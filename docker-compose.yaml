@@ -42,7 +42,7 @@ services:
     restart: always
     command: "bash ./wait-for-it.sh -t 0 db:5432 -- bash start.sh"
     env_file:
-      - ./env/application.env
+      - env/application-chat.env
     networks:
       - spring-net
     depends_on:
@@ -58,7 +58,7 @@ services:
       mode: replicated
       replicas: 2
     env_file:
-      - ./env/application.env
+      - ./env/application-chat.env
     networks:
       - spring-net
     depends_on:
