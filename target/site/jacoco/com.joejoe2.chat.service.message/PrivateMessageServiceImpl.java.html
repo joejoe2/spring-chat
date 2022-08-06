@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PrivateMessageServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">chat</a> &gt; <a href="index.source.html" class="el_package">com.joejoe2.chat.service.message</a> &gt; <span class="el_source">PrivateMessageServiceImpl.java</span></div><h1>PrivateMessageServiceImpl.java</h1><pre class="source lang-java linenums">package com.joejoe2.chat.service.message;
+
+import com.joejoe2.chat.data.PageRequest;
+import com.joejoe2.chat.data.message.PrivateMessageDto;
+import com.joejoe2.chat.data.SliceList;
+import com.joejoe2.chat.exception.ChannelDoesNotExist;
+import com.joejoe2.chat.exception.InvalidOperation;
+import com.joejoe2.chat.exception.UserDoesNotExist;
+import com.joejoe2.chat.models.PrivateChannel;
+import com.joejoe2.chat.models.PrivateMessage;
+import com.joejoe2.chat.models.User;
+import com.joejoe2.chat.repository.channel.PrivateChannelRepository;
+import com.joejoe2.chat.repository.message.PrivateMessageRepository;
+import com.joejoe2.chat.repository.user.UserRepository;
+import com.joejoe2.chat.service.nats.NatsService;
+import com.joejoe2.chat.utils.SubjectPrefix;
+import com.joejoe2.chat.validation.validator.MessageValidator;
+import com.joejoe2.chat.validation.validator.PageRequestValidator;
+import com.joejoe2.chat.validation.validator.UUIDValidator;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.data.domain.Slice;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.util.Comparator;
+import java.util.Optional;
+
+@Service
+<span class="fc" id="L34">public class PrivateMessageServiceImpl implements PrivateMessageService {</span>
+    @Autowired
+    UserRepository userRepository;
+    @Autowired
+    PrivateChannelRepository channelRepository;
+    @Autowired
+    PrivateMessageRepository messageRepository;
+    @Autowired
+    NatsService natsService;
+    @Autowired
+    UUIDValidator uuidValidator;
+    @Autowired
+    MessageValidator messageValidator;
+    @Autowired
+    PageRequestValidator pageValidator;
+
+    @Retryable(value = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 100))
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public PrivateMessageDto createMessage(String fromUserId, String channelId, String message) throws UserDoesNotExist, ChannelDoesNotExist {
+<span class="fc" id="L54">        User user = userRepository.findById(uuidValidator.validate(fromUserId))</span>
+<span class="pc" id="L55">                .orElseThrow(()-&gt;new UserDoesNotExist(&quot;user is not exist !&quot;));</span>
+<span class="fc" id="L56">        PrivateChannel channel = channelRepository.findById(uuidValidator.validate(channelId))</span>
+<span class="pc" id="L57">                .orElseThrow(()-&gt;new ChannelDoesNotExist(&quot;channel is not exist !&quot;));</span>
+<span class="fc" id="L58">        User targetUser = channel.getMembers().stream()</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">                .filter(u-&gt;!user.getId().equals(u.getId())).findFirst().get();</span>
+
+<span class="fc" id="L61">        PrivateMessage privateMessage =</span>
+<span class="fc" id="L62">                new PrivateMessage(channel, user, targetUser, messageValidator.validate(message));</span>
+<span class="fc" id="L63">        messageRepository.save(privateMessage);</span>
+<span class="fc" id="L64">        messageRepository.flush();</span>
+<span class="fc" id="L65">        channel.setLastMessage(privateMessage);</span>
+<span class="fc" id="L66">        channelRepository.save(channel);</span>
+<span class="fc" id="L67">        channelRepository.flush();</span>
+
+<span class="fc" id="L69">        return new PrivateMessageDto(privateMessage);</span>
+    }
+
+    @Async
+    @Transactional(readOnly = true)
+    @Override
+    public void deliverMessage(PrivateMessageDto message){
+<span class="nc" id="L76">        Optional&lt;PrivateChannel&gt; channel = channelRepository.findById(message.getChannel());</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">        if (channel.isEmpty()) return;</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">        for (User member : channel.get().getMembers()) {</span>
+<span class="nc" id="L79">            natsService.publish(SubjectPrefix.PRIVATE_CHANNEL+member.getId(),</span>
+                    message);
+<span class="nc" id="L81">        }</span>
+<span class="nc" id="L82">    }</span>
+
+    @Override
+    @Transactional(readOnly = true)
+    public SliceList&lt;PrivateMessageDto&gt; getAllMessages(String userId, PageRequest pageRequest) throws UserDoesNotExist {
+<span class="fc" id="L87">        org.springframework.data.domain.PageRequest paging = pageValidator.validate(pageRequest);</span>
+<span class="fc" id="L88">        User user = userRepository.findById(uuidValidator.validate(userId))</span>
+<span class="pc" id="L89">                .orElseThrow(()-&gt;new UserDoesNotExist(&quot;user is not exist !&quot;));</span>
+
+<span class="fc" id="L91">        Slice&lt;PrivateMessage&gt; slice = messageRepository.findAllByUser(user, paging);</span>
+<span class="fc" id="L92">        return new SliceList&lt;&gt;(slice.getNumber(), slice.getSize(),</span>
+<span class="fc" id="L93">                slice.getContent().stream().sorted(Comparator.comparing(PrivateMessage::getUpdateAt))</span>
+<span class="fc" id="L94">                        .map(PrivateMessageDto::new).toList(),</span>
+<span class="fc" id="L95">                slice.hasNext());</span>
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SliceList&lt;PrivateMessageDto&gt; getAllMessages(String userId, String channelId, PageRequest pageRequest) throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation {
+<span class="nc" id="L101">        org.springframework.data.domain.PageRequest paging = pageValidator.validate(pageRequest);</span>
+<span class="nc" id="L102">        User user = userRepository.findById(uuidValidator.validate(userId))</span>
+<span class="nc" id="L103">                .orElseThrow(()-&gt;new UserDoesNotExist(&quot;user is not exist !&quot;));</span>
+<span class="nc" id="L104">        PrivateChannel channel = channelRepository.findById(uuidValidator.validate(channelId))</span>
+<span class="nc" id="L105">                .orElseThrow(()-&gt;new ChannelDoesNotExist(&quot;channel is not exist !&quot;));</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">        if (!channel.getMembers().contains(user))</span>
+<span class="nc" id="L107">            throw new InvalidOperation(&quot;user is not in members of the channel !&quot;);</span>
+
+<span class="nc" id="L109">        Slice&lt;PrivateMessage&gt; slice = messageRepository.findAllByChannel(channel, paging);</span>
+<span class="nc" id="L110">        return new SliceList&lt;&gt;(slice.getNumber(), slice.getSize(),</span>
+<span class="nc" id="L111">                slice.getContent().stream().sorted(Comparator.comparing(PrivateMessage::getUpdateAt))</span>
+<span class="nc" id="L112">                        .map(PrivateMessageDto::new).toList(),</span>
+<span class="nc" id="L113">                slice.hasNext());</span>
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SliceList&lt;PrivateMessageDto&gt; getAllMessages(String userId, Instant since, PageRequest pageRequest) throws UserDoesNotExist {
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">        if (since == null) throw new IllegalArgumentException(&quot;since cannot be null !&quot;);</span>
+<span class="fc" id="L120">        org.springframework.data.domain.PageRequest paging = pageValidator.validate(pageRequest);</span>
+<span class="fc" id="L121">        User user = userRepository.findById(uuidValidator.validate(userId))</span>
+<span class="pc" id="L122">                .orElseThrow(()-&gt;new UserDoesNotExist(&quot;user is not exist !&quot;));</span>
+
+<span class="fc" id="L124">        Slice&lt;PrivateMessage&gt; slice = messageRepository.findAllByUserSince(user, since, paging);</span>
+<span class="fc" id="L125">        return new SliceList&lt;&gt;(slice.getNumber(), slice.getSize(),</span>
+<span class="fc" id="L126">                slice.getContent().stream().sorted(Comparator.comparing(PrivateMessage::getUpdateAt))</span>
+<span class="fc" id="L127">                        .map(PrivateMessageDto::new).toList(),</span>
+<span class="fc" id="L128">                slice.hasNext());</span>
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SliceList&lt;PrivateMessageDto&gt; getAllMessages(String userId, String channelId, Instant since, PageRequest pageRequest) throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation {
+<span class="nc bnc" id="L134" title="All 2 branches missed.">        if (since == null) throw new IllegalArgumentException(&quot;since cannot be null !&quot;);</span>
+<span class="nc" id="L135">        org.springframework.data.domain.PageRequest paging = pageValidator.validate(pageRequest);</span>
+<span class="nc" id="L136">        User user = userRepository.findById(uuidValidator.validate(userId))</span>
+<span class="nc" id="L137">                .orElseThrow(()-&gt;new UserDoesNotExist(&quot;user is not exist !&quot;));</span>
+<span class="nc" id="L138">        PrivateChannel channel = channelRepository.findById(uuidValidator.validate(channelId))</span>
+<span class="nc" id="L139">                .orElseThrow(()-&gt;new ChannelDoesNotExist(&quot;channel is not exist !&quot;));</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">        if (!channel.getMembers().contains(user))</span>
+<span class="nc" id="L141">            throw new InvalidOperation(&quot;user is not in members of the channel !&quot;);</span>
+
+<span class="nc" id="L143">        Slice&lt;PrivateMessage&gt; slice = messageRepository.findAllByChannelSince(channel, since, paging);</span>
+<span class="nc" id="L144">        return new SliceList&lt;&gt;(slice.getNumber(), slice.getSize(),</span>
+<span class="nc" id="L145">                slice.getContent().stream().sorted(Comparator.comparing(PrivateMessage::getUpdateAt))</span>
+<span class="nc" id="L146">                        .map(PrivateMessageDto::new).toList(),</span>
+<span class="nc" id="L147">                slice.hasNext());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

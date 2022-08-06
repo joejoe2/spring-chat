@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PublicMessageServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">chat</a> &gt; <a href="index.source.html" class="el_package">com.joejoe2.chat.service.message</a> &gt; <span class="el_source">PublicMessageServiceImpl.java</span></div><h1>PublicMessageServiceImpl.java</h1><pre class="source lang-java linenums">package com.joejoe2.chat.service.message;
+
+import com.joejoe2.chat.data.message.PublicMessageDto;
+import com.joejoe2.chat.data.SliceList;
+import com.joejoe2.chat.exception.ChannelDoesNotExist;
+import com.joejoe2.chat.exception.UserDoesNotExist;
+import com.joejoe2.chat.models.MessageType;
+import com.joejoe2.chat.models.PublicChannel;
+import com.joejoe2.chat.models.PublicMessage;
+import com.joejoe2.chat.models.User;
+import com.joejoe2.chat.repository.channel.PublicChannelRepository;
+import com.joejoe2.chat.repository.message.PublicMessageRepository;
+import com.joejoe2.chat.repository.user.UserRepository;
+import com.joejoe2.chat.service.nats.NatsService;
+import com.joejoe2.chat.utils.SubjectPrefix;
+import com.joejoe2.chat.validation.validator.MessageValidator;
+import com.joejoe2.chat.validation.validator.PageRequestValidator;
+import com.joejoe2.chat.validation.validator.UUIDValidator;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.util.Comparator;
+
+@Service
+<span class="fc" id="L30">public class PublicMessageServiceImpl implements PublicMessageService {</span>
+    @Autowired
+    UserRepository userRepository;
+    @Autowired
+    PublicChannelRepository channelRepository;
+    @Autowired
+    PublicMessageRepository messageRepository;
+    @Autowired
+    NatsService natsService;
+    @Autowired
+    UUIDValidator uuidValidator;
+    @Autowired
+    MessageValidator messageValidator;
+    @Autowired
+    PageRequestValidator pageValidator;
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public PublicMessageDto createMessage(String fromUserId, String channelId, String message) throws UserDoesNotExist, ChannelDoesNotExist {
+<span class="fc" id="L49">        User user = userRepository.findById(uuidValidator.validate(fromUserId))</span>
+<span class="pc" id="L50">                .orElseThrow(() -&gt; new UserDoesNotExist(&quot;user is not exist !&quot;));</span>
+<span class="fc" id="L51">        PublicChannel channel = channelRepository.findById(uuidValidator.validate(channelId))</span>
+<span class="pc" id="L52">                .orElseThrow(() -&gt; new ChannelDoesNotExist(&quot;channel is not exist !&quot;));</span>
+
+<span class="fc" id="L54">        PublicMessage publicMessage = PublicMessage.builder()</span>
+<span class="fc" id="L55">                .from(user)</span>
+<span class="fc" id="L56">                .channel(channel)</span>
+<span class="fc" id="L57">                .messageType(MessageType.MESSAGE)</span>
+<span class="fc" id="L58">                .content(messageValidator.validate(message)).build();</span>
+<span class="fc" id="L59">        messageRepository.save(publicMessage);</span>
+<span class="fc" id="L60">        messageRepository.flush();</span>
+<span class="fc" id="L61">        return new PublicMessageDto(publicMessage);</span>
+    }
+
+    @Async
+    @Transactional(readOnly = true)
+    @Override
+    public void deliverMessage(PublicMessageDto message){
+<span class="nc" id="L68">        natsService.publish(SubjectPrefix.PUBLIC_CHANNEL + message.getChannel().toString(), message);</span>
+<span class="nc" id="L69">    }</span>
+
+    @Override
+    @Transactional(readOnly = true)
+    public SliceList&lt;PublicMessageDto&gt; getAllMessages(String channelId, com.joejoe2.chat.data.PageRequest pageRequest) throws ChannelDoesNotExist {
+<span class="fc" id="L74">        PageRequest paging = pageValidator.validate(pageRequest);</span>
+<span class="fc" id="L75">        PublicChannel channel = channelRepository.findById(uuidValidator.validate(channelId))</span>
+<span class="pc" id="L76">                .orElseThrow(() -&gt; new ChannelDoesNotExist(&quot;channel is not exist !&quot;));</span>
+
+<span class="fc" id="L78">        Slice&lt;PublicMessage&gt; slice = messageRepository.findAllByChannel(channel, paging);</span>
+<span class="fc" id="L79">        return new SliceList&lt;&gt;(slice.getNumber(), slice.getSize(),</span>
+<span class="fc" id="L80">                slice.getContent().stream().sorted(Comparator.comparing(PublicMessage::getUpdateAt))</span>
+<span class="fc" id="L81">                        .map(PublicMessageDto::new).toList(),</span>
+<span class="fc" id="L82">                slice.hasNext());</span>
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SliceList&lt;PublicMessageDto&gt; getAllMessages(String channelId, Instant since, com.joejoe2.chat.data.PageRequest pageRequest) throws ChannelDoesNotExist {
+<span class="fc bfc" id="L88" title="All 2 branches covered.">        if (since == null) throw new IllegalArgumentException(&quot;since cannot be null !&quot;);</span>
+<span class="fc" id="L89">        PageRequest paging = pageValidator.validate(pageRequest);</span>
+<span class="fc" id="L90">        PublicChannel channel = channelRepository.findById(uuidValidator.validate(channelId))</span>
+<span class="pc" id="L91">                .orElseThrow(() -&gt; new ChannelDoesNotExist(&quot;channel is not exist !&quot;));</span>
+
+<span class="fc" id="L93">        Slice&lt;PublicMessage&gt; slice = messageRepository.findAllByChannelSince(channel, since, paging);</span>
+<span class="fc" id="L94">        return new SliceList&lt;&gt;(slice.getNumber(), slice.getSize(),</span>
+<span class="fc" id="L95">                slice.getContent().stream().sorted(Comparator.comparing(PublicMessage::getUpdateAt))</span>
+<span class="fc" id="L96">                        .map(PublicMessageDto::new).toList(),</span>
+<span class="fc" id="L97">                slice.hasNext());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

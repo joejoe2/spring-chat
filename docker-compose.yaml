@@ -1,0 +1,88 @@
+version: '3'
+
+services:
+  redis:
+    image: redis:6.2.7-alpine
+    restart: always
+    volumes:
+      - ./redis/data:/data
+    networks:
+      - spring-net
+
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: root_password  # please change it
+      POSTGRES_DB: spring
+    volumes:
+      - ./postgresql/data:/var/lib/postgresql/data
+    networks:
+      - spring-net
+
+  chat-db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: root_password  # please change it
+      POSTGRES_DB: spring-chat
+    volumes:
+      - ./postgresql/data:/var/lib/postgresql/chat-data
+    networks:
+      - spring-net
+
+  nats:
+    image: nats:2.8
+    restart: on-failure
+    networks:
+      - spring-net
+
+  web:
+    image: joejoe2/spring-jwt-template:latest
+    restart: always
+    command: "bash ./wait-for-it.sh -t 0 db:5432 -- bash start.sh"
+    env_file:
+      - ./env/application.env
+    networks:
+      - spring-net
+    depends_on:
+      - redis
+      - db
+      - nats
+
+  chat:
+    image: joejoe2/spring-chat:latest
+    restart: always
+    command: "bash ./wait-for-it.sh -t 0 chat-db:5432 -- bash start.sh"
+    deploy:
+      mode: replicated
+      replicas: 2
+    env_file:
+      - ./env/application.env
+    networks:
+      - spring-net
+    depends_on:
+      - redis
+      - chat-db
+
+  nginx:
+    image: jonasal/nginx-certbot:latest
+    restart: unless-stopped
+    env_file:
+      - ./nginx/nginx-certbot.env
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./nginx/data:/etc/letsencrypt
+      - ./nginx/user_conf.d:/etc/nginx/user_conf.d
+    networks:
+      - spring-net
+    depends_on:
+      - web
+      - chat
+
+
+networks:
+  spring-net:
+

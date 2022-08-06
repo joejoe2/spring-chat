@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JwtUtil.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">chat</a> &gt; <a href="index.source.html" class="el_package">com.joejoe2.chat.utils</a> &gt; <span class="el_source">JwtUtil.java</span></div><h1>JwtUtil.java</h1><pre class="source lang-java linenums">package com.joejoe2.chat.utils;
+
+import com.joejoe2.chat.data.UserDetail;
+import com.joejoe2.chat.exception.InvalidTokenException;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.JwtParser;
+import io.jsonwebtoken.Jwts;
+
+import java.security.interfaces.RSAPublicKey;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+<span class="nc" id="L15">public class JwtUtil {</span>
+    public static Map&lt;String, Object&gt; parseToken(RSAPublicKey key, String token) throws JwtException {
+        try {
+<span class="nc" id="L18">            JwtParser parser = Jwts.parserBuilder()</span>
+<span class="nc" id="L19">                    .setSigningKey(key)</span>
+<span class="nc" id="L20">                    .build();</span>
+
+<span class="nc" id="L22">            Claims claims = parser</span>
+<span class="nc" id="L23">                    .parseClaimsJws(token)</span>
+<span class="nc" id="L24">                    .getBody();</span>
+
+<span class="nc" id="L26">            return claims.entrySet().stream()</span>
+<span class="nc" id="L27">                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));</span>
+<span class="nc" id="L28">        }catch (Exception e){</span>
+<span class="nc" id="L29">            throw new JwtException(e.getMessage());</span>
+        }
+    }
+
+<span class="nc" id="L33">    private static final String[] REQUIRED_FIELDS = new String[]{</span>
+            &quot;type&quot;, &quot;id&quot;, &quot;username&quot;
+    };
+
+    public static UserDetail extractUserDetailFromAccessToken(RSAPublicKey publicKey, String token) throws InvalidTokenException {
+        try {
+<span class="nc" id="L39">            Map&lt;String, Object&gt; data = JwtUtil.parseToken(publicKey, token);</span>
+<span class="nc bnc" id="L40" title="All 4 branches missed.">            if (Arrays.stream(REQUIRED_FIELDS).anyMatch((f)-&gt; data.get(f)==null)){</span>
+<span class="nc" id="L41">                throw new InvalidTokenException(&quot;invalid token !&quot;);</span>
+            }
+<span class="nc bnc" id="L43" title="All 2 branches missed.">            if (!data.get(&quot;type&quot;).equals(&quot;access_token&quot;)){</span>
+<span class="nc" id="L44">                throw new InvalidTokenException(&quot;invalid token !&quot;);</span>
+            }
+<span class="nc" id="L46">            return new UserDetail((String) data.get(&quot;id&quot;), (String) data.get(&quot;username&quot;));</span>
+<span class="nc" id="L47">        }catch (Exception ex){</span>
+<span class="nc" id="L48">            throw new InvalidTokenException(&quot;invalid token !&quot;);</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

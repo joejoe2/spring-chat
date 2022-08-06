@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PrivateChannelRepository.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">chat</a> &gt; <a href="index.source.html" class="el_package">com.joejoe2.chat.repository.channel</a> &gt; <span class="el_source">PrivateChannelRepository.java</span></div><h1>PrivateChannelRepository.java</h1><pre class="source lang-java linenums">package com.joejoe2.chat.repository.channel;
+
+
+import com.joejoe2.chat.models.PrivateChannel;
+import com.joejoe2.chat.models.User;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.time.Instant;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+public interface PrivateChannelRepository extends JpaRepository&lt;PrivateChannel, UUID&gt; {
+    Optional&lt;PrivateChannel&gt; findById(UUID id);
+
+    Optional&lt;PrivateChannel&gt; findByUniqueUserIds(String id);
+
+    @Query(&quot;SELECT DISTINCT ch from PrivateChannel ch &quot; +
+            &quot;join fetch ch.members WHERE :user MEMBER ch.members &quot; +
+            &quot;ORDER BY ch.updateAt DESC&quot;)
+    List&lt;PrivateChannel&gt; findByMembersContainingUserByUpdateAtDesc(@Param(&quot;user&quot;) User user);
+
+    default List&lt;PrivateChannel&gt; findByIsUserInMembers(User user){
+<span class="nc" id="L29">        return findByMembersContainingUserByUpdateAtDesc(user);</span>
+    }
+
+    @Query(&quot;SELECT DISTINCT ch from PrivateChannel ch &quot; +
+            &quot;join fetch ch.members WHERE :user MEMBER ch.members &quot; +
+            &quot;ORDER BY ch.updateAt DESC&quot;)
+    Slice&lt;PrivateChannel&gt; findByMembersContainingUserByUpdateAtDesc(@Param(&quot;user&quot;) User user, Pageable pageable);
+
+    default Slice&lt;PrivateChannel&gt; findByIsUserInMembers(User user, Pageable pageable){
+<span class="fc" id="L38">        return findByMembersContainingUserByUpdateAtDesc(user, pageable);</span>
+    }
+
+    default boolean isPrivateChannelExistBetween(User user1, User user2){
+<span class="fc" id="L42">        String[] ids = new String[]{user1.getId().toString(), user2.getId().toString()};</span>
+<span class="fc" id="L43">        Arrays.sort(ids);</span>
+<span class="fc" id="L44">        return findByUniqueUserIds(ids[0] + ids[1]).isPresent();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>
