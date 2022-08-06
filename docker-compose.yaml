@@ -27,7 +27,7 @@ services:
       POSTGRES_PASSWORD: root_password  # please change it
       POSTGRES_DB: spring-chat
     volumes:
-      - ./postgresql/data:/var/lib/postgresql/chat-data
+      - ./postgresql/chat-data:/var/lib/postgresql/data
     networks:
       - spring-net
 
