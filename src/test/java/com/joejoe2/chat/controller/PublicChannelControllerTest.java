@@ -21,6 +21,8 @@ import com.joejoe2.chat.repository.user.UserRepository;
 import com.joejoe2.chat.service.channel.PublicChannelService;
 import com.joejoe2.chat.service.message.PublicMessageService;
 import com.joejoe2.chat.utils.AuthUtil;
+import io.nats.client.Connection;
+import io.nats.client.Dispatcher;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -57,6 +59,10 @@ class PublicChannelControllerTest {
     PublicChannelRepository channelRepository;
     @Autowired
     MockMvc mockMvc;
+    @MockBean
+    Connection connection;
+    @MockBean
+    Dispatcher dispatcher;
     @MockBean
     PublicMessageService messageService;
     @MockBean
