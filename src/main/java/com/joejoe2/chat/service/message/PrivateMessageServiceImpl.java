@@ -13,7 +13,7 @@ import com.joejoe2.chat.repository.channel.PrivateChannelRepository;
 import com.joejoe2.chat.repository.message.PrivateMessageRepository;
 import com.joejoe2.chat.repository.user.UserRepository;
 import com.joejoe2.chat.service.nats.NatsService;
-import com.joejoe2.chat.utils.SubjectPrefix;
+import com.joejoe2.chat.utils.ChannelSubject;
 import com.joejoe2.chat.validation.validator.MessageValidator;
 import com.joejoe2.chat.validation.validator.PageRequestValidator;
 import com.joejoe2.chat.validation.validator.UUIDValidator;
@@ -50,16 +50,17 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
     @Retryable(value = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 100))
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public PrivateMessageDto createMessage(String fromUserId, String channelId, String message) throws UserDoesNotExist, ChannelDoesNotExist {
-        User user = userRepository.findById(uuidValidator.validate(fromUserId))
+    public PrivateMessageDto createMessage(String fromUserId, String channelId, String message) throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation {
+        User fromUser = userRepository.findById(uuidValidator.validate(fromUserId))
                 .orElseThrow(()->new UserDoesNotExist("user is not exist !"));
         PrivateChannel channel = channelRepository.findById(uuidValidator.validate(channelId))
                 .orElseThrow(()->new ChannelDoesNotExist("channel is not exist !"));
-        User targetUser = channel.getMembers().stream()
-                .filter(u->!user.getId().equals(u.getId())).findFirst().get();
+        if (!channel.getMembers().contains(fromUser))
+            throw new InvalidOperation("user is not in members of the channel !");
 
+        User targetUser = channel.anotherMember(fromUser);
         PrivateMessage privateMessage =
-                new PrivateMessage(channel, user, targetUser, messageValidator.validate(message));
+                new PrivateMessage(channel, fromUser, targetUser, messageValidator.validate(message));
         messageRepository.save(privateMessage);
         messageRepository.flush();
         channel.setLastMessage(privateMessage);
@@ -76,8 +77,7 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
         Optional<PrivateChannel> channel = channelRepository.findById(message.getChannel());
         if (channel.isEmpty()) return;
         for (User member : channel.get().getMembers()) {
-            natsService.publish(SubjectPrefix.PRIVATE_CHANNEL+member.getId(),
-                    message);
+            natsService.publish(ChannelSubject.privateChannelSubject(member.getId().toString()), message);
         }
     }
 

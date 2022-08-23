@@ -10,7 +10,7 @@ import com.joejoe2.chat.exception.UserDoesNotExist;
 import java.time.Instant;
 
 public interface PrivateMessageService {
-    PrivateMessageDto createMessage(String fromUserId, String channelId, String message) throws UserDoesNotExist, ChannelDoesNotExist;
+    PrivateMessageDto createMessage(String fromUserId, String channelId, String message) throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation;
 
     void deliverMessage(PrivateMessageDto message);
 

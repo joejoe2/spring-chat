@@ -3,9 +3,9 @@ package com.joejoe2.chat.service.channel;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joejoe2.chat.data.PageRequest;
-import com.joejoe2.chat.data.message.PrivateMessageDto;
 import com.joejoe2.chat.data.SliceList;
 import com.joejoe2.chat.data.channel.profile.PrivateChannelProfile;
+import com.joejoe2.chat.data.message.PrivateMessageDto;
 import com.joejoe2.chat.exception.AlreadyExist;
 import com.joejoe2.chat.exception.ChannelDoesNotExist;
 import com.joejoe2.chat.exception.InvalidOperation;
@@ -14,8 +14,8 @@ import com.joejoe2.chat.models.PrivateChannel;
 import com.joejoe2.chat.models.User;
 import com.joejoe2.chat.repository.channel.PrivateChannelRepository;
 import com.joejoe2.chat.repository.user.UserRepository;
+import com.joejoe2.chat.utils.ChannelSubject;
 import com.joejoe2.chat.utils.SseUtil;
-import com.joejoe2.chat.utils.SubjectPrefix;
 import com.joejoe2.chat.validation.validator.PageRequestValidator;
 import com.joejoe2.chat.validation.validator.UUIDValidator;
 import io.nats.client.Connection;
@@ -39,6 +39,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class PrivateChannelServiceImpl implements PrivateChannelService {
+    private static final int MAX_CONNECT_DURATION = 15;
+    private static final Logger logger = LoggerFactory.getLogger(PrivateChannelService.class);
     @Autowired
     UserRepository userRepository;
     @Autowired
@@ -49,18 +51,11 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
     UUIDValidator uuidValidator;
     @Autowired
     PageRequestValidator pageValidator;
-
     Map<String, Set<SseEmitter>> listeningUsers = new ConcurrentHashMap<>();
-    private static final int MAX_CONNECT_DURATION = 15;
-    private ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(1);
-
-    private final String SUBJECT_PREFIX = SubjectPrefix.PRIVATE_CHANNEL;
-    private static final Logger logger = LoggerFactory.getLogger(PrivateChannelService.class);
-
     @Autowired
     Connection connection;
-
     Dispatcher dispatcher;
+    private ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(1);
 
     /**
      * create nats dispatcher with shared message handler for all
@@ -72,7 +67,8 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
     private void initNats() {
         dispatcher = connection.createDispatcher((msg) -> {
             try {
-                sendToSubscribers(listeningUsers.get(msg.getSubject().replace(SUBJECT_PREFIX, "")),
+                sendToSubscribers(
+                        listeningUsers.get(ChannelSubject.privateChannelUserOfSubject(msg.getSubject())),
                         objectMapper.readValue(new String(msg.getData(), StandardCharsets.UTF_8),
                                 PrivateMessageDto.class));
             } catch (JsonProcessingException e) {
@@ -106,6 +102,7 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
 
     /**
      * create SseEmitter instance(subscriber)
+     *
      * @param userId
      * @return
      */
@@ -119,26 +116,28 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
     /**
      * add UnSubscribe listener to SseEmitter instance(subscriber), and force
      * unsubscribing after MAX_CONNECT_DURATION MINUTES
+     *
      * @param userId
      * @param subscriber
      */
-    private void addUnSubscribeTriggers(String userId, SseEmitter subscriber){
-        Runnable unSubscribe =  () ->listeningUsers.compute(userId, (key, val) -> {
+    private void addUnSubscribeTriggers(String userId, SseEmitter subscriber) {
+        Runnable unSubscribe = () -> listeningUsers.compute(userId, (key, val) -> {
             //remove from subscribers
             if (val != null) val.remove(subscriber);
             //unsubscribe if no subscribers
             if (val == null || val.isEmpty()) {
-                dispatcher.unsubscribe(SUBJECT_PREFIX + userId);
+                dispatcher.unsubscribe(ChannelSubject.privateChannelSubject(userId));
                 return null;
             }
             return val;
         });
         SseUtil.addSseCallbacks(subscriber, unSubscribe);
-        scheduler.schedule(unSubscribe, MAX_CONNECT_DURATION, TimeUnit.MINUTES);
+        scheduler.schedule(subscriber::complete, MAX_CONNECT_DURATION, TimeUnit.MINUTES);
     }
 
     /**
      * register SseEmitter instance(subscriber) and channelId to nats dispatcher
+     *
      * @param subscriber
      * @param userId
      */
@@ -148,7 +147,7 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
                 subscribers = Collections.synchronizedSet(new HashSet<>());
             }
             subscribers.add(subscriber);
-            dispatcher.subscribe(SUBJECT_PREFIX + userId);
+            dispatcher.subscribe(ChannelSubject.privateChannelSubject(userId));
             return subscribers;
         });
     }

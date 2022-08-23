@@ -13,7 +13,7 @@ import lombok.extern.jackson.Jacksonized;
 import java.time.Instant;
 import java.util.UUID;
 
-@JsonTypeInfo(use= JsonTypeInfo.Id.DEDUCTION)
+@JsonTypeInfo(use=JsonTypeInfo.Id.DEDUCTION)
 @Jacksonized
 @NoArgsConstructor
 @AllArgsConstructor

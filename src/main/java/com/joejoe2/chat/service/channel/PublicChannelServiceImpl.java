@@ -10,7 +10,7 @@ import com.joejoe2.chat.exception.ChannelDoesNotExist;
 import com.joejoe2.chat.models.PublicChannel;
 import com.joejoe2.chat.repository.channel.PublicChannelRepository;
 import com.joejoe2.chat.utils.SseUtil;
-import com.joejoe2.chat.utils.SubjectPrefix;
+import com.joejoe2.chat.utils.ChannelSubject;
 import com.joejoe2.chat.validation.validator.PageRequestValidator;
 import com.joejoe2.chat.validation.validator.PublicChannelNameValidator;
 import com.joejoe2.chat.validation.validator.UUIDValidator;
@@ -69,7 +69,7 @@ public class PublicChannelServiceImpl implements PublicChannelService {
     private void initNats() {
         dispatcher = connection.createDispatcher((msg) -> {
             try {
-                String channel = msg.getSubject().replace(SubjectPrefix.PUBLIC_CHANNEL, "");
+                String channel = ChannelSubject.publicChannelOfSubject(msg.getSubject());
                 sendToSubscribers(listeningChannels.get(channel),
                         objectMapper.readValue(new String(msg.getData(), StandardCharsets.UTF_8),
                                 PublicMessageDto.class));
@@ -124,13 +124,13 @@ public class PublicChannelServiceImpl implements PublicChannelService {
         Runnable unSubscribe =  () -> listeningChannels.compute(channelId, (key, subscribers) -> {
             if (subscribers != null) subscribers.remove(subscriber);
             if (subscribers == null || subscribers.isEmpty()) {
-                dispatcher.unsubscribe(SubjectPrefix.PUBLIC_CHANNEL + channelId);
+                dispatcher.unsubscribe(ChannelSubject.publicChannelSubject(channelId));
                 return null;
             }
             return subscribers;
         });
         SseUtil.addSseCallbacks(subscriber, unSubscribe);
-        scheduler.schedule(unSubscribe, MAX_CONNECT_DURATION, TimeUnit.MINUTES);
+        scheduler.schedule(subscriber::complete, MAX_CONNECT_DURATION, TimeUnit.MINUTES);
     }
 
     /**
@@ -147,7 +147,7 @@ public class PublicChannelServiceImpl implements PublicChannelService {
             //add to subscribers
             subscribers.add(subscriber);
             //subscribe to nats
-            dispatcher.subscribe(SubjectPrefix.PUBLIC_CHANNEL + channelId);
+            dispatcher.subscribe(ChannelSubject.publicChannelSubject(channelId));
             return subscribers;
         });
     }

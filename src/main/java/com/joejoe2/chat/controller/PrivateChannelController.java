@@ -51,6 +51,10 @@ public class PrivateChannelController {
     @AuthenticatedApi
     @SecurityRequirement(name = "jwt")
     @ApiResponses(value = {
+            @ApiResponse(responseCode = "403", description = "current user is not a member" +
+                    " of target channel",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorMessageResponse.class))),
             @ApiResponse(responseCode = "404", description = "target channel is not exist",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorMessageResponse.class))),
@@ -65,6 +69,8 @@ public class PrivateChannelController {
             messageService.deliverMessage(message);
         }catch (ChannelDoesNotExist e){
             return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()), HttpStatus.NOT_FOUND);
+        } catch (InvalidOperation e) {
+            return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()), HttpStatus.FORBIDDEN);
         }
         return ResponseEntity.ok().build();
     }

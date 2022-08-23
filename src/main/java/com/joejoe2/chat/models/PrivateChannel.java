@@ -49,6 +49,17 @@ public class PrivateChannel extends TimeStampBase{
     String uniqueUserIds;
 
     @PrePersist
+    void prePersist(){
+        //check
+        checkNumOfMembers();
+        //pre-process before save
+        calculateUniqueByUserIds();
+    }
+
+    void checkNumOfMembers(){
+        if (getMembers().size()!=2) throw new RuntimeException("PrivateChannel must contain 2 members !");
+    }
+
     void calculateUniqueByUserIds(){
         List<String> ids = members.stream().sorted(Comparator.comparing(User::getId))
                 .map(user -> user.getId().toString()).toList();
@@ -56,6 +67,10 @@ public class PrivateChannel extends TimeStampBase{
         for (String id:ids)
             uniqueIds.append(id);
         this.uniqueUserIds = uniqueIds.toString();
+    }
+
+    public User anotherMember(User member){
+        return getMembers().stream().filter(u->!member.getId().equals(u.getId())).findFirst().get();
     }
 
     @Override

@@ -35,6 +35,14 @@ public class UserDetail implements UserDetails {
         return Objects.hash(id, username);
     }
 
+    @Override
+    public String toString() {
+        return "UserDetail{" +
+                "id='" + id + '\'' +
+                ", username='" + username + '\'' +
+                '}';
+    }
+
     public String getId(){
         return this.id;
     }

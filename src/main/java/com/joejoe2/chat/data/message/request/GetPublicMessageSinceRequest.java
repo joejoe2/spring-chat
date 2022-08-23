@@ -4,7 +4,10 @@ import com.joejoe2.chat.data.PageRequest;
 import com.joejoe2.chat.validation.constraint.UUID;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.validation.Valid;
@@ -15,6 +18,9 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class GetPublicMessageSinceRequest {
     @Parameter(description = "id of target channel")
     @UUID(message = "invalid channel id !")

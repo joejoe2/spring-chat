@@ -11,4 +11,6 @@ public interface JwtService {
      * @throws InvalidTokenException if the access token is invalid
      */
     UserDetail getUserDetailFromAccessToken(String token) throws InvalidTokenException;
+
+    boolean isAccessTokenInBlackList(String accessPlainToken);
 }

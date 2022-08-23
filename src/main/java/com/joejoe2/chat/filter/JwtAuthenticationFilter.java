@@ -28,6 +28,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             String accessToken = HttpUtil.extractAccessToken(request);
             if (accessToken != null){
+                if (jwtService.isAccessTokenInBlackList(accessToken))
+                    throw new InvalidTokenException("access token has been revoked !");
                 UserDetail userDetail = jwtService.getUserDetailFromAccessToken(accessToken);
                 userDetailService.createUserIfAbsent(userDetail);
                 AuthUtil.setCurrentUserDetail(userDetail);

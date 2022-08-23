@@ -4,6 +4,7 @@ import com.joejoe2.chat.data.UserDetail;
 import com.joejoe2.chat.models.User;
 import com.joejoe2.chat.repository.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -23,7 +24,6 @@ public class UserDetailService implements UserDetailsService {
     }
 
     public void createUserIfAbsent(UserDetail userDetail){
-        //todo: use redis cache to check user is exist or not
         if (!userRepository.existsById(UUID.fromString(userDetail.getId()))){
             User user = User.builder()
                     .id(UUID.fromString(userDetail.getId()))

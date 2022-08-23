@@ -12,7 +12,7 @@ import com.joejoe2.chat.repository.channel.PublicChannelRepository;
 import com.joejoe2.chat.repository.message.PublicMessageRepository;
 import com.joejoe2.chat.repository.user.UserRepository;
 import com.joejoe2.chat.service.nats.NatsService;
-import com.joejoe2.chat.utils.SubjectPrefix;
+import com.joejoe2.chat.utils.ChannelSubject;
 import com.joejoe2.chat.validation.validator.MessageValidator;
 import com.joejoe2.chat.validation.validator.PageRequestValidator;
 import com.joejoe2.chat.validation.validator.UUIDValidator;
@@ -65,7 +65,7 @@ public class PublicMessageServiceImpl implements PublicMessageService {
     @Transactional(readOnly = true)
     @Override
     public void deliverMessage(PublicMessageDto message){
-        natsService.publish(SubjectPrefix.PUBLIC_CHANNEL + message.getChannel().toString(), message);
+        natsService.publish(ChannelSubject.publicChannelSubject(message.getChannel().toString()), message);
     }
 
     @Override
