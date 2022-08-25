@@ -19,9 +19,8 @@ public class HttpUtil {
         }
     }
 
-    public static Map<String, String> splitQuery(URL url) {
+    public static Map<String, String> splitQuery(String query) {
         Map<String, String> query_pairs = new HashMap<>();
-        String query = url.getQuery();
         String[] pairs = query.split("&");
         for (String pair : pairs) {
             int idx = pair.indexOf("=");

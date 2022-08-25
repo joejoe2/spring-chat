@@ -6,6 +6,7 @@ import com.joejoe2.chat.data.channel.profile.PublicChannelProfile;
 import com.joejoe2.chat.exception.AlreadyExist;
 import com.joejoe2.chat.exception.ChannelDoesNotExist;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import org.springframework.web.socket.WebSocketSession;
 
 
 public interface PublicChannelService {
@@ -16,6 +17,14 @@ public interface PublicChannelService {
      * @throws ChannelDoesNotExist
      */
     SseEmitter subscribe(String channelId) throws ChannelDoesNotExist;
+
+    /**
+     * subscribe to target public channel using WebSocket
+     * @param session WebSocket session
+     * @param channelId target channel id
+     * @throws ChannelDoesNotExist
+     */
+    void subscribe(WebSocketSession session, String channelId) throws ChannelDoesNotExist;
 
     /**
      * create a new public channel

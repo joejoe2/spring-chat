@@ -16,6 +16,7 @@ import com.joejoe2.chat.repository.channel.PrivateChannelRepository;
 import com.joejoe2.chat.repository.user.UserRepository;
 import com.joejoe2.chat.utils.ChannelSubject;
 import com.joejoe2.chat.utils.SseUtil;
+import com.joejoe2.chat.utils.WebSocketUtil;
 import com.joejoe2.chat.validation.validator.PageRequestValidator;
 import com.joejoe2.chat.validation.validator.UUIDValidator;
 import io.nats.client.Connection;
@@ -27,8 +28,10 @@ import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import org.springframework.web.socket.WebSocketSession;
 
 import javax.annotation.PostConstruct;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -51,7 +54,7 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
     UUIDValidator uuidValidator;
     @Autowired
     PageRequestValidator pageValidator;
-    Map<String, Set<SseEmitter>> listeningUsers = new ConcurrentHashMap<>();
+    Map<String, Set<Object>> listeningUsers = new ConcurrentHashMap<>();
     @Autowired
     Connection connection;
     Dispatcher dispatcher;
@@ -80,12 +83,16 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
     /**
      * deliver private messages to registered users(subscribers)
      */
-    private void sendToSubscribers(Set<SseEmitter> subscribers, PrivateMessageDto message) {
-        new ArrayList<>(subscribers).parallelStream().forEach((subscriber) -> {
+    private void sendToSubscribers(Set<Object> subscribers, PrivateMessageDto message) {
+        List.copyOf(subscribers).parallelStream().forEach((subscriber) -> {
             try {
-                SseUtil.sendMessageEvent(subscriber, message);
+                if (subscriber instanceof SseEmitter)
+                    SseUtil.sendMessageEvent((SseEmitter) subscriber, message);
+                else if (subscriber instanceof WebSocketSession)
+                    WebSocketUtil.sendMessage(((WebSocketSession) subscriber),
+                            objectMapper.writeValueAsString(message));
             } catch (Exception e) {
-                logger.error(e.getMessage());
+                e.printStackTrace();
             }
         });
     }
@@ -98,6 +105,15 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
         SseEmitter subscriber = createUserSubscriber(fromUserId);
         SseUtil.sendConnectEvent(subscriber);
         return subscriber;
+    }
+
+    @Override
+    public void subscribe(WebSocketSession session, String fromUserId) throws UserDoesNotExist {
+        userRepository.findById(uuidValidator.validate(fromUserId))
+                .orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
+        addUnSubscribeTriggers(fromUserId, session);
+        listenToUser(session, fromUserId);
+        WebSocketUtil.sendConnectMessage(session);
     }
 
     /**
@@ -136,12 +152,59 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
     }
 
     /**
+     * add UnSubscribe listener to WebSocketSession instance(subscriber), and force
+     * unsubscribing after MAX_CONNECT_DURATION MINUTES
+     *
+     * @param userId
+     * @param subscriber
+     */
+    private void addUnSubscribeTriggers(String userId, WebSocketSession subscriber) {
+        Runnable unSubscribe = () -> listeningUsers.compute(userId, (key, val) -> {
+            //remove from subscribers
+            if (val != null) val.remove(subscriber);
+            //unsubscribe if no subscribers
+            if (val == null || val.isEmpty()) {
+                dispatcher.unsubscribe(ChannelSubject.privateChannelSubject(userId));
+                return null;
+            }
+            return val;
+        });
+        WebSocketUtil.addFinishedCallbacks(subscriber, unSubscribe);
+        scheduler.schedule(()-> {
+            try {
+                subscriber.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }finally {
+                unSubscribe.run();
+            }
+        }, MAX_CONNECT_DURATION, TimeUnit.MINUTES);
+    }
+
+    /**
      * register SseEmitter instance(subscriber) and channelId to nats dispatcher
      *
      * @param subscriber
      * @param userId
      */
     private void listenToUser(SseEmitter subscriber, String userId) {
+        listeningUsers.compute(userId, (key, subscribers) -> {
+            if (subscribers == null) {
+                subscribers = Collections.synchronizedSet(new HashSet<>());
+            }
+            subscribers.add(subscriber);
+            dispatcher.subscribe(ChannelSubject.privateChannelSubject(userId));
+            return subscribers;
+        });
+    }
+
+    /**
+     * register SseEmitter instance(subscriber) and channelId to nats dispatcher
+     *
+     * @param subscriber
+     * @param userId
+     */
+    private void listenToUser(WebSocketSession subscriber, String userId) {
         listeningUsers.compute(userId, (key, subscribers) -> {
             if (subscribers == null) {
                 subscribers = Collections.synchronizedSet(new HashSet<>());

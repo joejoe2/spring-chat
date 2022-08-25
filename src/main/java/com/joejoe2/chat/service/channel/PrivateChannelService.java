@@ -9,6 +9,7 @@ import com.joejoe2.chat.exception.InvalidOperation;
 import com.joejoe2.chat.exception.UserDoesNotExist;
 import com.joejoe2.chat.models.PrivateChannel;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import org.springframework.web.socket.WebSocketSession;
 
 public interface PrivateChannelService {
     /**
@@ -18,6 +19,8 @@ public interface PrivateChannelService {
      * @throws UserDoesNotExist
      */
     SseEmitter subscribe(String fromUserId) throws UserDoesNotExist;
+
+    void subscribe(WebSocketSession session, String fromUserId) throws UserDoesNotExist;
 
     /**
      * create a private channel between two users(from and to)
