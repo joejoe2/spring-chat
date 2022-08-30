@@ -36,6 +36,9 @@ class HttpUtilTest {
             query += "&" + param.getKey() + "=" + param.getValue();
         }
         params.put("arr", "[1, 2, 3]");
+        // test invalid query
+        query+="&";
+        query+="&invalid";
 
         assertEquals(params, HttpUtil.splitQuery(query));
     }
