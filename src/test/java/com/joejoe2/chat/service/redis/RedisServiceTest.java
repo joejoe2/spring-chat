@@ -1,11 +1,13 @@
 package com.joejoe2.chat.service.redis;
 
-import com.joejoe2.chat.service.redis.RedisService;
+import io.nats.client.Connection;
+import io.nats.client.Dispatcher;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import redis.embedded.RedisServer;
@@ -18,10 +20,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest
 @ActiveProfiles("test")
 class RedisServiceTest {
+    @MockBean
+    Connection connection;
+    @MockBean
+    Dispatcher dispatcher;
     @Autowired
     RedisService redisService;
     @Autowired
-    private StringRedisTemplate redisTemplate;
+    StringRedisTemplate redisTemplate;
 
     private static RedisServer redisServer;
 
