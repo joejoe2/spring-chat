@@ -131,6 +131,8 @@ class PublicChannelControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))
                         .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id").hasJsonPath())
+                .andExpect(jsonPath("$.content").hasJsonPath())
                 .andExpect(status().isOk());
 
         Mockito.verify(messageService, Mockito.times(1))

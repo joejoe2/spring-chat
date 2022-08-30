@@ -56,17 +56,18 @@ public class PublicChannelController {
                             schema = @Schema(implementation = ErrorMessageResponse.class))),
             @ApiResponse(
                     responseCode = "200", description = "publish message to target channel",
-                    content = @Content),
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = PublicMessageDto.class))),
     })
     @RequestMapping(path = "/publishMessage", method = RequestMethod.POST)
     public ResponseEntity<Object> publishMessage(@Valid @RequestBody PublishPublicMessageRequest request) throws UserDoesNotExist {
         try {
             PublicMessageDto message = messageService.createMessage(AuthUtil.currentUserDetail().getId(), request.getChannelId(), request.getMessage());
             messageService.deliverMessage(message);
+            return ResponseEntity.ok(message);
         } catch (ChannelDoesNotExist e) {
             return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()), HttpStatus.NOT_FOUND);
         }
-        return ResponseEntity.ok().build();
     }
 
     @Operation(summary = "get all messages in public channel")

@@ -1,4 +1,4 @@
-package com.joejoe2.chat.service.channel;
+package com.joejoe2.chat.service.message;
 
 import com.joejoe2.chat.data.PageRequest;
 import com.joejoe2.chat.data.SliceList;
@@ -8,6 +8,7 @@ import com.joejoe2.chat.models.User;
 import com.joejoe2.chat.repository.channel.PublicChannelRepository;
 import com.joejoe2.chat.repository.message.PublicMessageRepository;
 import com.joejoe2.chat.repository.user.UserRepository;
+import com.joejoe2.chat.service.channel.PublicChannelService;
 import com.joejoe2.chat.service.message.PublicMessageService;
 import io.nats.client.Connection;
 import io.nats.client.Dispatcher;

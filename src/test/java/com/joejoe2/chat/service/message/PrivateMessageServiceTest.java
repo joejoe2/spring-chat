@@ -1,4 +1,4 @@
-package com.joejoe2.chat.service.channel;
+package com.joejoe2.chat.service.message;
 
 import com.joejoe2.chat.data.PageRequest;
 import com.joejoe2.chat.data.channel.profile.PrivateChannelProfile;
@@ -9,6 +9,7 @@ import com.joejoe2.chat.models.User;
 import com.joejoe2.chat.repository.channel.PrivateChannelRepository;
 import com.joejoe2.chat.repository.message.PrivateMessageRepository;
 import com.joejoe2.chat.repository.user.UserRepository;
+import com.joejoe2.chat.service.channel.PrivateChannelService;
 import com.joejoe2.chat.service.message.PrivateMessageService;
 import io.nats.client.Connection;
 import io.nats.client.Dispatcher;

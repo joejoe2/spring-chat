@@ -3,7 +3,6 @@ package com.joejoe2.chat.utils;
 import org.springframework.http.HttpHeaders;
 
 import javax.servlet.http.HttpServletRequest;
-import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;

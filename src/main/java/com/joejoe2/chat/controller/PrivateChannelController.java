@@ -60,19 +60,20 @@ public class PrivateChannelController {
                             schema = @Schema(implementation = ErrorMessageResponse.class))),
             @ApiResponse(
                     responseCode = "200", description = "publish message to target channel",
-                    content = @Content),
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = PrivateMessageDto.class))),
     })
     @RequestMapping(path = "/publishMessage", method = RequestMethod.POST)
     public ResponseEntity<Object> publishMessage(@RequestBody @Valid PublishPrivateMessageRequest request) throws UserDoesNotExist {
         try {
             PrivateMessageDto message = messageService.createMessage(AuthUtil.currentUserDetail().getId(), request.getChannelId(), request.getMessage());
             messageService.deliverMessage(message);
+            return ResponseEntity.ok(message);
         }catch (ChannelDoesNotExist e){
             return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()), HttpStatus.NOT_FOUND);
         } catch (InvalidOperation e) {
             return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()), HttpStatus.FORBIDDEN);
         }
-        return ResponseEntity.ok().build();
     }
 
     @Operation(summary = "get all messages in private channels of current user")
