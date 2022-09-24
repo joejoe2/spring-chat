@@ -382,5 +382,4 @@ class PublicChannelControllerTest {
                 .andExpect(status().isOk());
     }
 
-
 }

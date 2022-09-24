@@ -47,9 +47,9 @@ to setup
 2. copy `./env/application-chat.env.example` to `./env/application-chat.env` 
 and set `jwt.secret.publicKey` as in 1.
 
-3. prepare 2 FQDNs (ex. `chat.example.com`, `auth.example.com`)
+3. prepare 2 FQDNs (ex. `chat.test.com`, `auth.test.com`)
 
 4. open `./nginx/user_conf.d/server.conf` to
-   replace `example1.com` and `example2.com` with your FQDNs (ex. chat.example.com, auth.example.com)
+   replace `chat.example.com` and `auth.example.com` with your 2 FQDNs
 
 5. `docker-compose up` or `docker-compose up -d`
