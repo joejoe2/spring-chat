@@ -10,6 +10,13 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      nats:
+        image: nats:2.8
+        ports:
+          - 4222:4222
+          - 6222:6222
+          - 8222:8222
 
     steps:
       - name: Checkout

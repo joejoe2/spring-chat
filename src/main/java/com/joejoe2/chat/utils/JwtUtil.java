@@ -2,17 +2,32 @@ package com.joejoe2.chat.utils;
 
 import com.joejoe2.chat.data.UserDetail;
 import com.joejoe2.chat.exception.InvalidTokenException;
+import com.joejoe2.chat.models.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 
+import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 public class JwtUtil {
+    public static String generateAccessToken(RSAPrivateKey key, String jti, String issuer, User user, Calendar exp){
+        Claims claims = Jwts.claims();
+        claims.put("type", "access_token");
+        claims.put("id", user.getId().toString());
+        claims.put("username", user.getUserName());
+        claims.setExpiration(exp.getTime());
+        claims.setIssuer(issuer);
+        claims.setId(jti);
+
+        return Jwts.builder().setClaims(claims).signWith(key).compact();
+    }
+
     public static Map<String, Object> parseToken(RSAPublicKey key, String token) throws JwtException {
         try {
             JwtParser parser = Jwts.parserBuilder()

@@ -382,7 +382,5 @@ class PublicChannelControllerTest {
                 .andExpect(status().isOk());
     }
 
-    @Test
-    void subscribe() {
-    }
+
 }

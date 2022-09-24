@@ -1,6 +1,7 @@
 package com.joejoe2.chat.models;
 
 import lombok.Data;
+import lombok.Getter;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.Column;
