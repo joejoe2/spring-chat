@@ -1,18 +1,24 @@
 package com.joejoe2.chat.controller;
 
+import com.joejoe2.chat.TestContext;
 import com.joejoe2.chat.models.PublicChannel;
 import com.joejoe2.chat.models.User;
 import com.joejoe2.chat.repository.channel.PublicChannelRepository;
 import com.joejoe2.chat.repository.user.UserRepository;
 import com.joejoe2.chat.utils.JwtUtil;
+import io.nats.client.Connection;
+import io.nats.client.Dispatcher;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
-import redis.embedded.RedisServer;
 
 import java.net.URI;
 import java.security.interfaces.RSAPrivateKey;
@@ -25,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @ActiveProfiles("test")
+@ExtendWith(TestContext.class)
 class PublicChannelWSHandlerTest {
     User user;
     String accessToken;
@@ -35,19 +42,6 @@ class PublicChannelWSHandlerTest {
     UserRepository userRepository;
     @Autowired
     PublicChannelRepository channelRepository;
-
-    private static RedisServer redisServer;
-
-    @BeforeAll
-    static void beforeAll() {
-        redisServer=RedisServer.builder().port(6370).setting("maxmemory 128M").build();
-        redisServer.start();
-    }
-
-    @AfterAll
-    static void afterAll() {
-        redisServer.stop();
-    }
 
     @BeforeEach
     void setUp() {

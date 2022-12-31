@@ -1,5 +1,6 @@
 package com.joejoe2.chat.service.channel;
 
+import com.joejoe2.chat.TestContext;
 import com.joejoe2.chat.data.PageRequest;
 import com.joejoe2.chat.data.SliceList;
 import com.joejoe2.chat.data.UserPublicProfile;
@@ -16,6 +17,7 @@ import io.nats.client.Dispatcher;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -27,11 +29,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@ExtendWith(TestContext.class)
 class PrivateChannelServiceTest {
-    @MockBean
-    Connection connection;
-    @MockBean
-    Dispatcher dispatcher;
     @Autowired
     PrivateChannelService channelService;
     @Autowired

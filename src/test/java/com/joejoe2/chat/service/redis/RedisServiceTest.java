@@ -1,16 +1,15 @@
 package com.joejoe2.chat.service.redis;
 
+import com.joejoe2.chat.TestContext;
 import io.nats.client.Connection;
 import io.nats.client.Dispatcher;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
-import redis.embedded.RedisServer;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
@@ -19,28 +18,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@ExtendWith(TestContext.class)
 class RedisServiceTest {
-    @MockBean
-    Connection connection;
-    @MockBean
-    Dispatcher dispatcher;
     @Autowired
     RedisService redisService;
     @Autowired
     StringRedisTemplate redisTemplate;
-
-    private static RedisServer redisServer;
-
-    @BeforeAll
-    static void beforeAll() {
-        redisServer=RedisServer.builder().port(6370).setting("maxmemory 128M").build();
-        redisServer.start();
-    }
-
-    @AfterAll
-    static void afterAll() {
-        redisServer.stop();
-    }
 
     @Test
     void set() {

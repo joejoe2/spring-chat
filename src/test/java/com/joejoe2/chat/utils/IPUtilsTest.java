@@ -1,8 +1,10 @@
 package com.joejoe2.chat.utils;
 
+import com.joejoe2.chat.TestContext;
 import io.nats.client.Connection;
 import io.nats.client.Dispatcher;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
@@ -13,12 +15,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@ExtendWith(TestContext.class)
 class IPUtilsTest {
-    @MockBean
-    Connection connection;
-    @MockBean
-    Dispatcher dispatcher;
-
     @Test
     void setRequestIP() {
         IPUtils.setRequestIP("127.0.0.1");

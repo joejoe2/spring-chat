@@ -1,6 +1,7 @@
 package com.joejoe2.chat.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.joejoe2.chat.TestContext;
 import com.joejoe2.chat.data.PageList;
 import com.joejoe2.chat.data.PageRequest;
 import com.joejoe2.chat.data.SliceList;
@@ -26,6 +27,7 @@ import io.nats.client.Dispatcher;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +51,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@ExtendWith(TestContext.class)
 class PublicChannelControllerTest {
     MockedStatic<AuthUtil> mockAuthUtil;
     User user;
@@ -59,10 +62,6 @@ class PublicChannelControllerTest {
     PublicChannelRepository channelRepository;
     @Autowired
     MockMvc mockMvc;
-    @MockBean
-    Connection connection;
-    @MockBean
-    Dispatcher dispatcher;
     @MockBean
     PublicMessageService messageService;
     @MockBean
