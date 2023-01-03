@@ -1,0 +1,407 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1672709295522-1
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_account_user
+                  name: id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                  name: user_name
+                  type: VARCHAR(32)
+            tableName: account_user
+  - changeSet:
+      id: 1672709295522-2
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_private_channel
+                  name: id
+                  type: UUID
+              - column:
+                  name: create_at
+                  type: DATETIME
+              - column:
+                  name: update_at
+                  type: DATETIME
+              - column:
+                  constraints:
+                    nullable: false
+                  defaultValueComputed: now()
+                  name: version
+                  type: TIMESTAMP
+              - column:
+                  name: last_message_id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                  name: unique_user_ids
+                  type: VARCHAR(255)
+            tableName: private_channel
+  - changeSet:
+      id: 1672709295522-3
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_private_channels_users
+                  name: private_channel_id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_private_channels_users
+                  name: user_id
+                  type: UUID
+            tableName: private_channels_users
+  - changeSet:
+      id: 1672709295522-4
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_private_message
+                  name: id
+                  type: UUID
+              - column:
+                  name: create_at
+                  type: DATETIME
+              - column:
+                  name: update_at
+                  type: DATETIME
+              - column:
+                  constraints:
+                    nullable: false
+                  defaultValueComputed: now()
+                  name: version
+                  type: TIMESTAMP
+              - column:
+                  constraints:
+                    nullable: false
+                  name: channel_id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                  name: message_type
+                  type: VARCHAR(32)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: from_id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                  name: to_id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                  name: content
+                  type: TEXT
+            tableName: private_message
+  - changeSet:
+      id: 1672709295522-5
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_public_channel
+                  name: id
+                  type: UUID
+              - column:
+                  name: create_at
+                  type: DATETIME
+              - column:
+                  name: update_at
+                  type: DATETIME
+              - column:
+                  constraints:
+                    nullable: false
+                  defaultValueComputed: now()
+                  name: version
+                  type: TIMESTAMP
+              - column:
+                  constraints:
+                    nullable: false
+                  name: name
+                  type: VARCHAR(128)
+            tableName: public_channel
+  - changeSet:
+      id: 1672709295522-6
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_public_message
+                  name: id
+                  type: UUID
+              - column:
+                  name: create_at
+                  type: DATETIME
+              - column:
+                  name: update_at
+                  type: DATETIME
+              - column:
+                  constraints:
+                    nullable: false
+                  defaultValueComputed: now()
+                  name: version
+                  type: TIMESTAMP
+              - column:
+                  constraints:
+                    nullable: false
+                  name: channel_id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                  name: message_type
+                  type: VARCHAR(32)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: from_id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                  name: content
+                  type: TEXT
+            tableName: public_message
+  - changeSet:
+      id: 1672709295522-7
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addUniqueConstraint:
+            columnNames: id
+            constraintName: uc_account_user_id
+            tableName: account_user
+  - changeSet:
+      id: 1672709295522-8
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addUniqueConstraint:
+            columnNames: user_name
+            constraintName: uc_account_user_username
+            tableName: account_user
+  - changeSet:
+      id: 1672709295522-9
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addUniqueConstraint:
+            columnNames: id
+            constraintName: uc_private_channel_id
+            tableName: private_channel
+  - changeSet:
+      id: 1672709295522-10
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addUniqueConstraint:
+            columnNames: unique_user_ids
+            constraintName: uc_private_channel_uniqueuserids
+            tableName: private_channel
+  - changeSet:
+      id: 1672709295522-12
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addUniqueConstraint:
+            columnNames: id
+            constraintName: uc_private_message_id
+            tableName: private_message
+  - changeSet:
+      id: 1672709295522-13
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addUniqueConstraint:
+            columnNames: id
+            constraintName: uc_public_channel_id
+            tableName: public_channel
+  - changeSet:
+      id: 1672709295522-14
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addUniqueConstraint:
+            columnNames: name
+            constraintName: uc_public_channel_name
+            tableName: public_channel
+  - changeSet:
+      id: 1672709295522-15
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addUniqueConstraint:
+            columnNames: id
+            constraintName: uc_public_message_id
+            tableName: public_message
+  - changeSet:
+      id: 1672709295522-19
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createIndex:
+            columns:
+              - column:
+                  name: unique_user_ids
+            indexName: idx_eeb6ebf5fdd9ed6592c37c3e2
+            tableName: private_channel
+  - changeSet:
+      id: 1672709295522-21
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: last_message_id
+            baseTableName: private_channel
+            constraintName: FK_PRIVATE_CHANNEL_ON_LASTMESSAGE
+            referencedColumnNames: id
+            referencedTableName: private_message
+  - changeSet:
+      id: 1672709295522-22
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: channel_id
+            baseTableName: private_message
+            constraintName: FK_PRIVATE_MESSAGE_ON_CHANNEL
+            onDelete: CASCADE
+            referencedColumnNames: id
+            referencedTableName: private_channel
+        - createIndex:
+            columns:
+              - column:
+                  name: channel_id
+            indexName: idx_f4b1f0297cb08818f0fdd72ae
+            tableName: private_message
+  - changeSet:
+      id: 1672709295522-23
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: from_id
+            baseTableName: private_message
+            constraintName: FK_PRIVATE_MESSAGE_ON_FROM
+            referencedColumnNames: id
+            referencedTableName: account_user
+        - createIndex:
+            columns:
+              - column:
+                  name: from_id
+            indexName: idx_2a928e06ef506e38ed4bdceaf
+            tableName: private_message
+  - changeSet:
+      id: 1672709295522-24
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: to_id
+            baseTableName: private_message
+            constraintName: FK_PRIVATE_MESSAGE_ON_TO
+            referencedColumnNames: id
+            referencedTableName: account_user
+        - createIndex:
+            columns:
+              - column:
+                  name: to_id
+            indexName: idx_ecaafc1ff6215046b1f1eeb1c
+            tableName: private_message
+  - changeSet:
+      id: 1672709295522-25
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: channel_id
+            baseTableName: public_message
+            constraintName: FK_PUBLIC_MESSAGE_ON_CHANNEL
+            onDelete: CASCADE
+            referencedColumnNames: id
+            referencedTableName: public_channel
+        - createIndex:
+            columns:
+              - column:
+                  name: channel_id
+            indexName: idx_4d387c582b0780068ae1fb32a
+            tableName: public_message
+  - changeSet:
+      id: 1672709295522-26
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: from_id
+            baseTableName: public_message
+            constraintName: FK_PUBLIC_MESSAGE_ON_FROM
+            referencedColumnNames: id
+            referencedTableName: account_user
+  - changeSet:
+      id: 1672709295522-27
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: private_channel_id
+            baseTableName: private_channels_users
+            constraintName: fk_prichause_on_private_channel
+            referencedColumnNames: id
+            referencedTableName: private_channel
+  - changeSet:
+      id: 1672709295522-28
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: user_id
+            baseTableName: private_channels_users
+            constraintName: fk_prichause_on_user
+            referencedColumnNames: id
+            referencedTableName: account_user
+

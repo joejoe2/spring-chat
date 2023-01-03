@@ -12,6 +12,8 @@ public class TestContext implements BeforeAllCallback, ExtensionContext.Store.Cl
         setUpRedis("6370");
         //setup nats for all tests
         setUpNats("4221");
+        //setup db for all tests
+        setupPostgres("5430");
     }
 
     private static GenericContainer setUpRedis(String port){
@@ -33,6 +35,18 @@ public class TestContext implements BeforeAllCallback, ExtensionContext.Store.Cl
 
         System.setProperty("nats.url", "nats://"+nats.getContainerIpAddress()+":"+nats.getFirstMappedPort());
         return nats;
+    }
+
+    private static GenericContainer setupPostgres(String port){
+        GenericContainer postgres = new GenericContainer("postgres:15.1")
+                .withExposedPorts(5432)
+                .withEnv("POSTGRES_PASSWORD", "pa55ward")
+                .withEnv("POSTGRES_DB", "spring-chat");
+        postgres.getPortBindings().add(port+":5432");
+        postgres.start();
+
+        System.setProperty("spring.datasource.url", "jdbc:postgresql://"+postgres.getContainerIpAddress()+":"+postgres.getFirstMappedPort()+"/spring-chat");
+        return postgres;
     }
 
     @Override
