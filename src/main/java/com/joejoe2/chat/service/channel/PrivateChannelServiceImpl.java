@@ -137,16 +137,7 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
      * @param subscriber
      */
     private void addUnSubscribeTriggers(String userId, SseEmitter subscriber) {
-        Runnable unSubscribe = () -> listeningUsers.compute(userId, (key, val) -> {
-            //remove from subscribers
-            if (val != null) val.remove(subscriber);
-            //unsubscribe if no subscribers
-            if (val == null || val.isEmpty()) {
-                dispatcher.unsubscribe(ChannelSubject.privateChannelSubject(userId));
-                return null;
-            }
-            return val;
-        });
+        Runnable unSubscribe = createUnSubscribeTrigger(userId, subscriber);
         SseUtil.addSseCallbacks(subscriber, unSubscribe);
         scheduler.schedule(subscriber::complete, MAX_CONNECT_DURATION, TimeUnit.MINUTES);
     }
@@ -159,16 +150,7 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
      * @param subscriber
      */
     private void addUnSubscribeTriggers(String userId, WebSocketSession subscriber) {
-        Runnable unSubscribe = () -> listeningUsers.compute(userId, (key, val) -> {
-            //remove from subscribers
-            if (val != null) val.remove(subscriber);
-            //unsubscribe if no subscribers
-            if (val == null || val.isEmpty()) {
-                dispatcher.unsubscribe(ChannelSubject.privateChannelSubject(userId));
-                return null;
-            }
-            return val;
-        });
+        Runnable unSubscribe = createUnSubscribeTrigger(userId, subscriber);
         WebSocketUtil.addFinishedCallbacks(subscriber, unSubscribe);
         scheduler.schedule(()-> {
             try {
@@ -181,20 +163,18 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
         }, MAX_CONNECT_DURATION, TimeUnit.MINUTES);
     }
 
-    /**
-     * register SseEmitter instance(subscriber) and channelId to nats dispatcher
-     *
-     * @param subscriber
-     * @param userId
-     */
-    private void listenToUser(SseEmitter subscriber, String userId) {
-        listeningUsers.compute(userId, (key, subscribers) -> {
-            if (subscribers == null) {
-                subscribers = Collections.synchronizedSet(new HashSet<>());
+    private Runnable createUnSubscribeTrigger(String userId, Object subscriber){
+        return () -> listeningUsers.compute(userId, (key, subscriptions) -> {
+            //remove from subscribers
+            if (subscriptions != null) subscriptions.remove(subscriber);
+            //unsubscribe if no subscriptions
+            if (subscriptions == null || subscriptions.isEmpty()) {
+                dispatcher.unsubscribe(ChannelSubject.privateChannelSubject(userId));
+                subscriptions = null;
             }
-            subscribers.add(subscriber);
-            dispatcher.subscribe(ChannelSubject.privateChannelSubject(userId));
-            return subscribers;
+            int count = subscriptions==null?0:subscriptions.size();
+            logger.info("User "+userId+" now has "+count+" active subscriptions");
+            return subscriptions;
         });
     }
 
@@ -204,12 +184,27 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
      * @param subscriber
      * @param userId
      */
+    private void listenToUser(SseEmitter subscriber, String userId) {
+        addToSubscribers(subscriber, userId);
+    }
+
+    /**
+     * register SseEmitter instance(subscriber) and channelId to nats dispatcher
+     *
+     * @param subscriber
+     * @param userId
+     */
     private void listenToUser(WebSocketSession subscriber, String userId) {
+        addToSubscribers(subscriber, userId);
+    }
+
+    private void addToSubscribers(Object subscriber, String userId){
         listeningUsers.compute(userId, (key, subscribers) -> {
             if (subscribers == null) {
                 subscribers = Collections.synchronizedSet(new HashSet<>());
             }
             subscribers.add(subscriber);
+            logger.info("User "+userId+" now has "+subscribers.size()+" active subscriptions");
             dispatcher.subscribe(ChannelSubject.privateChannelSubject(userId));
             return subscribers;
         });
