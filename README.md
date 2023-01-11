@@ -30,6 +30,10 @@ as authentication service for JWT authentication.
 
 ![image](architecture.png)
 
+## Online demo
+
+[https://frontend.joejoe2.com](https://frontend.joejoe2.com)
+
 ## Example Frontend
 
 We provide an example frontend application written in Vue.js [at here](https://github.com/joejoe2/frontend/tree/chat) to
