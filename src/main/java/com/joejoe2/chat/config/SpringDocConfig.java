@@ -34,26 +34,26 @@ import org.springframework.context.annotation.Configuration;
 })
 @Configuration
 public class SpringDocConfig {
-        @Bean
-        public OpenAPI customOpenAPI() {
-                return new OpenAPI().components(new Components()
-                        .addSchemas("Sender", getSchemaWithDifferentDescription(UserPublicProfile.class,
-                                "profile of the sender" ))
-                        .addSchemas("Receiver", getSchemaWithDifferentDescription(UserPublicProfile.class,
-                                "profile of the receiver, null if the message is in public channel", true)));
-        }
+    @Bean
+    public OpenAPI customOpenAPI() {
+        return new OpenAPI().components(new Components()
+                .addSchemas("Sender", getSchemaWithDifferentDescription(UserPublicProfile.class,
+                        "profile of the sender"))
+                .addSchemas("Receiver", getSchemaWithDifferentDescription(UserPublicProfile.class,
+                        "profile of the receiver, null if the message is in public channel", true)));
+    }
 
-        private Schema getSchemaWithDifferentDescription(Class className, String description){
-                ResolvedSchema resolvedSchema = ModelConverters.getInstance()
-                        .resolveAsResolvedSchema(
-                                new AnnotatedType(className).resolveAsRef(false));
-                return resolvedSchema.schema.description(description);
-        }
+    private Schema getSchemaWithDifferentDescription(Class className, String description) {
+        ResolvedSchema resolvedSchema = ModelConverters.getInstance()
+                .resolveAsResolvedSchema(
+                        new AnnotatedType(className).resolveAsRef(false));
+        return resolvedSchema.schema.description(description);
+    }
 
-        private Schema getSchemaWithDifferentDescription(Class className, String description, Boolean nullable){
-                ResolvedSchema resolvedSchema = ModelConverters.getInstance()
-                        .resolveAsResolvedSchema(
-                                new AnnotatedType(className).resolveAsRef(false));
-                return resolvedSchema.schema.description(description).nullable(nullable);
-        }
+    private Schema getSchemaWithDifferentDescription(Class className, String description, Boolean nullable) {
+        ResolvedSchema resolvedSchema = ModelConverters.getInstance()
+                .resolveAsResolvedSchema(
+                        new AnnotatedType(className).resolveAsRef(false));
+        return resolvedSchema.schema.description(description).nullable(nullable);
+    }
 }

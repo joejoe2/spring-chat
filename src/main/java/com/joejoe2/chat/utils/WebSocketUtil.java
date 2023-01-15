@@ -6,17 +6,17 @@ import org.springframework.web.socket.WebSocketSession;
 import java.io.IOException;
 
 public class WebSocketUtil {
-    public static void addFinishedCallbacks(WebSocketSession session, Runnable runnable){
+    public static void addFinishedCallbacks(WebSocketSession session, Runnable runnable) {
         session.getAttributes().put("finishedCallbacks", runnable);
     }
 
-    public static void executeFinishedCallbacks(WebSocketSession session){
-        if (session.getAttributes().containsKey("finishedCallbacks")){
+    public static void executeFinishedCallbacks(WebSocketSession session) {
+        if (session.getAttributes().containsKey("finishedCallbacks")) {
             ((Runnable) session.getAttributes().get("finishedCallbacks")).run();
         }
     }
 
-    public static void sendConnectMessage(WebSocketSession session){
+    public static void sendConnectMessage(WebSocketSession session) {
         try {
             session.sendMessage(new TextMessage("[]"));
         } catch (IOException e) {
@@ -26,6 +26,6 @@ public class WebSocketUtil {
     }
 
     public static void sendMessage(WebSocketSession session, String msg) throws IOException {
-        session.sendMessage(new TextMessage("["+msg+"]"));
+        session.sendMessage(new TextMessage("[" + msg + "]"));
     }
 }

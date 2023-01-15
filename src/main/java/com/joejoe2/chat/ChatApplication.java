@@ -5,7 +5,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 import javax.annotation.PostConstruct;
-import java.time.Instant;
 import java.util.Locale;
 import java.util.TimeZone;
 
@@ -18,7 +17,7 @@ public class ChatApplication {
     }
 
     @PostConstruct
-    public void init(){
+    public void init() {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     }
 }

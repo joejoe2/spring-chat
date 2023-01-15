@@ -3,7 +3,6 @@ package com.joejoe2.chat.data.message.request;
 import com.joejoe2.chat.data.PageRequest;
 import com.joejoe2.chat.validation.constraint.UUID;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,11 +10,8 @@ import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.validation.Valid;
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.time.Instant;
-import java.time.LocalDateTime;
 
 @Data
 @Builder

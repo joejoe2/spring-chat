@@ -20,7 +20,7 @@ import java.util.Objects;
         indexes = {@Index(columnList = "to_id"),
                 @Index(columnList = "from_id"),
                 @Index(columnList = "channel_id")})
-public class PrivateMessage extends TimeStampBase{
+public class PrivateMessage extends TimeStampBase {
     @Version
     @Column(nullable = false, columnDefinition = "TIMESTAMP DEFAULT now()")
     private Instant version;
@@ -31,7 +31,7 @@ public class PrivateMessage extends TimeStampBase{
 
     @Column(length = 32, nullable = false)
     @Enumerated(EnumType.STRING)
-    private MessageType messageType=MessageType.MESSAGE; //code level default
+    private MessageType messageType = MessageType.MESSAGE; //code level default
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     User from;

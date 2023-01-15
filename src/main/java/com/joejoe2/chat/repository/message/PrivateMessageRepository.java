@@ -16,7 +16,7 @@ import java.util.UUID;
 public interface PrivateMessageRepository extends JpaRepository<PrivateMessage, UUID> {
     Optional<PrivateMessage> findById(UUID id);
 
-    @Query(nativeQuery = true,value = "SELECT * FROM private_message WHERE channel_id = :channel " +
+    @Query(nativeQuery = true, value = "SELECT * FROM private_message WHERE channel_id = :channel " +
             "AND update_at >= :since ORDER BY update_at DESC")
     Slice<PrivateMessage> findAllByChannelSince(@Param("channel") PrivateChannel channel, @Param("since") Instant since, Pageable pageable);
 
@@ -28,12 +28,12 @@ public interface PrivateMessageRepository extends JpaRepository<PrivateMessage, 
     @Query(nativeQuery = true,
             value = "SELECT * FROM private_message WHERE to_id = :user OR from_id = :user " +
                     "AND update_at >= :since ORDER BY update_at DESC")
-    Slice<PrivateMessage> findAllByUserSince(@Param("user")User user, @Param("since") Instant since, Pageable pageable);
+    Slice<PrivateMessage> findAllByUserSince(@Param("user") User user, @Param("since") Instant since, Pageable pageable);
 
     @Query(nativeQuery = true,
             value = "SELECT * FROM private_message WHERE to_id = :user OR from_id = :user " +
                     "ORDER BY update_at DESC")
-    Slice<PrivateMessage> findAllByUser(@Param("user")User user, Pageable pageable);
+    Slice<PrivateMessage> findAllByUser(@Param("user") User user, Pageable pageable);
 
     void deleteByCreateAtLessThan(Instant dateTime);
 }

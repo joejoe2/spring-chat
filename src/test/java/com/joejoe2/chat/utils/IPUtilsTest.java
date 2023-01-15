@@ -1,12 +1,9 @@
 package com.joejoe2.chat.utils;
 
 import com.joejoe2.chat.TestContext;
-import io.nats.client.Connection;
-import io.nats.client.Dispatcher;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;

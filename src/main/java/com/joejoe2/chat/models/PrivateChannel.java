@@ -2,16 +2,14 @@ package com.joejoe2.chat.models;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.*;
+import org.hibernate.annotations.BatchSize;
 
 import javax.persistence.*;
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.Index;
-import javax.persistence.Table;
-import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -19,7 +17,7 @@ import java.util.*;
 @BatchSize(size = 128)
 @Table(name = "private_channel",
         indexes = {@Index(columnList = "uniqueUserIds")})
-public class PrivateChannel extends TimeStampBase{
+public class PrivateChannel extends TimeStampBase {
     public final static String WITH_MEMBERS = "PrivateChannelGraph.with_members";
 
     @Version
@@ -49,28 +47,28 @@ public class PrivateChannel extends TimeStampBase{
     String uniqueUserIds;
 
     @PrePersist
-    void prePersist(){
+    void prePersist() {
         //check
         checkNumOfMembers();
         //pre-process before save
         calculateUniqueByUserIds();
     }
 
-    void checkNumOfMembers(){
-        if (getMembers().size()!=2) throw new RuntimeException("PrivateChannel must contain 2 members !");
+    void checkNumOfMembers() {
+        if (getMembers().size() != 2) throw new RuntimeException("PrivateChannel must contain 2 members !");
     }
 
-    void calculateUniqueByUserIds(){
+    void calculateUniqueByUserIds() {
         List<String> ids = members.stream().sorted(Comparator.comparing(User::getId))
                 .map(user -> user.getId().toString()).toList();
         StringBuilder uniqueIds = new StringBuilder();
-        for (String id:ids)
+        for (String id : ids)
             uniqueIds.append(id);
         this.uniqueUserIds = uniqueIds.toString();
     }
 
-    public User anotherMember(User member){
-        return getMembers().stream().filter(u->!member.getId().equals(u.getId())).findFirst().get();
+    public User anotherMember(User member) {
+        return getMembers().stream().filter(u -> !member.getId().equals(u.getId())).findFirst().get();
     }
 
     @Override

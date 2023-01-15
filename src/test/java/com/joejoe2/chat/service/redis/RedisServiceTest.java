@@ -1,13 +1,10 @@
 package com.joejoe2.chat.service.redis;
 
 import com.joejoe2.chat.TestContext;
-import io.nats.client.Connection;
-import io.nats.client.Dispatcher;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -29,7 +26,7 @@ class RedisServiceTest {
     void set() {
         redisService.set("key1", "test", Duration.ofSeconds(30));
         assertTrue(redisTemplate.hasKey("key1"));
-        assert redisTemplate.getExpire("key1", TimeUnit.SECONDS)<30;
+        assert redisTemplate.getExpire("key1", TimeUnit.SECONDS) < 30;
     }
 
     @Test

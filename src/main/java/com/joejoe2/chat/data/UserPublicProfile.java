@@ -19,7 +19,7 @@ public class UserPublicProfile {
     @Schema(description = "username")
     String username;
 
-    public UserPublicProfile(User user){
+    public UserPublicProfile(User user) {
         this.id = user.getId().toString();
         this.username = user.getUserName();
     }

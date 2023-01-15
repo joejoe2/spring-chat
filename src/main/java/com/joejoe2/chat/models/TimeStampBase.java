@@ -11,7 +11,7 @@ import java.time.Instant;
 @EqualsAndHashCode(callSuper = true)
 @MappedSuperclass
 @Data
-public class TimeStampBase extends Base{
+public class TimeStampBase extends Base {
     @CreationTimestamp
     Instant createAt;
 

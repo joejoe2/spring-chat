@@ -120,6 +120,7 @@ public class PublicChannelServiceImpl implements PublicChannelService {
 
     /**
      * create SseEmitter instance(subscriber)
+     *
      * @param channelId
      * @return
      */
@@ -133,10 +134,11 @@ public class PublicChannelServiceImpl implements PublicChannelService {
     /**
      * add UnSubscribe listener to SseEmitter instance(subscriber), and force
      * unsubscribing after MAX_CONNECT_DURATION MINUTES
+     *
      * @param channelId
      * @param subscriber
      */
-    private void addUnSubscribeTriggers(String channelId, SseEmitter subscriber){
+    private void addUnSubscribeTriggers(String channelId, SseEmitter subscriber) {
         Runnable unSubscribe = createUnSubscribeTrigger(channelId, subscriber);
         SseUtil.addSseCallbacks(subscriber, unSubscribe);
         scheduler.schedule(subscriber::complete, MAX_CONNECT_DURATION, TimeUnit.MINUTES);
@@ -145,38 +147,40 @@ public class PublicChannelServiceImpl implements PublicChannelService {
     /**
      * add UnSubscribe listener to WebSocketSession instance(subscriber), and force
      * unsubscribing after MAX_CONNECT_DURATION MINUTES
+     *
      * @param channelId
      * @param subscriber
      */
-    private void addUnSubscribeTriggers(String channelId, WebSocketSession subscriber){
+    private void addUnSubscribeTriggers(String channelId, WebSocketSession subscriber) {
         Runnable unSubscribe = createUnSubscribeTrigger(channelId, subscriber);
         WebSocketUtil.addFinishedCallbacks(subscriber, unSubscribe);
-        scheduler.schedule(()-> {
+        scheduler.schedule(() -> {
             try {
                 subscriber.close();
             } catch (IOException e) {
                 e.printStackTrace();
-            }finally {
+            } finally {
                 unSubscribe.run();
             }
         }, MAX_CONNECT_DURATION, TimeUnit.MINUTES);
     }
 
-    private Runnable createUnSubscribeTrigger(String channelId, Object subscriber){
+    private Runnable createUnSubscribeTrigger(String channelId, Object subscriber) {
         return () -> listeningChannels.compute(channelId, (key, subscribers) -> {
             if (subscribers != null) subscribers.remove(subscriber);
             if (subscribers == null || subscribers.isEmpty()) {
                 dispatcher.unsubscribe(ChannelSubject.publicChannelSubject(channelId));
                 subscribers = null;
             }
-            int count = subscribers==null?0:subscribers.size();
-            logger.info("PublicChannel "+channelId+" now has "+count+" subscribers");
+            int count = subscribers == null ? 0 : subscribers.size();
+            logger.info("PublicChannel " + channelId + " now has " + count + " subscribers");
             return subscribers;
         });
     }
 
     /**
      * register SseEmitter instance(subscriber) and channelId to nats dispatcher
+     *
      * @param subscriber
      * @param channelId
      */
@@ -186,6 +190,7 @@ public class PublicChannelServiceImpl implements PublicChannelService {
 
     /**
      * register WebSocketSession instance(subscriber) and channelId to nats dispatcher
+     *
      * @param subscriber
      * @param channelId
      */
@@ -193,7 +198,7 @@ public class PublicChannelServiceImpl implements PublicChannelService {
         addToSubscribers(subscriber, channelId);
     }
 
-    private void addToSubscribers(Object subscriber, String channelId){
+    private void addToSubscribers(Object subscriber, String channelId) {
         listeningChannels.compute(channelId, (key, subscribers) -> {
             //create new subscribers set
             if (subscribers == null) {
@@ -201,7 +206,7 @@ public class PublicChannelServiceImpl implements PublicChannelService {
             }
             //add to subscribers
             subscribers.add(subscriber);
-            logger.info("PublicChannel "+channelId+" now has "+subscribers.size()+" subscribers");
+            logger.info("PublicChannel " + channelId + " now has " + subscribers.size() + " subscribers");
             //subscribe to nats
             dispatcher.subscribe(ChannelSubject.publicChannelSubject(channelId));
             return subscribers;

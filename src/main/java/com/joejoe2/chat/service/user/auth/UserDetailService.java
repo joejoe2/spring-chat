@@ -4,7 +4,6 @@ import com.joejoe2.chat.data.UserDetail;
 import com.joejoe2.chat.models.User;
 import com.joejoe2.chat.repository.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -19,12 +18,12 @@ public class UserDetailService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user=userRepository.getByUserName(username).orElseThrow(()->new UsernameNotFoundException("user does not exist !"));
+        User user = userRepository.getByUserName(username).orElseThrow(() -> new UsernameNotFoundException("user does not exist !"));
         return new UserDetail(user);
     }
 
-    public void createUserIfAbsent(UserDetail userDetail){
-        if (!userRepository.existsById(UUID.fromString(userDetail.getId()))){
+    public void createUserIfAbsent(UserDetail userDetail) {
+        if (!userRepository.existsById(UUID.fromString(userDetail.getId()))) {
             User user = User.builder()
                     .id(UUID.fromString(userDetail.getId()))
                     .userName(userDetail.getUsername())

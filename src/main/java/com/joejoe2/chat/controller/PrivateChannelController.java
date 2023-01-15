@@ -3,17 +3,16 @@ package com.joejoe2.chat.controller;
 import com.joejoe2.chat.controller.constraint.auth.AuthenticatedApi;
 import com.joejoe2.chat.data.ErrorMessageResponse;
 import com.joejoe2.chat.data.PageRequest;
-import com.joejoe2.chat.data.channel.PageOfChannel;
-import com.joejoe2.chat.data.channel.profile.PublicChannelProfile;
-import com.joejoe2.chat.data.message.PublicMessageDto;
-import com.joejoe2.chat.data.message.request.GetPrivateMessageSinceRequest;
-import com.joejoe2.chat.data.message.PrivateMessageDto;
 import com.joejoe2.chat.data.SliceList;
 import com.joejoe2.chat.data.channel.SliceOfChannel;
-import com.joejoe2.chat.data.message.request.PublishPrivateMessageRequest;
-import com.joejoe2.chat.data.message.SliceOfMessage;
 import com.joejoe2.chat.data.channel.profile.PrivateChannelProfile;
-import com.joejoe2.chat.data.channel.request.*;
+import com.joejoe2.chat.data.channel.request.CreatePrivateChannelRequest;
+import com.joejoe2.chat.data.channel.request.GetChannelProfileRequest;
+import com.joejoe2.chat.data.channel.request.SubscribePrivateChannelRequest;
+import com.joejoe2.chat.data.message.PrivateMessageDto;
+import com.joejoe2.chat.data.message.SliceOfMessage;
+import com.joejoe2.chat.data.message.request.GetPrivateMessageSinceRequest;
+import com.joejoe2.chat.data.message.request.PublishPrivateMessageRequest;
 import com.joejoe2.chat.exception.AlreadyExist;
 import com.joejoe2.chat.exception.ChannelDoesNotExist;
 import com.joejoe2.chat.exception.InvalidOperation;
@@ -69,7 +68,7 @@ public class PrivateChannelController {
             PrivateMessageDto message = messageService.createMessage(AuthUtil.currentUserDetail().getId(), request.getChannelId(), request.getMessage());
             messageService.deliverMessage(message);
             return ResponseEntity.ok(message);
-        }catch (ChannelDoesNotExist e){
+        } catch (ChannelDoesNotExist e) {
             return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()), HttpStatus.NOT_FOUND);
         } catch (InvalidOperation e) {
             return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()), HttpStatus.FORBIDDEN);
@@ -121,7 +120,7 @@ public class PrivateChannelController {
                     content = @Content),
     })
     @RequestMapping(path = "/create", method = RequestMethod.POST)
-    public ResponseEntity<Object> create(@Valid @RequestBody CreatePrivateChannelRequest request){
+    public ResponseEntity<Object> create(@Valid @RequestBody CreatePrivateChannelRequest request) {
         try {
             PrivateChannelProfile channel = channelService.
                     createChannelBetween(AuthUtil.currentUserDetail().getId(), request.getTargetUserId());

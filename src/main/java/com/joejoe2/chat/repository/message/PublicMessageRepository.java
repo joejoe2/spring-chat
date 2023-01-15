@@ -17,12 +17,12 @@ public interface PublicMessageRepository extends JpaRepository<PublicMessage, UU
 
     @Query(nativeQuery = true, value = "SELECT * FROM public_message WHERE channel_id = :channel " +
             "AND update_at >= :since ORDER BY update_at DESC")
-    Slice<PublicMessage> findAllByChannelSince(@Param("channel")PublicChannel channel, @Param("since") Instant since, Pageable pageable);
+    Slice<PublicMessage> findAllByChannelSince(@Param("channel") PublicChannel channel, @Param("since") Instant since, Pageable pageable);
 
     @Query(nativeQuery = true,
             value = "SELECT * FROM public_message WHERE channel_id = :channel " +
                     "ORDER BY update_at DESC")
-    Slice<PublicMessage> findAllByChannel(@Param("channel")PublicChannel channel, Pageable pageable);
+    Slice<PublicMessage> findAllByChannel(@Param("channel") PublicChannel channel, Pageable pageable);
 
     void deleteByCreateAtLessThan(Instant dateTime);
 }

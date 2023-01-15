@@ -21,7 +21,7 @@ public class PrivateChannelWSHHandler extends TextWebSocketHandler {
             channelService.subscribe(session, AuthUtil.currentUserDetail(session).getId());
         } catch (IllegalArgumentException | UserDoesNotExist e) {
             session.close(CloseStatus.BAD_DATA);
-        }catch (Exception e){
+        } catch (Exception e) {
             session.close(CloseStatus.SERVER_ERROR);
         }
     }

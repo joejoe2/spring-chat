@@ -5,8 +5,8 @@
 ## Description
 
 This is a horizontal scalable chat application using [Nats](https://github.com/nats-io/nats-server) as event bus.
-You can add as many application instances as you need to increase the capacity of 
-online users in overall system. If you have even more users you can add Nats 
+You can add as many application instances as you need to increase the capacity of
+online users in overall system. If you have even more users you can add Nats
 servers as cluster to increase the message delivery speed/throughput.
 
 ## Features
@@ -38,18 +38,19 @@ as authentication service for JWT authentication.
 
 We provide an example frontend application written in Vue.js [at here](https://github.com/joejoe2/frontend/tree/chat) to
 work with this project.
+
 - chat in public channel
-![image](demo_public_chat.png)
+  ![image](demo_public_chat.png)
 - chat in private channel
-![image](demo_private_chat.png)
+  ![image](demo_private_chat.png)
 
 ## Deploy
 
 1. follow [this](https://github.com/joejoe2/spring-jwt-template#deploy)
-to setup
+   to setup
 
-2. copy `./env/application-chat.env.example` to `./env/application-chat.env` 
-and set `jwt.secret.publicKey` as in 1.
+2. copy `./env/application-chat.env.example` to `./env/application-chat.env`
+   and set `jwt.secret.publicKey` as in 1.
 
 3. prepare 2 FQDNs (ex. `chat.test.com`, `auth.test.com`)
 

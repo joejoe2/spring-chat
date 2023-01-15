@@ -152,18 +152,18 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
     private void addUnSubscribeTriggers(String userId, WebSocketSession subscriber) {
         Runnable unSubscribe = createUnSubscribeTrigger(userId, subscriber);
         WebSocketUtil.addFinishedCallbacks(subscriber, unSubscribe);
-        scheduler.schedule(()-> {
+        scheduler.schedule(() -> {
             try {
                 subscriber.close();
             } catch (IOException e) {
                 e.printStackTrace();
-            }finally {
+            } finally {
                 unSubscribe.run();
             }
         }, MAX_CONNECT_DURATION, TimeUnit.MINUTES);
     }
 
-    private Runnable createUnSubscribeTrigger(String userId, Object subscriber){
+    private Runnable createUnSubscribeTrigger(String userId, Object subscriber) {
         return () -> listeningUsers.compute(userId, (key, subscriptions) -> {
             //remove from subscribers
             if (subscriptions != null) subscriptions.remove(subscriber);
@@ -172,8 +172,8 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
                 dispatcher.unsubscribe(ChannelSubject.privateChannelSubject(userId));
                 subscriptions = null;
             }
-            int count = subscriptions==null?0:subscriptions.size();
-            logger.info("User "+userId+" now has "+count+" active subscriptions");
+            int count = subscriptions == null ? 0 : subscriptions.size();
+            logger.info("User " + userId + " now has " + count + " active subscriptions");
             return subscriptions;
         });
     }
@@ -198,13 +198,13 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
         addToSubscribers(subscriber, userId);
     }
 
-    private void addToSubscribers(Object subscriber, String userId){
+    private void addToSubscribers(Object subscriber, String userId) {
         listeningUsers.compute(userId, (key, subscribers) -> {
             if (subscribers == null) {
                 subscribers = Collections.synchronizedSet(new HashSet<>());
             }
             subscribers.add(subscriber);
-            logger.info("User "+userId+" now has "+subscribers.size()+" active subscriptions");
+            logger.info("User " + userId + " now has " + subscribers.size() + " active subscriptions");
             dispatcher.subscribe(ChannelSubject.privateChannelSubject(userId));
             return subscribers;
         });

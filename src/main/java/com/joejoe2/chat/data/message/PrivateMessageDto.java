@@ -3,8 +3,6 @@ package com.joejoe2.chat.data.message;
 
 import com.joejoe2.chat.data.UserPublicProfile;
 import com.joejoe2.chat.models.PrivateMessage;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.jackson.Jacksonized;
@@ -12,8 +10,8 @@ import lombok.extern.jackson.Jacksonized;
 @Jacksonized
 @NoArgsConstructor
 @Data
-public class PrivateMessageDto extends MessageDto{
-    public PrivateMessageDto(PrivateMessage message){
+public class PrivateMessageDto extends MessageDto {
+    public PrivateMessageDto(PrivateMessage message) {
         super(message.getVersion(), message.getId(),
                 message.getChannel().getId(), message.getMessageType(),
                 UserPublicProfile.builder()

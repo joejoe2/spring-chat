@@ -18,9 +18,9 @@ public class PublicChannelWSHandler extends TextWebSocketHandler {
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         try {
             channelService.subscribe(session, (String) session.getAttributes().getOrDefault("channelId", ""));
-        } catch (IllegalArgumentException|ChannelDoesNotExist e) {
+        } catch (IllegalArgumentException | ChannelDoesNotExist e) {
             session.close(CloseStatus.BAD_DATA);
-        }catch (Exception e){
+        } catch (Exception e) {
             session.close(CloseStatus.SERVER_ERROR);
         }
     }

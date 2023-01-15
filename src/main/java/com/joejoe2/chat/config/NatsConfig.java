@@ -20,7 +20,8 @@ public class NatsConfig {
     }
 
     @Bean
-    Dispatcher dispatcher(Connection natsConnection){
-        return natsConnection.createDispatcher((msg)->{});
+    Dispatcher dispatcher(Connection natsConnection) {
+        return natsConnection.createDispatcher((msg) -> {
+        });
     }
 }

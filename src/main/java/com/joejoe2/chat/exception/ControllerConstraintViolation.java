@@ -1,6 +1,6 @@
 package com.joejoe2.chat.exception;
 
-public class ControllerConstraintViolation extends Exception{
+public class ControllerConstraintViolation extends Exception {
     private final int rejectStatus;
     private final String rejectMessage;
 

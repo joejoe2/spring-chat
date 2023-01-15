@@ -22,8 +22,6 @@ import com.joejoe2.chat.repository.user.UserRepository;
 import com.joejoe2.chat.service.channel.PublicChannelService;
 import com.joejoe2.chat.service.message.PublicMessageService;
 import com.joejoe2.chat.utils.AuthUtil;
-import io.nats.client.Connection;
-import io.nats.client.Dispatcher;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -67,7 +65,7 @@ class PublicChannelControllerTest {
     @MockBean
     PublicChannelService channelService;
 
-    ObjectMapper objectMapper=new ObjectMapper();
+    ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     void setUp() {
@@ -90,8 +88,8 @@ class PublicChannelControllerTest {
     }
 
     @Test
-    void publishMessage() throws Exception{
-        PublishPublicMessageRequest request=PublishPublicMessageRequest
+    void publishMessage() throws Exception {
+        PublishPublicMessageRequest request = PublishPublicMessageRequest
                 .builder().channelId("invalid id").message(" ").build();
         //test 400
         mockMvc.perform(MockMvcRequestBuilders.post("/api/channel/public/publishMessage")
@@ -141,7 +139,7 @@ class PublicChannelControllerTest {
     }
 
     @Test
-    void getMessages() throws Exception{
+    void getMessages() throws Exception {
         GetAllPublicMessageRequest request = GetAllPublicMessageRequest.builder()
                 .channelId("invalid id")
                 .pageRequest(PageRequest.builder().page(-1).size(0).build())
@@ -197,7 +195,7 @@ class PublicChannelControllerTest {
     }
 
     @Test
-    void getMessagesSince() throws Exception{
+    void getMessagesSince() throws Exception {
         GetPublicMessageSinceRequest request = GetPublicMessageSinceRequest.builder()
                 .channelId("invalid id")
                 .pageRequest(PageRequest.builder().page(-1).size(0).build())
@@ -207,7 +205,7 @@ class PublicChannelControllerTest {
         query.add("channelId", request.getChannelId());
         query.add("pageRequest.page", request.getPageRequest().getPage().toString());
         query.add("pageRequest.size", request.getPageRequest().getSize().toString());
-        query.add("since", request.getSince().toString()+"invalid time");
+        query.add("since", request.getSince().toString() + "invalid time");
         //test 400
         mockMvc.perform(MockMvcRequestBuilders.get("/api/channel/public/getMessagesSince")
                         .params(query)
@@ -260,7 +258,7 @@ class PublicChannelControllerTest {
     }
 
     @Test
-    void create() throws Exception{
+    void create() throws Exception {
         CreatePublicChannelRequest request = CreatePublicChannelRequest.builder()
                 .channelName("invalid name !!!")
                 .build();
@@ -297,8 +295,8 @@ class PublicChannelControllerTest {
     }
 
     @Test
-    void list() throws Exception{
-        PageRequest request=PageRequest.builder()
+    void list() throws Exception {
+        PageRequest request = PageRequest.builder()
                 .page(-1).size(0)
                 .build();
         //test 400
@@ -313,15 +311,15 @@ class PublicChannelControllerTest {
                 .andExpect(jsonPath("$.errors.size").exists())
                 .andExpect(status().isBadRequest());
         //test success
-        request=PageRequest.builder()
+        request = PageRequest.builder()
                 .page(0).size(1)
                 .build();
         query = new LinkedMultiValueMap<>();
         query.add("page", request.getPage().toString());
         query.add("size", request.getSize().toString());
-        List<PublicChannelProfile> profiles=List.of(new PublicChannelProfile(channel));
+        List<PublicChannelProfile> profiles = List.of(new PublicChannelProfile(channel));
         Mockito.doReturn(new PageList<>(1, request.getPage(),
-                1, request.getSize(), profiles))
+                        1, request.getSize(), profiles))
                 .when(channelService).getAllChannels(request);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/channel/public/list")
@@ -336,7 +334,7 @@ class PublicChannelControllerTest {
     }
 
     @Test
-    void profile() throws Exception{
+    void profile() throws Exception {
         GetChannelProfileRequest request = GetChannelProfileRequest.builder()
                 .channelId("invalid id")
                 .build();

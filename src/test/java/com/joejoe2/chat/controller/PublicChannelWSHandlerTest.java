@@ -6,8 +6,6 @@ import com.joejoe2.chat.models.User;
 import com.joejoe2.chat.repository.channel.PublicChannelRepository;
 import com.joejoe2.chat.repository.user.UserRepository;
 import com.joejoe2.chat.utils.JwtUtil;
-import io.nats.client.Connection;
-import io.nats.client.Dispatcher;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 import org.junit.jupiter.api.AfterEach;
@@ -17,7 +15,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.net.URI;
@@ -52,7 +49,7 @@ class PublicChannelWSHandlerTest {
         channelRepository.save(channel);
         Calendar exp = Calendar.getInstance();
         exp.add(Calendar.MINUTE, 10);
-        accessToken=JwtUtil.generateAccessToken(privateKey, "jti", "issuer", user, exp);
+        accessToken = JwtUtil.generateAccessToken(privateKey, "jti", "issuer", user, exp);
     }
 
     @AfterEach
@@ -61,7 +58,7 @@ class PublicChannelWSHandlerTest {
         userRepository.deleteAll();
     }
 
-    public class WsClient extends WebSocketClient{
+    public class WsClient extends WebSocketClient {
         CountDownLatch messageLatch = new CountDownLatch(1);
 
         public WsClient(URI serverUri) {
@@ -90,10 +87,10 @@ class PublicChannelWSHandlerTest {
     }
 
     @Test
-    void subscribe() throws Exception{
-        String uri = "ws://localhost:8081/ws/channel/public/subscribe?access_token="+accessToken
-                +"&channelId="+channel.getId();
-        WsClient client=new WsClient(URI.create(uri));
+    void subscribe() throws Exception {
+        String uri = "ws://localhost:8081/ws/channel/public/subscribe?access_token=" + accessToken
+                + "&channelId=" + channel.getId();
+        WsClient client = new WsClient(URI.create(uri));
         client.connectBlocking(5, TimeUnit.SECONDS);
         //test success
         Thread.sleep(1000);

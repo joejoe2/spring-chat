@@ -13,12 +13,12 @@ public class UserDetail implements UserDetails {
     private String username;
 
     public UserDetail(User user) {
-        this.id=user.getId().toString();
+        this.id = user.getId().toString();
         this.username = user.getUserName();
     }
 
     public UserDetail(String id, String username) {
-        this.id=id;
+        this.id = id;
         this.username = username;
     }
 
@@ -43,7 +43,7 @@ public class UserDetail implements UserDetails {
                 '}';
     }
 
-    public String getId(){
+    public String getId() {
         return this.id;
     }
 

@@ -1,8 +1,8 @@
 package com.joejoe2.chat.service.message;
 
 import com.joejoe2.chat.data.PageRequest;
-import com.joejoe2.chat.data.message.PublicMessageDto;
 import com.joejoe2.chat.data.SliceList;
+import com.joejoe2.chat.data.message.PublicMessageDto;
 import com.joejoe2.chat.exception.ChannelDoesNotExist;
 import com.joejoe2.chat.exception.UserDoesNotExist;
 

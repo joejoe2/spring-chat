@@ -2,8 +2,6 @@ package com.joejoe2.chat.data.message;
 
 import com.joejoe2.chat.data.UserPublicProfile;
 import com.joejoe2.chat.models.PublicMessage;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.jackson.Jacksonized;

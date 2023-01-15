@@ -14,7 +14,7 @@ import java.util.Objects;
 @Entity
 @BatchSize(size = 128)
 @Table(name = "public_channel")
-public class PublicChannel extends TimeStampBase{
+public class PublicChannel extends TimeStampBase {
     @Version
     @Column(nullable = false, columnDefinition = "TIMESTAMP DEFAULT now()")
     private Instant version;

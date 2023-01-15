@@ -1,17 +1,14 @@
 package com.joejoe2.chat.utils;
 
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.http.HttpHeaders;
-import org.springframework.mock.web.MockHttpServletRequest;
 
 import javax.servlet.http.HttpServletRequest;
-
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class HttpUtilTest {
 
@@ -32,13 +29,13 @@ class HttpUtilTest {
         params.put("k3", "45799962");
 
         String query = "arr=[1, 2, 3]";
-        for (Map.Entry<String, String> param:params.entrySet()){
+        for (Map.Entry<String, String> param : params.entrySet()) {
             query += "&" + param.getKey() + "=" + param.getValue();
         }
         params.put("arr", "[1, 2, 3]");
         // test invalid query
-        query+="&";
-        query+="&invalid";
+        query += "&";
+        query += "&invalid";
 
         assertEquals(params, HttpUtil.splitQuery(query));
     }

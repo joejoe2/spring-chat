@@ -27,7 +27,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         try {
             String accessToken = HttpUtil.extractAccessToken(request);
-            if (accessToken != null){
+            if (accessToken != null) {
                 if (jwtService.isAccessTokenInBlackList(accessToken))
                     throw new InvalidTokenException("access token has been revoked !");
                 UserDetail userDetail = jwtService.getUserDetailFromAccessToken(accessToken);

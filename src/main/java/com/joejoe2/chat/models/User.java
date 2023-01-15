@@ -4,14 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.*;
+import org.hibernate.annotations.BatchSize;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.Table;
 import javax.persistence.*;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -23,7 +18,7 @@ import java.util.UUID;
 @Entity
 @BatchSize(size = 128) // for many to one
 @Table(name = "account_user")
-public class User{
+public class User {
     @Id
     @Column(unique = true, updatable = false, nullable = false)
     private UUID id;

@@ -5,7 +5,6 @@ import com.joejoe2.chat.data.UserPublicProfile;
 import com.joejoe2.chat.models.MessageType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.jackson.Jacksonized;
@@ -13,7 +12,7 @@ import lombok.extern.jackson.Jacksonized;
 import java.time.Instant;
 import java.util.UUID;
 
-@JsonTypeInfo(use=JsonTypeInfo.Id.DEDUCTION)
+@JsonTypeInfo(use = JsonTypeInfo.Id.DEDUCTION)
 @Jacksonized
 @NoArgsConstructor
 @AllArgsConstructor

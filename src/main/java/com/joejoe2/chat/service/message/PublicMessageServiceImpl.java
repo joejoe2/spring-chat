@@ -1,7 +1,7 @@
 package com.joejoe2.chat.service.message;
 
-import com.joejoe2.chat.data.message.PublicMessageDto;
 import com.joejoe2.chat.data.SliceList;
+import com.joejoe2.chat.data.message.PublicMessageDto;
 import com.joejoe2.chat.exception.ChannelDoesNotExist;
 import com.joejoe2.chat.exception.UserDoesNotExist;
 import com.joejoe2.chat.models.MessageType;
@@ -64,7 +64,7 @@ public class PublicMessageServiceImpl implements PublicMessageService {
     @Async
     @Transactional(readOnly = true)
     @Override
-    public void deliverMessage(PublicMessageDto message){
+    public void deliverMessage(PublicMessageDto message) {
         natsService.publish(ChannelSubject.publicChannelSubject(message.getChannel().toString()), message);
     }
 

@@ -12,6 +12,7 @@ import org.springframework.web.socket.WebSocketSession;
 public interface PublicChannelService {
     /**
      * subscribe to target public channel using Server Sent Event(SSE)
+     *
      * @param channelId target channel id
      * @return SseEmitter
      * @throws ChannelDoesNotExist
@@ -20,7 +21,8 @@ public interface PublicChannelService {
 
     /**
      * subscribe to target public channel using WebSocket
-     * @param session WebSocket session
+     *
+     * @param session   WebSocket session
      * @param channelId target channel id
      * @throws ChannelDoesNotExist
      */
@@ -28,6 +30,7 @@ public interface PublicChannelService {
 
     /**
      * create a new public channel
+     *
      * @param channelName
      * @return created public channel
      * @throws AlreadyExist
@@ -36,6 +39,7 @@ public interface PublicChannelService {
 
     /**
      * get all public channels with page
+     *
      * @param pageRequest
      * @return
      */
@@ -43,6 +47,7 @@ public interface PublicChannelService {
 
     /**
      * get profile of target channel
+     *
      * @param channelId id of target channel
      * @return profile of target channel
      * @throws ChannelDoesNotExist

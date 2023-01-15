@@ -10,16 +10,12 @@ import com.joejoe2.chat.repository.channel.PublicChannelRepository;
 import com.joejoe2.chat.repository.message.PublicMessageRepository;
 import com.joejoe2.chat.repository.user.UserRepository;
 import com.joejoe2.chat.service.channel.PublicChannelService;
-import com.joejoe2.chat.service.message.PublicMessageService;
-import io.nats.client.Connection;
-import io.nats.client.Dispatcher;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.Instant;
@@ -49,16 +45,16 @@ class PublicMessageServiceTest {
 
     @BeforeEach
     void setUp() {
-        userA=User.builder()
+        userA = User.builder()
                 .id(UUID.fromString("2354705e-cabf-40dd-b9c5-47a6f1bd5a2d"))
                 .userName("A").build();
-        userB=User.builder()
+        userB = User.builder()
                 .id(UUID.fromString("2354705e-cabf-40dd-b9c5-47a6f1bd5a3d"))
                 .userName("B").build();
-        userC=User.builder()
+        userC = User.builder()
                 .id(UUID.fromString("2354705e-cabf-40dd-b9c5-47a6f1bd5a4d"))
                 .userName("C").build();
-        userD=User.builder()
+        userD = User.builder()
                 .id(UUID.fromString("2354705e-cabf-40dd-b9c5-47a6f1bd5a5d"))
                 .userName("D").build();
         userRepository.saveAll(Arrays.asList(userA, userB, userC, userD));
@@ -72,31 +68,31 @@ class PublicMessageServiceTest {
     }
 
     @Test
-    void createMessage() throws Exception{
+    void createMessage() throws Exception {
         //prepare channel
         PublicChannelProfile channel = channelService.createChannel("test");
         //test IllegalArgument
-        assertThrows(IllegalArgumentException.class, ()->messageService.createMessage(userA.getId().toString(), "invalid_id", null));
+        assertThrows(IllegalArgumentException.class, () -> messageService.createMessage(userA.getId().toString(), "invalid_id", null));
         //test success
         PublicMessageDto message = messageService.createMessage(userA.getId().toString(), channel.getId(), "test");
         assertTrue(messageRepository.existsById(message.getId()));
     }
 
     @Test
-    void getAllMessages() throws Exception{
+    void getAllMessages() throws Exception {
         //prepare channel
         PublicChannelProfile channel = channelService.createChannel("test");
         //prepare messages
         List<String> messages = new LinkedList<>();
-        for (int i=0;i<10;i++){
-            messageService.createMessage(userA.getId().toString(), channel.getId(), "a"+i);
-            messageService.createMessage(userB.getId().toString(), channel.getId(), "b"+i);
-            messageService.createMessage(userC.getId().toString(), channel.getId(), "c"+i);
-            messageService.createMessage(userD.getId().toString(), channel.getId(), "d"+i);
-            messages.addAll(Arrays.asList("a"+i, "b"+i, "c"+i, "d"+i));
+        for (int i = 0; i < 10; i++) {
+            messageService.createMessage(userA.getId().toString(), channel.getId(), "a" + i);
+            messageService.createMessage(userB.getId().toString(), channel.getId(), "b" + i);
+            messageService.createMessage(userC.getId().toString(), channel.getId(), "c" + i);
+            messageService.createMessage(userD.getId().toString(), channel.getId(), "d" + i);
+            messages.addAll(Arrays.asList("a" + i, "b" + i, "c" + i, "d" + i));
         }
         //test IllegalArgument
-        assertThrows(IllegalArgumentException.class, ()->messageService.getAllMessages("invalid_id", PageRequest.builder().page(-1).size(0).build()));
+        assertThrows(IllegalArgumentException.class, () -> messageService.getAllMessages("invalid_id", PageRequest.builder().page(-1).size(0).build()));
         //test success
         SliceList<PublicMessageDto> sliceList = messageService.getAllMessages(channel.getId(), PageRequest.builder().page(1).size(10).build());
         assertTrue(sliceList.isHasNext());
@@ -106,29 +102,29 @@ class PublicMessageServiceTest {
     }
 
     @Test
-    void getMessagesSince() throws Exception{
+    void getMessagesSince() throws Exception {
         //prepare channel
         PublicChannelProfile channel = channelService.createChannel("test");
         //prepare messages
-        for (int i=0;i<10;i++){
-            messageService.createMessage(userA.getId().toString(), channel.getId(), "a"+i);
-            messageService.createMessage(userB.getId().toString(), channel.getId(), "b"+i);
-            messageService.createMessage(userC.getId().toString(), channel.getId(), "c"+i);
-            messageService.createMessage(userD.getId().toString(), channel.getId(), "d"+i);
+        for (int i = 0; i < 10; i++) {
+            messageService.createMessage(userA.getId().toString(), channel.getId(), "a" + i);
+            messageService.createMessage(userB.getId().toString(), channel.getId(), "b" + i);
+            messageService.createMessage(userC.getId().toString(), channel.getId(), "c" + i);
+            messageService.createMessage(userD.getId().toString(), channel.getId(), "d" + i);
         }
         Instant since = Instant.now();
         List<String> messages = new LinkedList<>();
-        for (int i=10;i<20;i++){
-            messageService.createMessage(userA.getId().toString(), channel.getId(), "a"+i);
-            messageService.createMessage(userB.getId().toString(), channel.getId(), "b"+i);
-            messageService.createMessage(userC.getId().toString(), channel.getId(), "c"+i);
-            messageService.createMessage(userD.getId().toString(), channel.getId(), "d"+i);
-            messages.addAll(Arrays.asList("a"+i, "b"+i, "c"+i, "d"+i));
+        for (int i = 10; i < 20; i++) {
+            messageService.createMessage(userA.getId().toString(), channel.getId(), "a" + i);
+            messageService.createMessage(userB.getId().toString(), channel.getId(), "b" + i);
+            messageService.createMessage(userC.getId().toString(), channel.getId(), "c" + i);
+            messageService.createMessage(userD.getId().toString(), channel.getId(), "d" + i);
+            messages.addAll(Arrays.asList("a" + i, "b" + i, "c" + i, "d" + i));
         }
         //test IllegalArgument
-        assertThrows(IllegalArgumentException.class, ()->messageService.getAllMessages("invalid_id", null, PageRequest.builder().page(-1).size(0).build()));
+        assertThrows(IllegalArgumentException.class, () -> messageService.getAllMessages("invalid_id", null, PageRequest.builder().page(-1).size(0).build()));
         //test success
-        SliceList<PublicMessageDto> sliceList = messageService.getAllMessages(channel.getId(), since,PageRequest.builder().page(2).size(10).build());
+        SliceList<PublicMessageDto> sliceList = messageService.getAllMessages(channel.getId(), since, PageRequest.builder().page(2).size(10).build());
         assertTrue(sliceList.isHasNext());
         assertEquals(2, sliceList.getCurrentPage());
         assertEquals(10, sliceList.getPageSize());

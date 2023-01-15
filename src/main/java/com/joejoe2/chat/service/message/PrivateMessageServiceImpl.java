@@ -1,8 +1,8 @@
 package com.joejoe2.chat.service.message;
 
 import com.joejoe2.chat.data.PageRequest;
-import com.joejoe2.chat.data.message.PrivateMessageDto;
 import com.joejoe2.chat.data.SliceList;
+import com.joejoe2.chat.data.message.PrivateMessageDto;
 import com.joejoe2.chat.exception.ChannelDoesNotExist;
 import com.joejoe2.chat.exception.InvalidOperation;
 import com.joejoe2.chat.exception.UserDoesNotExist;
@@ -52,9 +52,9 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
     @Override
     public PrivateMessageDto createMessage(String fromUserId, String channelId, String message) throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation {
         User fromUser = userRepository.findById(uuidValidator.validate(fromUserId))
-                .orElseThrow(()->new UserDoesNotExist("user is not exist !"));
+                .orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
         PrivateChannel channel = channelRepository.findById(uuidValidator.validate(channelId))
-                .orElseThrow(()->new ChannelDoesNotExist("channel is not exist !"));
+                .orElseThrow(() -> new ChannelDoesNotExist("channel is not exist !"));
         if (!channel.getMembers().contains(fromUser))
             throw new InvalidOperation("user is not in members of the channel !");
 
@@ -73,7 +73,7 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
     @Async
     @Transactional(readOnly = true)
     @Override
-    public void deliverMessage(PrivateMessageDto message){
+    public void deliverMessage(PrivateMessageDto message) {
         Optional<PrivateChannel> channel = channelRepository.findById(message.getChannel());
         if (channel.isEmpty()) return;
         for (User member : channel.get().getMembers()) {
@@ -86,7 +86,7 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
     public SliceList<PrivateMessageDto> getAllMessages(String userId, PageRequest pageRequest) throws UserDoesNotExist {
         org.springframework.data.domain.PageRequest paging = pageValidator.validate(pageRequest);
         User user = userRepository.findById(uuidValidator.validate(userId))
-                .orElseThrow(()->new UserDoesNotExist("user is not exist !"));
+                .orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
 
         Slice<PrivateMessage> slice = messageRepository.findAllByUser(user, paging);
         return new SliceList<>(slice.getNumber(), slice.getSize(),
@@ -100,9 +100,9 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
     public SliceList<PrivateMessageDto> getAllMessages(String userId, String channelId, PageRequest pageRequest) throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation {
         org.springframework.data.domain.PageRequest paging = pageValidator.validate(pageRequest);
         User user = userRepository.findById(uuidValidator.validate(userId))
-                .orElseThrow(()->new UserDoesNotExist("user is not exist !"));
+                .orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
         PrivateChannel channel = channelRepository.findById(uuidValidator.validate(channelId))
-                .orElseThrow(()->new ChannelDoesNotExist("channel is not exist !"));
+                .orElseThrow(() -> new ChannelDoesNotExist("channel is not exist !"));
         if (!channel.getMembers().contains(user))
             throw new InvalidOperation("user is not in members of the channel !");
 
@@ -119,7 +119,7 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
         if (since == null) throw new IllegalArgumentException("since cannot be null !");
         org.springframework.data.domain.PageRequest paging = pageValidator.validate(pageRequest);
         User user = userRepository.findById(uuidValidator.validate(userId))
-                .orElseThrow(()->new UserDoesNotExist("user is not exist !"));
+                .orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
 
         Slice<PrivateMessage> slice = messageRepository.findAllByUserSince(user, since, paging);
         return new SliceList<>(slice.getNumber(), slice.getSize(),
@@ -134,9 +134,9 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
         if (since == null) throw new IllegalArgumentException("since cannot be null !");
         org.springframework.data.domain.PageRequest paging = pageValidator.validate(pageRequest);
         User user = userRepository.findById(uuidValidator.validate(userId))
-                .orElseThrow(()->new UserDoesNotExist("user is not exist !"));
+                .orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
         PrivateChannel channel = channelRepository.findById(uuidValidator.validate(channelId))
-                .orElseThrow(()->new ChannelDoesNotExist("channel is not exist !"));
+                .orElseThrow(() -> new ChannelDoesNotExist("channel is not exist !"));
         if (!channel.getMembers().contains(user))
             throw new InvalidOperation("user is not in members of the channel !");
 

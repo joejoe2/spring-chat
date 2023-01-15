@@ -7,23 +7,21 @@ import com.joejoe2.chat.data.UserPublicProfile;
 import com.joejoe2.chat.data.channel.profile.PrivateChannelProfile;
 import com.joejoe2.chat.exception.AlreadyExist;
 import com.joejoe2.chat.exception.InvalidOperation;
-import com.joejoe2.chat.models.PrivateChannel;
 import com.joejoe2.chat.models.User;
 import com.joejoe2.chat.repository.channel.PrivateChannelRepository;
 import com.joejoe2.chat.repository.message.PrivateMessageRepository;
 import com.joejoe2.chat.repository.user.UserRepository;
-import io.nats.client.Connection;
-import io.nats.client.Dispatcher;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -44,16 +42,16 @@ class PrivateChannelServiceTest {
 
     @BeforeEach
     void setUp() {
-        userA=User.builder()
+        userA = User.builder()
                 .id(UUID.fromString("2354705e-cabf-40dd-b9c5-47a6f1bd5a2d"))
                 .userName("A").build();
-        userB=User.builder()
+        userB = User.builder()
                 .id(UUID.fromString("2354705e-cabf-40dd-b9c5-47a6f1bd5a3d"))
                 .userName("B").build();
-        userC=User.builder()
+        userC = User.builder()
                 .id(UUID.fromString("2354705e-cabf-40dd-b9c5-47a6f1bd5a4d"))
                 .userName("C").build();
-        userD=User.builder()
+        userD = User.builder()
                 .id(UUID.fromString("2354705e-cabf-40dd-b9c5-47a6f1bd5a5d"))
                 .userName("D").build();
         userRepository.saveAll(Arrays.asList(userA, userB, userC, userD));
@@ -69,32 +67,32 @@ class PrivateChannelServiceTest {
     @Test
     void createChannelBetween() {
         //test IllegalArgument
-        assertThrows(IllegalArgumentException.class, ()->
+        assertThrows(IllegalArgumentException.class, () ->
                 channelService.createChannelBetween("invalid_uid", "invalid_uid"));
         //test InvalidOperation, chat with self
-        assertThrows(InvalidOperation.class, ()->
+        assertThrows(InvalidOperation.class, () ->
                 channelService.createChannelBetween(userA.getId().toString(), userA.getId().toString()));
         //test success
-        assertDoesNotThrow(()->{
+        assertDoesNotThrow(() -> {
             PrivateChannelProfile channel;
             for (User user : Arrays.asList(userB, userC, userD)) {
-                channel=channelService.createChannelBetween(userA.getId().toString(), user.getId().toString());
+                channel = channelService.createChannelBetween(userA.getId().toString(), user.getId().toString());
                 assertEquals(new HashSet<>(channel.getMembers()), new HashSet<>(Arrays.asList(new UserPublicProfile(userA), new UserPublicProfile(user))));
             }
             for (User user : Arrays.asList(userC, userD)) {
-                channel=channelService.createChannelBetween(userB.getId().toString(), user.getId().toString());
+                channel = channelService.createChannelBetween(userB.getId().toString(), user.getId().toString());
                 assertEquals(new HashSet<>(channel.getMembers()), new HashSet<>(Arrays.asList(new UserPublicProfile(userB), new UserPublicProfile(user))));
             }
-            channel=channelService.createChannelBetween(userC.getId().toString(), userD.getId().toString());
+            channel = channelService.createChannelBetween(userC.getId().toString(), userD.getId().toString());
             assertEquals(new HashSet<>(channel.getMembers()), new HashSet<>(Arrays.asList(new UserPublicProfile(userC), new UserPublicProfile(userD))));
         });
         //test AlreadyExist
-        assertThrows(AlreadyExist.class, ()->
+        assertThrows(AlreadyExist.class, () ->
                 channelService.createChannelBetween(userA.getId().toString(), userB.getId().toString()));
     }
 
     @Test
-    void getAllChannels() throws Exception{
+    void getAllChannels() throws Exception {
         //prepare channels
         for (User user : Arrays.asList(userB, userC, userD)) {
             channelService.createChannelBetween(userA.getId().toString(), user.getId().toString());
@@ -104,7 +102,7 @@ class PrivateChannelServiceTest {
         }
         channelService.createChannelBetween(userC.getId().toString(), userD.getId().toString());
         //test IllegalArgument
-        assertThrows(IllegalArgumentException.class, ()->
+        assertThrows(IllegalArgumentException.class, () ->
                 channelService.getAllChannels("invalid_uid", PageRequest.builder().page(-1).size(0).build()));
         //test success
         SliceList<PrivateChannelProfile> channels = channelService.getAllChannels(userA.getId().toString(), PageRequest.builder().page(0).size(2).build());
@@ -123,13 +121,13 @@ class PrivateChannelServiceTest {
 
 
     @Test
-    void getChannelProfile() throws Exception{
+    void getChannelProfile() throws Exception {
         //prepare channels
         PrivateChannelProfile channel = channelService.createChannelBetween(userA.getId().toString(), userB.getId().toString());
         //test IllegalArgument
-        assertThrows(IllegalArgumentException.class, ()-> channelService.getChannelProfile("", ""));
+        assertThrows(IllegalArgumentException.class, () -> channelService.getChannelProfile("", ""));
         //test InvalidOperation
-        assertThrows(InvalidOperation.class, ()-> channelService.getChannelProfile(userC.getId().toString(), channel.getId()));
+        assertThrows(InvalidOperation.class, () -> channelService.getChannelProfile(userC.getId().toString(), channel.getId()));
         //test success
         assertEquals(channel, channelService.getChannelProfile(userA.getId().toString(), channel.getId()));
         assertEquals(channel, channelService.getChannelProfile(userB.getId().toString(), channel.getId()));

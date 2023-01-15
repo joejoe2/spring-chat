@@ -8,7 +8,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.time.Instant;
-import java.time.LocalDateTime;
 
 @Data
 public class GetPrivateMessageSinceRequest {

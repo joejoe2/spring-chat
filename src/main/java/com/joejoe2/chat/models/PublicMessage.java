@@ -17,7 +17,7 @@ import java.util.Objects;
 @Data
 @Entity
 @Table(name = "public_message", indexes = {@Index(columnList = "channel_id")})
-public class PublicMessage extends TimeStampBase{
+public class PublicMessage extends TimeStampBase {
     @Version
     @Column(nullable = false, columnDefinition = "TIMESTAMP DEFAULT now()")
     private Instant version;
@@ -28,7 +28,7 @@ public class PublicMessage extends TimeStampBase{
 
     @Column(length = 32, nullable = false)
     @Enumerated(EnumType.STRING)
-    private MessageType messageType=MessageType.MESSAGE; //code level default
+    private MessageType messageType = MessageType.MESSAGE; //code level default
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private User from;

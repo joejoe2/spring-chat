@@ -14,14 +14,16 @@ import java.lang.annotation.Target;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 @Target(ElementType.FIELD)
-@Constraint(validatedBy={})
+@Constraint(validatedBy = {})
 @Retention(RUNTIME)
-@Size(min = PublicChannelNameValidator.minLength, message = "length of channel name is at least "+PublicChannelNameValidator.minLength+" !")
-@Size(max = PublicChannelNameValidator.maxLength, message = "length of channel name is at most "+PublicChannelNameValidator.maxLength+" !")
+@Size(min = PublicChannelNameValidator.minLength, message = "length of channel name is at least " + PublicChannelNameValidator.minLength + " !")
+@Size(max = PublicChannelNameValidator.maxLength, message = "length of channel name is at most " + PublicChannelNameValidator.maxLength + " !")
 @NotEmpty(message = "channel name cannot be empty !")
-@Pattern(regexp= PublicChannelNameValidator.REGEX, message = PublicChannelNameValidator.NOT_MATCH_MSG)
+@Pattern(regexp = PublicChannelNameValidator.REGEX, message = PublicChannelNameValidator.NOT_MATCH_MSG)
 public @interface PublicChannelName {
     String message() default PublicChannelNameValidator.NOT_MATCH_MSG;
+
     Class<?>[] groups() default {};
+
     Class<? extends Payload>[] payload() default {};
 }
