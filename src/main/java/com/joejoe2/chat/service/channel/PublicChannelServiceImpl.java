@@ -15,6 +15,8 @@ import com.joejoe2.chat.utils.WebSocketUtil;
 import com.joejoe2.chat.validation.validator.PageRequestValidator;
 import com.joejoe2.chat.validation.validator.PublicChannelNameValidator;
 import com.joejoe2.chat.validation.validator.UUIDValidator;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.nats.client.Connection;
 import io.nats.client.Dispatcher;
 import org.slf4j.Logger;
@@ -61,6 +63,22 @@ public class PublicChannelServiceImpl implements PublicChannelService {
     Connection connection;
 
     Dispatcher dispatcher;
+    @Autowired
+    MeterRegistry meterRegistry;
+
+    Gauge onlineUsers;
+
+    @PostConstruct
+    private void afterInjection() {
+        initMetrics(meterRegistry);
+        initNats(connection);
+    }
+
+    private void initMetrics(MeterRegistry meterRegistry) {
+        onlineUsers = Gauge.builder("chat.public.channel.online.users", listeningChannels,
+                        l -> l.values().stream().mapToDouble(Set::size).sum())
+                .register(meterRegistry);
+    }
 
     /**
      * create nats dispatcher with shared message handler for all
@@ -68,8 +86,7 @@ public class PublicChannelServiceImpl implements PublicChannelService {
      * handler will deliver public messages to registered subscribers
      * on this server
      */
-    @PostConstruct
-    private void initNats() {
+    private void initNats(Connection connection) {
         dispatcher = connection.createDispatcher((msg) -> {
             try {
                 String channel = ChannelSubject.publicChannelOfSubject(msg.getSubject());
@@ -172,6 +189,7 @@ public class PublicChannelServiceImpl implements PublicChannelService {
                 dispatcher.unsubscribe(ChannelSubject.publicChannelSubject(channelId));
                 subscribers = null;
             }
+            //decrease online user
             int count = subscribers == null ? 0 : subscribers.size();
             logger.info("PublicChannel " + channelId + " now has " + count + " subscribers");
             return subscribers;
@@ -206,6 +224,7 @@ public class PublicChannelServiceImpl implements PublicChannelService {
             }
             //add to subscribers
             subscribers.add(subscriber);
+            //increase online user
             logger.info("PublicChannel " + channelId + " now has " + subscribers.size() + " subscribers");
             //subscribe to nats
             dispatcher.subscribe(ChannelSubject.publicChannelSubject(channelId));

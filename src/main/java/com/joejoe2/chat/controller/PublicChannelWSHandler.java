@@ -28,7 +28,6 @@ public class PublicChannelWSHandler extends TextWebSocketHandler {
     @Override
     public void handleTransportError(WebSocketSession session, Throwable exception) {
         exception.printStackTrace();
-        WebSocketUtil.executeFinishedCallbacks(session);
     }
 
     @Override

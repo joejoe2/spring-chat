@@ -6,6 +6,7 @@ import com.joejoe2.chat.models.User;
 import com.joejoe2.chat.repository.channel.PublicChannelRepository;
 import com.joejoe2.chat.repository.user.UserRepository;
 import com.joejoe2.chat.utils.JwtUtil;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 import org.junit.jupiter.api.AfterEach;
@@ -24,6 +25,7 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
@@ -39,6 +41,8 @@ class PublicChannelWSHandlerTest {
     UserRepository userRepository;
     @Autowired
     PublicChannelRepository channelRepository;
+    @Autowired
+    SimpleMeterRegistry meterRegistry;
 
     @BeforeEach
     void setUp() {
@@ -96,5 +100,32 @@ class PublicChannelWSHandlerTest {
         Thread.sleep(1000);
         assertTrue(client.isOpen());
         assertTrue(client.messageLatch.await(1, TimeUnit.SECONDS));
+        client.close();
+    }
+
+    @Test
+    void testMetrics() throws Exception {
+        String uri = "ws://localhost:8081/ws/channel/public/subscribe?access_token=" + accessToken
+                + "&channelId=" + channel.getId();
+        // test init is 0
+        assertEquals(0, meterRegistry.find("chat.public.channel.online.users").gauge().value());
+        // test with subscribers
+        WsClient client1 = new WsClient(URI.create(uri));
+        client1.connectBlocking(5, TimeUnit.SECONDS);
+        Thread.sleep(1000);
+        assertEquals(1, meterRegistry.find("chat.public.channel.online.users").gauge().value());
+
+        WsClient client2 = new WsClient(URI.create(uri));
+        client2.connectBlocking(5, TimeUnit.SECONDS);
+        Thread.sleep(1000);
+        assertEquals(2, meterRegistry.find("chat.public.channel.online.users").gauge().value());
+
+        client1.close();
+        Thread.sleep(1000);
+        assertEquals(1, meterRegistry.find("chat.public.channel.online.users").gauge().value());
+
+        client2.close();
+        Thread.sleep(1000);
+        assertEquals(0, meterRegistry.find("chat.public.channel.online.users").gauge().value());
     }
 }

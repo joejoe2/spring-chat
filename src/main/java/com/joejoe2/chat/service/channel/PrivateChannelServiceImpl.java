@@ -19,6 +19,8 @@ import com.joejoe2.chat.utils.SseUtil;
 import com.joejoe2.chat.utils.WebSocketUtil;
 import com.joejoe2.chat.validation.validator.PageRequestValidator;
 import com.joejoe2.chat.validation.validator.UUIDValidator;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.nats.client.Connection;
 import io.nats.client.Dispatcher;
 import org.slf4j.Logger;
@@ -60,14 +62,30 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
     Dispatcher dispatcher;
     private ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(1);
 
+    @Autowired
+    MeterRegistry meterRegistry;
+
+    Gauge onlineUsers;
+
+    @PostConstruct
+    private void afterInjection() {
+        initMetrics(meterRegistry);
+        initNats(connection);
+    }
+
+    private void initMetrics(MeterRegistry meterRegistry) {
+        onlineUsers = Gauge.builder("chat.private.channel.online.users", listeningUsers,
+                        l -> l.values().stream().mapToDouble(Set::size).sum())
+                .register(meterRegistry);
+    }
+
     /**
      * create nats dispatcher with shared message handler for all
      * private messages after bean is constructed, the shared message
      * handler will deliver private messages to registered users(subscribers)
      * on this server
      */
-    @PostConstruct
-    private void initNats() {
+    private void initNats(Connection connection) {
         dispatcher = connection.createDispatcher((msg) -> {
             try {
                 sendToSubscribers(
@@ -172,6 +190,7 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
                 dispatcher.unsubscribe(ChannelSubject.privateChannelSubject(userId));
                 subscriptions = null;
             }
+            //decrease online user
             int count = subscriptions == null ? 0 : subscriptions.size();
             logger.info("User " + userId + " now has " + count + " active subscriptions");
             return subscriptions;
@@ -204,6 +223,7 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
                 subscribers = Collections.synchronizedSet(new HashSet<>());
             }
             subscribers.add(subscriber);
+            //increase online users
             logger.info("User " + userId + " now has " + subscribers.size() + " active subscriptions");
             dispatcher.subscribe(ChannelSubject.privateChannelSubject(userId));
             return subscribers;

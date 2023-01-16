@@ -7,8 +7,6 @@ import java.util.List;
 
 public class SseUtil {
     public static void addSseCallbacks(SseEmitter sseEmitter, Runnable runnable) {
-        sseEmitter.onTimeout(runnable);
-        sseEmitter.onError((e) -> runnable.run());
         sseEmitter.onCompletion(runnable);
     }
 
