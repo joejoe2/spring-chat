@@ -1,12 +1,19 @@
 package com.joejoe2.chat.validation.validator;
 
 import com.joejoe2.chat.exception.ValidationError;
-import org.springframework.stereotype.Component;
 
-@Component
-public class MessageValidator extends Validator<String, String> {
+public class MessageValidator implements Validator<String, String> {
     public static final int minLength = 1;
     public static final int maxLength = 4096;
+
+    private static final MessageValidator instance = new MessageValidator();
+
+    private MessageValidator() {
+    }
+
+    public static MessageValidator getInstance() {
+        return instance;
+    }
 
     @Override
     public String validate(String data) throws ValidationError {

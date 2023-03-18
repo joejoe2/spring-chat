@@ -46,12 +46,12 @@ public class PublicChannelServiceImpl implements PublicChannelService {
     PublicChannelRepository channelRepository;
     @Autowired
     ObjectMapper objectMapper;
-    @Autowired
-    UUIDValidator uuidValidator;
-    @Autowired
-    PublicChannelNameValidator channelNameValidator;
-    @Autowired
-    PageRequestValidator pageValidator;
+
+    UUIDValidator uuidValidator = UUIDValidator.getInstance();
+
+    PublicChannelNameValidator channelNameValidator = PublicChannelNameValidator.getInstance();
+
+    PageRequestValidator pageValidator = PageRequestValidator.getInstance();
 
     Map<String, Set<Object>> listeningChannels = new ConcurrentHashMap<>();
     private static final int MAX_CONNECT_DURATION = 15;

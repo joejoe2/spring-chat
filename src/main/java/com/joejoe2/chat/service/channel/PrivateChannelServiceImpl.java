@@ -52,10 +52,10 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
     PrivateChannelRepository channelRepository;
     @Autowired
     ObjectMapper objectMapper;
-    @Autowired
-    UUIDValidator uuidValidator;
-    @Autowired
-    PageRequestValidator pageValidator;
+
+    UUIDValidator uuidValidator = UUIDValidator.getInstance();
+
+    PageRequestValidator pageValidator = PageRequestValidator.getInstance();
     Map<String, Set<Object>> listeningUsers = new ConcurrentHashMap<>();
     @Autowired
     Connection connection;

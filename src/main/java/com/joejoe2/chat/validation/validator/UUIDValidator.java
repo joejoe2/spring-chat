@@ -1,12 +1,19 @@
 package com.joejoe2.chat.validation.validator;
 
 import com.joejoe2.chat.exception.ValidationError;
-import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
-@Component
-public class UUIDValidator extends Validator<String, UUID> {
+public class UUIDValidator implements Validator<String, UUID> {
+    private static final UUIDValidator instance = new UUIDValidator();
+
+    private UUIDValidator() {
+    }
+
+    public static UUIDValidator getInstance() {
+        return instance;
+    }
+
     @Override
     public UUID validate(String data) throws ValidationError {
         if (data == null) throw new ValidationError("uuid can not be null !");

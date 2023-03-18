@@ -40,12 +40,11 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
     PrivateMessageRepository messageRepository;
     @Autowired
     NatsService natsService;
-    @Autowired
-    UUIDValidator uuidValidator;
-    @Autowired
-    MessageValidator messageValidator;
-    @Autowired
-    PageRequestValidator pageValidator;
+
+    UUIDValidator uuidValidator = UUIDValidator.getInstance();
+    MessageValidator messageValidator = MessageValidator.getInstance();
+
+    PageRequestValidator pageValidator = PageRequestValidator.getInstance();
 
     @Retryable(value = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 100))
     @Transactional(rollbackFor = Exception.class)

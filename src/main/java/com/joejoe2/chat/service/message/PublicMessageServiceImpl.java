@@ -36,12 +36,11 @@ public class PublicMessageServiceImpl implements PublicMessageService {
     PublicMessageRepository messageRepository;
     @Autowired
     NatsService natsService;
-    @Autowired
-    UUIDValidator uuidValidator;
-    @Autowired
-    MessageValidator messageValidator;
-    @Autowired
-    PageRequestValidator pageValidator;
+
+    UUIDValidator uuidValidator = UUIDValidator.getInstance();
+    MessageValidator messageValidator = MessageValidator.getInstance();
+
+    PageRequestValidator pageValidator = PageRequestValidator.getInstance();
 
     @Override
     @Transactional(rollbackFor = Exception.class)
