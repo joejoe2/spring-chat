@@ -3,10 +3,12 @@ package com.joejoe2.chat.data.channel;
 import com.joejoe2.chat.data.SliceList;
 import com.joejoe2.chat.data.channel.profile.PrivateChannelProfile;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Data
+@NoArgsConstructor
 public class SliceOfChannel {
     private int currentPage;
     private int pageSize;

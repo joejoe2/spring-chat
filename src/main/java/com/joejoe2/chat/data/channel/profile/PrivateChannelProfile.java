@@ -4,12 +4,14 @@ import com.joejoe2.chat.data.UserPublicProfile;
 import com.joejoe2.chat.models.PrivateChannel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Data
+@NoArgsConstructor
 public class PrivateChannelProfile {
     @Schema(description = "id of the channel")
     private String id;

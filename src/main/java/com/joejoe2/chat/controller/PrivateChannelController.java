@@ -117,7 +117,8 @@ public class PrivateChannelController {
             @ApiResponse(
                     responseCode = "200", description = "create private channel between " +
                     "current user and target user",
-                    content = @Content),
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = PrivateChannelProfile.class))),
     })
     @RequestMapping(path = "/create", method = RequestMethod.POST)
     public ResponseEntity<Object> create(@Valid @RequestBody CreatePrivateChannelRequest request) {

@@ -1,10 +1,12 @@
 package com.joejoe2.chat.data;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Data
+@NoArgsConstructor
 public class PageList<E> {
     private long totalItems;
     private int currentPage;

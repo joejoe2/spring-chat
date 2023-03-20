@@ -11,7 +11,7 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 @Component
-public class PrivateChannelWSHHandler extends TextWebSocketHandler {
+public class PrivateChannelWSHandler extends TextWebSocketHandler {
     @Autowired
     PrivateChannelService channelService;
 

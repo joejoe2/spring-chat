@@ -3,8 +3,10 @@ package com.joejoe2.chat.data.channel.profile;
 import com.joejoe2.chat.models.PublicChannel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 public class PublicChannelProfile {
     @Schema(description = "id of the channel")
     private String id;

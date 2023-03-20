@@ -2,7 +2,10 @@ package com.joejoe2.chat.data.message.request;
 
 import com.joejoe2.chat.data.PageRequest;
 import io.swagger.v3.oas.annotations.Parameter;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.validation.Valid;
@@ -10,6 +13,9 @@ import javax.validation.constraints.NotNull;
 import java.time.Instant;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class GetPrivateMessageSinceRequest {
     @Parameter(description = "since in UTC")
     @NotNull(message = "invalid since format !")

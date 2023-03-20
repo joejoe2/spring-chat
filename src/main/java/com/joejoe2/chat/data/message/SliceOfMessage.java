@@ -2,9 +2,11 @@ package com.joejoe2.chat.data.message;
 
 import com.joejoe2.chat.data.SliceList;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+@NoArgsConstructor
 @Data
 public class SliceOfMessage<E extends MessageDto> {
     private int currentPage;

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.joejoe2.chat.data.UserPublicProfile;
 import com.joejoe2.chat.models.MessageType;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.jackson.Jacksonized;
@@ -15,11 +14,10 @@ import java.util.UUID;
 @JsonTypeInfo(use = JsonTypeInfo.Id.DEDUCTION)
 @Jacksonized
 @NoArgsConstructor
-@AllArgsConstructor
 @Data
 public class MessageDto {
     @Schema(description = "version of the message")
-    protected Instant version;
+    protected Double version;
 
     @Schema(description = "id of the message")
     protected UUID id;
@@ -47,11 +45,23 @@ public class MessageDto {
 
     public MessageDto(Instant version, UUID id, UUID channel, MessageType messageType,
                       UserPublicProfile from, String content, String createAt, String updateAt) {
-        this.version = version;
+        this.version = version.toEpochMilli() / 1000.0;
         this.id = id;
         this.channel = channel;
         this.messageType = messageType;
         this.from = from;
+        this.content = content;
+        this.createAt = createAt;
+        this.updateAt = updateAt;
+    }
+
+    public MessageDto(Instant version, UUID id, UUID channel, MessageType messageType, UserPublicProfile from, UserPublicProfile to, String content, String createAt, String updateAt) {
+        this.version = version.toEpochMilli() / 1000.0;
+        this.id = id;
+        this.channel = channel;
+        this.messageType = messageType;
+        this.from = from;
+        this.to = to;
         this.content = content;
         this.createAt = createAt;
         this.updateAt = updateAt;

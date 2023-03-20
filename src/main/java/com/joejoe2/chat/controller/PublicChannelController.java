@@ -123,16 +123,16 @@ public class PublicChannelController {
                             schema = @Schema(implementation = ErrorMessageResponse.class))),
             @ApiResponse(
                     responseCode = "200", description = "create public channel",
-                    content = @Content),
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = PublicChannelProfile.class))),
     })
     @RequestMapping(path = "/create", method = RequestMethod.POST)
     public ResponseEntity<Object> create(@Valid @RequestBody CreatePublicChannelRequest request) {
         try {
-            channelService.createChannel(request.getChannelName());
+            return ResponseEntity.ok(channelService.createChannel(request.getChannelName()));
         } catch (AlreadyExist e) {
             return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()), HttpStatus.FORBIDDEN);
         }
-        return ResponseEntity.ok().build();
     }
 
     @Operation(summary = "get profiles of all public channels")

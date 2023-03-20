@@ -31,7 +31,7 @@ public class PrivateChannel extends TimeStampBase {
             inverseJoinColumns = {@JoinColumn(name = "user_id", unique = false, nullable = false)})
     Set<User> members;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "channel")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "channel", orphanRemoval = true)
     List<PrivateMessage> messages;
 
     @OneToOne

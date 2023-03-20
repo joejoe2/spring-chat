@@ -22,7 +22,7 @@ public class PublicChannel extends TimeStampBase {
     @Column(unique = true, updatable = false, nullable = false, length = 128)
     String name;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "channel")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "channel", orphanRemoval = true)
     @BatchSize(size = 128)
     List<PublicMessage> messages;
 

@@ -3,10 +3,12 @@ package com.joejoe2.chat.data.channel;
 import com.joejoe2.chat.data.PageList;
 import com.joejoe2.chat.data.channel.profile.PublicChannelProfile;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Data
+@NoArgsConstructor
 public class PageOfChannel {
     private long totalItems;
     private int currentPage;
