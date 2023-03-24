@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GetChannelProfileRequest {
-    @Parameter(description = "id of target channel")
-    @UUID(message = "invalid channel id !")
-    private String channelId;
+  @Parameter(description = "id of target channel")
+  @UUID(message = "invalid channel id !")
+  private String channelId;
 }

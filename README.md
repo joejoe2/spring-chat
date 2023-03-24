@@ -44,6 +44,23 @@ work with this project.
 - chat in private channel
   ![image](demo_private_chat.png)
 
+## Testing
+
+run `mvn test` or `./mvnw test`
+
+## Lint
+
+run
+```
+mvn spotless:check
+mvn spotless:apply
+``` 
+or
+```
+./mvnw spotless:check
+./mvnw spotless:apply
+``` 
+
 ## Deploy
 
 1. follow [this](https://github.com/joejoe2/spring-jwt-template#deploy)

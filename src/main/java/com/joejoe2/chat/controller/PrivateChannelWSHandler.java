@@ -12,28 +12,27 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 @Component
 public class PrivateChannelWSHandler extends TextWebSocketHandler {
-    @Autowired
-    PrivateChannelService channelService;
+  @Autowired PrivateChannelService channelService;
 
-    @Override
-    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        try {
-            channelService.subscribe(session, AuthUtil.currentUserDetail(session).getId());
-        } catch (IllegalArgumentException | UserDoesNotExist e) {
-            session.close(CloseStatus.BAD_DATA);
-        } catch (Exception e) {
-            session.close(CloseStatus.SERVER_ERROR);
-        }
+  @Override
+  public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+    try {
+      channelService.subscribe(session, AuthUtil.currentUserDetail(session).getId());
+    } catch (IllegalArgumentException | UserDoesNotExist e) {
+      session.close(CloseStatus.BAD_DATA);
+    } catch (Exception e) {
+      session.close(CloseStatus.SERVER_ERROR);
     }
+  }
 
-    @Override
-    public void handleTransportError(WebSocketSession session, Throwable exception) {
-        exception.printStackTrace();
-        WebSocketUtil.executeFinishedCallbacks(session);
-    }
+  @Override
+  public void handleTransportError(WebSocketSession session, Throwable exception) {
+    exception.printStackTrace();
+    WebSocketUtil.executeFinishedCallbacks(session);
+  }
 
-    @Override
-    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
-        WebSocketUtil.executeFinishedCallbacks(session);
-    }
+  @Override
+  public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
+    WebSocketUtil.executeFinishedCallbacks(session);
+  }
 }

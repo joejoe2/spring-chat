@@ -14,13 +14,14 @@ import lombok.extern.jackson.Jacksonized;
 @AllArgsConstructor
 @Data
 public class UserPublicProfile {
-    @Schema(description = "user id")
-    String id;
-    @Schema(description = "username")
-    String username;
+  @Schema(description = "user id")
+  String id;
 
-    public UserPublicProfile(User user) {
-        this.id = user.getId().toString();
-        this.username = user.getUserName();
-    }
+  @Schema(description = "username")
+  String username;
+
+  public UserPublicProfile(User user) {
+    this.id = user.getId().toString();
+    this.username = user.getUserName();
+  }
 }

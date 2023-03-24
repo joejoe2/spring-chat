@@ -4,9 +4,9 @@ import lombok.Data;
 
 @Data
 public class ErrorMessageResponse {
-    String message;
+  String message;
 
-    public ErrorMessageResponse(String message) {
-        this.message = message;
-    }
+  public ErrorMessageResponse(String message) {
+    this.message = message;
+  }
 }

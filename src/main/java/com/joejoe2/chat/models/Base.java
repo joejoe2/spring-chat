@@ -1,20 +1,19 @@
 package com.joejoe2.chat.models;
 
-import lombok.Data;
-import org.hibernate.annotations.GenericGenerator;
-
+import java.util.UUID;
 import javax.persistence.Column;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
-import java.util.UUID;
+import lombok.Data;
+import org.hibernate.annotations.GenericGenerator;
 
 @MappedSuperclass
 @Data
 public class Base {
-    @Id
-    @GeneratedValue(generator = "UUID")
-    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @Column(unique = true, updatable = false, nullable = false)
-    UUID id;
+  @Id
+  @GeneratedValue(generator = "UUID")
+  @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
+  @Column(unique = true, updatable = false, nullable = false)
+  UUID id;
 }

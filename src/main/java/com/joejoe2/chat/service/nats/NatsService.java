@@ -6,9 +6,9 @@ import io.nats.client.MessageHandler;
 import io.nats.client.Subscription;
 
 public interface NatsService {
-    void publish(String subject, PrivateMessageDto message);
+  void publish(String subject, PrivateMessageDto message);
 
-    void publish(String subject, PublicMessageDto message);
+  void publish(String subject, PublicMessageDto message);
 
-    Subscription subscribe(String subject, MessageHandler handler);
+  Subscription subscribe(String subject, MessageHandler handler);
 }

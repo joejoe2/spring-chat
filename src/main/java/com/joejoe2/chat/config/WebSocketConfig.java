@@ -12,19 +12,16 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 @Configuration
 @EnableWebSocket
 public class WebSocketConfig implements WebSocketConfigurer {
-    @Autowired
-    PublicChannelWSHandler publicChannelWSHandler;
-    @Autowired
-    PrivateChannelWSHandler privateChannelWSHandler;
-    @Autowired
-    AuthenticatedHandshakeInterceptor authenticatedHandshakeInterceptor;
+  @Autowired PublicChannelWSHandler publicChannelWSHandler;
+  @Autowired PrivateChannelWSHandler privateChannelWSHandler;
+  @Autowired AuthenticatedHandshakeInterceptor authenticatedHandshakeInterceptor;
 
-    @Override
-    public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry
-                .addHandler(publicChannelWSHandler, "/ws/channel/public/subscribe")
-                .addHandler(privateChannelWSHandler, "/ws/channel/private/subscribe")
-                .addInterceptors(authenticatedHandshakeInterceptor)
-                .setAllowedOrigins("*");
-    }
+  @Override
+  public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
+    registry
+        .addHandler(publicChannelWSHandler, "/ws/channel/public/subscribe")
+        .addHandler(privateChannelWSHandler, "/ws/channel/private/subscribe")
+        .addInterceptors(authenticatedHandshakeInterceptor)
+        .setAllowedOrigins("*");
+  }
 }

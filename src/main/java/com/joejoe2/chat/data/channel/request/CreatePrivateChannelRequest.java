@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreatePrivateChannelRequest {
-    @Schema(description = "id of target user")
-    @UUID(message = "invalid user id")
-    String targetUserId;
+  @Schema(description = "id of target user")
+  @UUID(message = "invalid user id")
+  String targetUserId;
 }

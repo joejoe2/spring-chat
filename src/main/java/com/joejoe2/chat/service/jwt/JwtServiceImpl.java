@@ -12,20 +12,18 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class JwtServiceImpl implements JwtService {
-    @Autowired
-    JwtConfig jwtConfig;
-    @Autowired
-    RedisService redisService;
+  @Autowired JwtConfig jwtConfig;
+  @Autowired RedisService redisService;
 
-    private static final Logger logger = LoggerFactory.getLogger(JwtServiceImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(JwtServiceImpl.class);
 
-    @Override
-    public UserDetail getUserDetailFromAccessToken(String token) throws InvalidTokenException {
-        return JwtUtil.extractUserDetailFromAccessToken(jwtConfig.getPublicKey(), token);
-    }
+  @Override
+  public UserDetail getUserDetailFromAccessToken(String token) throws InvalidTokenException {
+    return JwtUtil.extractUserDetailFromAccessToken(jwtConfig.getPublicKey(), token);
+  }
 
-    @Override
-    public boolean isAccessTokenInBlackList(String accessPlainToken) {
-        return redisService.has("revoked_access_token:{" + accessPlainToken + "}");
-    }
+  @Override
+  public boolean isAccessTokenInBlackList(String accessPlainToken) {
+    return redisService.has("revoked_access_token:{" + accessPlainToken + "}");
+  }
 }

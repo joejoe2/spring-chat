@@ -8,13 +8,14 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class PublicChannelProfile {
-    @Schema(description = "id of the channel")
-    private String id;
-    @Schema(description = "name of the channel")
-    private String name;
+  @Schema(description = "id of the channel")
+  private String id;
 
-    public PublicChannelProfile(PublicChannel channel) {
-        id = channel.getId().toString();
-        name = channel.getName();
-    }
+  @Schema(description = "name of the channel")
+  private String name;
+
+  public PublicChannelProfile(PublicChannel channel) {
+    id = channel.getId().toString();
+    name = channel.getName();
+  }
 }

@@ -18,42 +18,49 @@ import org.springframework.context.annotation.Configuration;
 
 @OpenAPIDefinition(info = @Info(title = "Spring Chat API", version = "v0.0.1"))
 @SecuritySchemes({
-        @SecurityScheme(
-                name = "jwt",
-                scheme = "bearer",
-                bearerFormat = "jwt",
-                type = SecuritySchemeType.HTTP,
-                in = SecuritySchemeIn.HEADER
-        ),
-        @SecurityScheme(
-                name = "jwt-in-query",
-                paramName = "access_token",
-                type = SecuritySchemeType.APIKEY,
-                in = SecuritySchemeIn.QUERY
-        )
+  @SecurityScheme(
+      name = "jwt",
+      scheme = "bearer",
+      bearerFormat = "jwt",
+      type = SecuritySchemeType.HTTP,
+      in = SecuritySchemeIn.HEADER),
+  @SecurityScheme(
+      name = "jwt-in-query",
+      paramName = "access_token",
+      type = SecuritySchemeType.APIKEY,
+      in = SecuritySchemeIn.QUERY)
 })
 @Configuration
 public class SpringDocConfig {
-    @Bean
-    public OpenAPI customOpenAPI() {
-        return new OpenAPI().components(new Components()
-                .addSchemas("Sender", getSchemaWithDifferentDescription(UserPublicProfile.class,
-                        "profile of the sender"))
-                .addSchemas("Receiver", getSchemaWithDifferentDescription(UserPublicProfile.class,
-                        "profile of the receiver, null if the message is in public channel", true)));
-    }
+  @Bean
+  public OpenAPI customOpenAPI() {
+    return new OpenAPI()
+        .components(
+            new Components()
+                .addSchemas(
+                    "Sender",
+                    getSchemaWithDifferentDescription(
+                        UserPublicProfile.class, "profile of the sender"))
+                .addSchemas(
+                    "Receiver",
+                    getSchemaWithDifferentDescription(
+                        UserPublicProfile.class,
+                        "profile of the receiver, null if the message is in public channel",
+                        true)));
+  }
 
-    private Schema getSchemaWithDifferentDescription(Class className, String description) {
-        ResolvedSchema resolvedSchema = ModelConverters.getInstance()
-                .resolveAsResolvedSchema(
-                        new AnnotatedType(className).resolveAsRef(false));
-        return resolvedSchema.schema.description(description);
-    }
+  private Schema getSchemaWithDifferentDescription(Class className, String description) {
+    ResolvedSchema resolvedSchema =
+        ModelConverters.getInstance()
+            .resolveAsResolvedSchema(new AnnotatedType(className).resolveAsRef(false));
+    return resolvedSchema.schema.description(description);
+  }
 
-    private Schema getSchemaWithDifferentDescription(Class className, String description, Boolean nullable) {
-        ResolvedSchema resolvedSchema = ModelConverters.getInstance()
-                .resolveAsResolvedSchema(
-                        new AnnotatedType(className).resolveAsRef(false));
-        return resolvedSchema.schema.description(description).nullable(nullable);
-    }
+  private Schema getSchemaWithDifferentDescription(
+      Class className, String description, Boolean nullable) {
+    ResolvedSchema resolvedSchema =
+        ModelConverters.getInstance()
+            .resolveAsResolvedSchema(new AnnotatedType(className).resolveAsRef(false));
+    return resolvedSchema.schema.description(description).nullable(nullable);
+  }
 }

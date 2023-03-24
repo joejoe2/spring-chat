@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreatePublicChannelRequest {
-    @Schema(description = "channel name")
-    @PublicChannelName
-    private String channelName;
+  @Schema(description = "channel name")
+  @PublicChannelName
+  private String channelName;
 }

@@ -1,5 +1,9 @@
 package com.joejoe2.chat.controller;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joejoe2.chat.TestContext;
 import com.joejoe2.chat.data.PageRequest;
@@ -22,6 +26,11 @@ import com.joejoe2.chat.repository.user.UserRepository;
 import com.joejoe2.chat.service.channel.PublicChannelService;
 import com.joejoe2.chat.service.message.PublicMessageService;
 import com.joejoe2.chat.utils.AuthUtil;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,374 +48,419 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.util.LinkedMultiValueMap;
 
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @ExtendWith(TestContext.class)
 class PublicChannelControllerTest {
-    MockedStatic<AuthUtil> mockAuthUtil;
-    User user;
-    PublicChannel channel;
-    @Autowired
-    UserRepository userRepository;
-    @Autowired
-    PublicChannelRepository channelRepository;
-    @Autowired
-    PublicMessageRepository messageRepository;
-    @Autowired
-    MockMvc mockMvc;
-    @SpyBean
-    PublicMessageService messageService;
-    @SpyBean
-    PublicChannelService channelService;
+  MockedStatic<AuthUtil> mockAuthUtil;
+  User user;
+  PublicChannel channel;
+  @Autowired UserRepository userRepository;
+  @Autowired PublicChannelRepository channelRepository;
+  @Autowired PublicMessageRepository messageRepository;
+  @Autowired MockMvc mockMvc;
+  @SpyBean PublicMessageService messageService;
+  @SpyBean PublicChannelService channelService;
 
-    @Autowired
-    ObjectMapper objectMapper;
+  @Autowired ObjectMapper objectMapper;
 
-    @BeforeEach
-    void setUp() {
-        user = User.builder().id(UUID.randomUUID()).userName("test").build();
-        userRepository.save(user);
-        channel = new PublicChannel();
-        channel.setName("test");
-        channelRepository.save(channel);
-        //mock login
-        mockAuthUtil = Mockito.mockStatic(AuthUtil.class);
-        mockAuthUtil.when(AuthUtil::isAuthenticated).thenReturn(true);
-        mockAuthUtil.when(AuthUtil::currentUserDetail).thenReturn(new UserDetail(user));
+  @BeforeEach
+  void setUp() {
+    user = User.builder().id(UUID.randomUUID()).userName("test").build();
+    userRepository.save(user);
+    channel = new PublicChannel();
+    channel.setName("test");
+    channelRepository.save(channel);
+    // mock login
+    mockAuthUtil = Mockito.mockStatic(AuthUtil.class);
+    mockAuthUtil.when(AuthUtil::isAuthenticated).thenReturn(true);
+    mockAuthUtil.when(AuthUtil::currentUserDetail).thenReturn(new UserDetail(user));
+  }
+
+  @AfterEach
+  void tearDown() {
+    channelRepository.deleteAll();
+    userRepository.deleteAll();
+    mockAuthUtil.close();
+  }
+
+  @Test
+  void publishMessage() throws Exception {
+    PublishPublicMessageRequest request =
+        PublishPublicMessageRequest.builder()
+            .channelId(channel.getId().toString())
+            .message("msg")
+            .build();
+    // test success
+    MvcResult result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.post("/api/channel/public/publishMessage")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request))
+                    .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
+    PublicMessageDto message =
+        messageService
+            .getAllMessages(
+                channel.getId().toString(), PageRequest.builder().page(0).size(1).build())
+            .getList()
+            .get(0);
+    assertEquals(
+        message.getId(),
+        objectMapper
+            .readValue(result.getResponse().getContentAsString(), PublicMessageDto.class)
+            .getId());
+    Mockito.verify(messageService, Mockito.times(1)).deliverMessage(Mockito.any());
+  }
+
+  @Test
+  void publishMessageWithError() throws Exception {
+    PublishPublicMessageRequest request =
+        PublishPublicMessageRequest.builder().channelId("invalid id").message(" ").build();
+    // test 400
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.post("/api/channel/public/publishMessage")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.errors.channelId").exists())
+        .andExpect(jsonPath("$.errors.message").exists())
+        .andExpect(status().isBadRequest());
+    // test 404
+    String id = UUID.randomUUID().toString();
+    while (Objects.equals(channel.getId().toString(), id)) id = UUID.randomUUID().toString();
+    request = PublishPublicMessageRequest.builder().channelId(id).message("msg").build();
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.post("/api/channel/public/publishMessage")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.message").exists())
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void getMessages() throws Exception {
+    // prepare
+    List<PublicMessageDto> messages = new ArrayList<>();
+    for (int i = 0; i < 10; i++)
+      messages.add(
+          messageService.createMessage(user.getId().toString(), channel.getId().toString(), "msg"));
+    // test success
+    GetAllPublicMessageRequest request =
+        GetAllPublicMessageRequest.builder()
+            .pageRequest(PageRequest.builder().page(0).size(messages.size()).build())
+            .channelId(channel.getId().toString())
+            .build();
+    LinkedMultiValueMap<String, String> query = new LinkedMultiValueMap<>();
+    query.add("channelId", request.getChannelId());
+    query.add("pageRequest.page", request.getPageRequest().getPage().toString());
+    query.add("pageRequest.size", request.getPageRequest().getSize().toString());
+    MvcResult result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.get("/api/channel/public/getAllMessages")
+                    .params(query)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
+    SliceOfMessage<MessageDto> slice =
+        objectMapper.readValue(result.getResponse().getContentAsString(), SliceOfMessage.class);
+    assertEquals(request.getPageRequest().getSize(), slice.getPageSize());
+    assertEquals(request.getPageRequest().getPage(), slice.getCurrentPage());
+    assertEquals(request.getPageRequest().getSize(), slice.getMessages().size());
+    for (int i = 0; i < messages.size(); i++) {
+      assertEquals(messages.get(i).getId(), slice.getMessages().get(i).getId());
     }
+  }
 
-    @AfterEach
-    void tearDown() {
-        channelRepository.deleteAll();
-        userRepository.deleteAll();
-        mockAuthUtil.close();
+  @Test
+  void getMessagesWithError() throws Exception {
+    GetAllPublicMessageRequest request =
+        GetAllPublicMessageRequest.builder()
+            .channelId("invalid id")
+            .pageRequest(PageRequest.builder().page(-1).size(0).build())
+            .build();
+    LinkedMultiValueMap<String, String> query = new LinkedMultiValueMap<>();
+    query.add("channelId", request.getChannelId());
+    query.add("pageRequest.page", request.getPageRequest().getPage().toString());
+    query.add("pageRequest.size", request.getPageRequest().getSize().toString());
+    // test 400
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.get("/api/channel/public/getAllMessages")
+                .params(query)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.errors.channelId").exists())
+        .andExpect(jsonPath("$.errors.['pageRequest.page']").exists())
+        .andExpect(jsonPath("$.errors.['pageRequest.size']").exists())
+        .andExpect(status().isBadRequest());
+    // test 404
+    String id = UUID.randomUUID().toString();
+    while (Objects.equals(channel.getId().toString(), id)) id = UUID.randomUUID().toString();
+    request =
+        GetAllPublicMessageRequest.builder()
+            .pageRequest(PageRequest.builder().page(0).size(1).build())
+            .channelId(id)
+            .build();
+    query = new LinkedMultiValueMap<>();
+    query.add("channelId", request.getChannelId());
+    query.add("pageRequest.page", request.getPageRequest().getPage().toString());
+    query.add("pageRequest.size", request.getPageRequest().getSize().toString());
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.get("/api/channel/public/getAllMessages")
+                .params(query)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.message").exists())
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void getMessagesSince() throws Exception {
+    // prepare
+    List<PublicMessageDto> messages = new ArrayList<>();
+    for (int i = 0; i < 10; i++)
+      messageService.createMessage(user.getId().toString(), channel.getId().toString(), "msg");
+    Instant since = Instant.now();
+    Thread.sleep(1000);
+    for (int i = 0; i < 10; i++)
+      messages.add(
+          messageService.createMessage(user.getId().toString(), channel.getId().toString(), "msg"));
+    // test success
+    GetPublicMessageSinceRequest request =
+        GetPublicMessageSinceRequest.builder()
+            .pageRequest(PageRequest.builder().page(0).size(messages.size()).build())
+            .channelId(channel.getId().toString())
+            .since(since)
+            .build();
+    LinkedMultiValueMap<String, String> query = new LinkedMultiValueMap<>();
+    query.add("channelId", request.getChannelId());
+    query.add("pageRequest.page", request.getPageRequest().getPage().toString());
+    query.add("pageRequest.size", request.getPageRequest().getSize().toString());
+    query.add("since", request.getSince().toString());
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.get("/api/channel/public/getMessagesSince")
+                    .params(query)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
+    SliceOfMessage<MessageDto> slice =
+        objectMapper.readValue(result.getResponse().getContentAsString(), SliceOfMessage.class);
+    assertEquals(request.getPageRequest().getSize(), slice.getPageSize());
+    assertEquals(request.getPageRequest().getPage(), slice.getCurrentPage());
+    assertEquals(request.getPageRequest().getSize(), slice.getMessages().size());
+    for (int i = 0; i < messages.size(); i++) {
+      assertEquals(messages.get(i).getId(), slice.getMessages().get(i).getId());
     }
+  }
 
-    @Test
-    void publishMessage() throws Exception {
-        PublishPublicMessageRequest request = PublishPublicMessageRequest
-                .builder().channelId(channel.getId().toString()).message("msg").build();
-        //test success
-        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/api/channel/public/publishMessage")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        PublicMessageDto message = messageService.getAllMessages(channel.getId().toString(), PageRequest.builder().page(0).size(1).build()).getList().get(0);
-        assertEquals(message.getId(), objectMapper.readValue(result.getResponse().getContentAsString(), PublicMessageDto.class).getId());
-        Mockito.verify(messageService, Mockito.times(1))
-                .deliverMessage(Mockito.any());
-    }
+  @Test
+  void getMessagesSinceWithError() throws Exception {
+    GetPublicMessageSinceRequest request =
+        GetPublicMessageSinceRequest.builder()
+            .channelId("invalid id")
+            .pageRequest(PageRequest.builder().page(-1).size(0).build())
+            .since(Instant.now())
+            .build();
+    LinkedMultiValueMap<String, String> query = new LinkedMultiValueMap<>();
+    query.add("channelId", request.getChannelId());
+    query.add("pageRequest.page", request.getPageRequest().getPage().toString());
+    query.add("pageRequest.size", request.getPageRequest().getSize().toString());
+    query.add("since", request.getSince().toString() + "invalid time");
+    // test 400
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.get("/api/channel/public/getMessagesSince")
+                .params(query)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.errors.channelId").exists())
+        .andExpect(jsonPath("$.errors.['pageRequest.page']").exists())
+        .andExpect(jsonPath("$.errors.['pageRequest.size']").exists())
+        .andExpect(jsonPath("$.errors.since").exists())
+        .andExpect(status().isBadRequest());
+    // test 404
+    String id = UUID.randomUUID().toString();
+    while (Objects.equals(channel.getId().toString(), id)) id = UUID.randomUUID().toString();
+    request =
+        GetPublicMessageSinceRequest.builder()
+            .pageRequest(PageRequest.builder().page(0).size(1).build())
+            .channelId(id)
+            .since(Instant.now())
+            .build();
+    query = new LinkedMultiValueMap<>();
+    query.add("channelId", request.getChannelId());
+    query.add("pageRequest.page", request.getPageRequest().getPage().toString());
+    query.add("pageRequest.size", request.getPageRequest().getSize().toString());
+    query.add("since", request.getSince().toString());
 
-    @Test
-    void publishMessageWithError() throws Exception {
-        PublishPublicMessageRequest request = PublishPublicMessageRequest
-                .builder().channelId("invalid id").message(" ").build();
-        //test 400
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/channel/public/publishMessage")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.errors.channelId").exists())
-                .andExpect(jsonPath("$.errors.message").exists())
-                .andExpect(status().isBadRequest());
-        //test 404
-        String id = UUID.randomUUID().toString();
-        while (Objects.equals(channel.getId().toString(), id))
-            id = UUID.randomUUID().toString();
-        request = PublishPublicMessageRequest
-                .builder().channelId(id).message("msg").build();
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.get("/api/channel/public/getMessagesSince")
+                .params(query)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.message").exists())
+        .andExpect(status().isNotFound());
+  }
 
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/channel/public/publishMessage")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").exists())
-                .andExpect(status().isNotFound());
-    }
+  @Test
+  void create() throws Exception {
+    // test success
+    CreatePublicChannelRequest request =
+        CreatePublicChannelRequest.builder().channelName("create").build();
 
-    @Test
-    void getMessages() throws Exception {
-        //prepare
-        List<PublicMessageDto> messages = new ArrayList<>();
-        for (int i = 0; i < 10; i++)
-            messages.add(messageService.createMessage(user.getId().toString(), channel.getId().toString(), "msg"));
-        //test success
-        GetAllPublicMessageRequest request = GetAllPublicMessageRequest.builder()
-                .pageRequest(PageRequest.builder().page(0).size(messages.size()).build())
-                .channelId(channel.getId().toString())
-                .build();
-        LinkedMultiValueMap<String, String> query = new LinkedMultiValueMap<>();
-        query.add("channelId", request.getChannelId());
-        query.add("pageRequest.page", request.getPageRequest().getPage().toString());
-        query.add("pageRequest.size", request.getPageRequest().getSize().toString());
-        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/api/channel/public/getAllMessages")
-                        .params(query)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        SliceOfMessage<MessageDto> slice = objectMapper.readValue(result.getResponse().getContentAsString(), SliceOfMessage.class);
-        assertEquals(request.getPageRequest().getSize(), slice.getPageSize());
-        assertEquals(request.getPageRequest().getPage(), slice.getCurrentPage());
-        assertEquals(request.getPageRequest().getSize(), slice.getMessages().size());
-        for (int i = 0; i < messages.size(); i++) {
-            assertEquals(messages.get(i).getId(), slice.getMessages().get(i).getId());
-        }
-    }
+    MvcResult result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.post("/api/channel/public/create")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request))
+                    .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
+    assertEquals(
+        new PublicChannelProfile(channelRepository.findByName(request.getChannelName()).get()),
+        objectMapper.readValue(
+            result.getResponse().getContentAsString(), PublicChannelProfile.class));
+  }
 
-    @Test
-    void getMessagesWithError() throws Exception {
-        GetAllPublicMessageRequest request = GetAllPublicMessageRequest.builder()
-                .channelId("invalid id")
-                .pageRequest(PageRequest.builder().page(-1).size(0).build())
-                .build();
-        LinkedMultiValueMap<String, String> query = new LinkedMultiValueMap<>();
-        query.add("channelId", request.getChannelId());
-        query.add("pageRequest.page", request.getPageRequest().getPage().toString());
-        query.add("pageRequest.size", request.getPageRequest().getSize().toString());
-        //test 400
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/channel/public/getAllMessages")
-                        .params(query)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.errors.channelId").exists())
-                .andExpect(jsonPath("$.errors.['pageRequest.page']").exists())
-                .andExpect(jsonPath("$.errors.['pageRequest.size']").exists())
-                .andExpect(status().isBadRequest());
-        //test 404
-        String id = UUID.randomUUID().toString();
-        while (Objects.equals(channel.getId().toString(), id))
-            id = UUID.randomUUID().toString();
-        request = GetAllPublicMessageRequest.builder()
-                .pageRequest(PageRequest.builder().page(0).size(1).build())
-                .channelId(id)
-                .build();
-        query = new LinkedMultiValueMap<>();
-        query.add("channelId", request.getChannelId());
-        query.add("pageRequest.page", request.getPageRequest().getPage().toString());
-        query.add("pageRequest.size", request.getPageRequest().getSize().toString());
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/channel/public/getAllMessages")
-                        .params(query)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").exists())
-                .andExpect(status().isNotFound());
-    }
+  @Test
+  void createWithError() throws Exception {
+    CreatePublicChannelRequest request =
+        CreatePublicChannelRequest.builder().channelName("invalid name !!!").build();
+    // test 400
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.post("/api/channel/public/create")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.errors.channelName").exists())
+        .andExpect(status().isBadRequest());
+    // test 403
+    request = CreatePublicChannelRequest.builder().channelName(channel.getName()).build();
 
-    @Test
-    void getMessagesSince() throws Exception {
-        //prepare
-        List<PublicMessageDto> messages = new ArrayList<>();
-        for (int i = 0; i < 10; i++)
-            messageService.createMessage(user.getId().toString(), channel.getId().toString(), "msg");
-        Instant since = Instant.now();
-        Thread.sleep(1000);
-        for (int i = 0; i < 10; i++)
-            messages.add(messageService.createMessage(user.getId().toString(), channel.getId().toString(), "msg"));
-        //test success
-        GetPublicMessageSinceRequest request = GetPublicMessageSinceRequest.builder()
-                .pageRequest(PageRequest.builder().page(0).size(messages.size()).build())
-                .channelId(channel.getId().toString())
-                .since(since)
-                .build();
-        LinkedMultiValueMap<String, String> query = new LinkedMultiValueMap<>();
-        query.add("channelId", request.getChannelId());
-        query.add("pageRequest.page", request.getPageRequest().getPage().toString());
-        query.add("pageRequest.size", request.getPageRequest().getSize().toString());
-        query.add("since", request.getSince().toString());
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.post("/api/channel/public/create")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.message").exists())
+        .andExpect(status().isForbidden());
+  }
 
-        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/api/channel/public/getMessagesSince")
-                        .params(query)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        SliceOfMessage<MessageDto> slice = objectMapper.readValue(result.getResponse().getContentAsString(), SliceOfMessage.class);
-        assertEquals(request.getPageRequest().getSize(), slice.getPageSize());
-        assertEquals(request.getPageRequest().getPage(), slice.getCurrentPage());
-        assertEquals(request.getPageRequest().getSize(), slice.getMessages().size());
-        for (int i = 0; i < messages.size(); i++) {
-            assertEquals(messages.get(i).getId(), slice.getMessages().get(i).getId());
-        }
-    }
+  @Test
+  void list() throws Exception {
+    // prepare
+    List<PublicChannelProfile> profiles = List.of(new PublicChannelProfile(channel));
+    // test success
+    PageRequest request = PageRequest.builder().page(0).size(profiles.size()).build();
+    LinkedMultiValueMap<String, String> query = new LinkedMultiValueMap<>();
+    query.add("page", request.getPage().toString());
+    query.add("size", request.getSize().toString());
 
-    @Test
-    void getMessagesSinceWithError() throws Exception {
-        GetPublicMessageSinceRequest request = GetPublicMessageSinceRequest.builder()
-                .channelId("invalid id")
-                .pageRequest(PageRequest.builder().page(-1).size(0).build())
-                .since(Instant.now())
-                .build();
-        LinkedMultiValueMap<String, String> query = new LinkedMultiValueMap<>();
-        query.add("channelId", request.getChannelId());
-        query.add("pageRequest.page", request.getPageRequest().getPage().toString());
-        query.add("pageRequest.size", request.getPageRequest().getSize().toString());
-        query.add("since", request.getSince().toString() + "invalid time");
-        //test 400
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/channel/public/getMessagesSince")
-                        .params(query)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.errors.channelId").exists())
-                .andExpect(jsonPath("$.errors.['pageRequest.page']").exists())
-                .andExpect(jsonPath("$.errors.['pageRequest.size']").exists())
-                .andExpect(jsonPath("$.errors.since").exists())
-                .andExpect(status().isBadRequest());
-        //test 404
-        String id = UUID.randomUUID().toString();
-        while (Objects.equals(channel.getId().toString(), id))
-            id = UUID.randomUUID().toString();
-        request = GetPublicMessageSinceRequest.builder()
-                .pageRequest(PageRequest.builder().page(0).size(1).build())
-                .channelId(id)
-                .since(Instant.now())
-                .build();
-        query = new LinkedMultiValueMap<>();
-        query.add("channelId", request.getChannelId());
-        query.add("pageRequest.page", request.getPageRequest().getPage().toString());
-        query.add("pageRequest.size", request.getPageRequest().getSize().toString());
-        query.add("since", request.getSince().toString());
+    MvcResult result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.get("/api/channel/public/list")
+                    .params(query)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.channels").isArray())
+            .andExpect(jsonPath("$.totalItems").value(request.getSize()))
+            .andExpect(jsonPath("$.currentPage").value(request.getPage()))
+            .andExpect(jsonPath("$.totalPages").value(1))
+            .andExpect(jsonPath("$.pageSize").value(request.getSize()))
+            .andExpect(status().isOk())
+            .andReturn();
+    assertEquals(
+        profiles.get(0),
+        objectMapper
+            .readValue(result.getResponse().getContentAsString(), PageOfChannel.class)
+            .getChannels()
+            .get(0));
+  }
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/channel/public/getMessagesSince")
-                        .params(query)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").exists())
-                .andExpect(status().isNotFound());
-    }
+  @Test
+  void listWithError() throws Exception {
+    PageRequest request = PageRequest.builder().page(-1).size(0).build();
+    // test 400
+    LinkedMultiValueMap<String, String> query = new LinkedMultiValueMap<>();
+    query.add("page", request.getPage().toString());
+    query.add("size", request.getSize().toString());
 
-    @Test
-    void create() throws Exception {
-        //test success
-        CreatePublicChannelRequest request = CreatePublicChannelRequest.builder()
-                .channelName("create")
-                .build();
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.get("/api/channel/public/list")
+                .params(query)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.errors.page").exists())
+        .andExpect(jsonPath("$.errors.size").exists())
+        .andExpect(status().isBadRequest());
+  }
 
-        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/api/channel/public/create")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        assertEquals(new PublicChannelProfile(channelRepository.findByName(request.getChannelName()).get()), objectMapper.readValue(result.getResponse().getContentAsString(), PublicChannelProfile.class));
-    }
+  @Test
+  void profile() throws Exception {
+    // test success
+    GetChannelProfileRequest request =
+        GetChannelProfileRequest.builder().channelId(channel.getId().toString()).build();
+    LinkedMultiValueMap<String, String> query = new LinkedMultiValueMap<>();
+    query.add("channelId", request.getChannelId());
+    Mockito.doReturn(new PublicChannelProfile(channel))
+        .when(channelService)
+        .getChannelProfile(request.getChannelId());
 
-    @Test
-    void createWithError() throws Exception {
-        CreatePublicChannelRequest request = CreatePublicChannelRequest.builder()
-                .channelName("invalid name !!!")
-                .build();
-        //test 400
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/channel/public/create")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.errors.channelName").exists())
-                .andExpect(status().isBadRequest());
-        //test 403
-        request = CreatePublicChannelRequest.builder()
-                .channelName(channel.getName())
-                .build();
+    MvcResult result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.get("/api/channel/public/profile")
+                    .params(query)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
+    assertEquals(
+        new PublicChannelProfile(channel),
+        objectMapper.readValue(
+            result.getResponse().getContentAsString(), PublicChannelProfile.class));
+  }
 
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/channel/public/create")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").exists())
-                .andExpect(status().isForbidden());
-    }
+  @Test
+  void profileWithError() throws Exception {
+    GetChannelProfileRequest request =
+        GetChannelProfileRequest.builder().channelId("invalid id").build();
+    // test 400
+    LinkedMultiValueMap<String, String> query = new LinkedMultiValueMap<>();
+    query.add("channelId", request.getChannelId());
 
-    @Test
-    void list() throws Exception {
-        //prepare
-        List<PublicChannelProfile> profiles = List.of(new PublicChannelProfile(channel));
-        //test success
-        PageRequest request = PageRequest.builder()
-                .page(0).size(profiles.size())
-                .build();
-        LinkedMultiValueMap<String, String> query = new LinkedMultiValueMap<>();
-        query.add("page", request.getPage().toString());
-        query.add("size", request.getSize().toString());
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.get("/api/channel/public/profile")
+                .params(query)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.errors.channelId").exists())
+        .andExpect(status().isBadRequest());
+    // test 404
+    String id = UUID.randomUUID().toString();
+    while (Objects.equals(channel.getId().toString(), id)) id = UUID.randomUUID().toString();
+    request = GetChannelProfileRequest.builder().channelId(id).build();
+    query = new LinkedMultiValueMap<>();
+    query.add("channelId", request.getChannelId());
 
-        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/api/channel/public/list")
-                        .params(query)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.channels").isArray())
-                .andExpect(jsonPath("$.totalItems").value(request.getSize()))
-                .andExpect(jsonPath("$.currentPage").value(request.getPage()))
-                .andExpect(jsonPath("$.totalPages").value(1))
-                .andExpect(jsonPath("$.pageSize").value(request.getSize()))
-                .andExpect(status().isOk()).andReturn();
-        assertEquals(profiles.get(0), objectMapper.readValue(result.getResponse().getContentAsString(), PageOfChannel.class).getChannels().get(0));
-    }
-
-    @Test
-    void listWithError() throws Exception {
-        PageRequest request = PageRequest.builder()
-                .page(-1).size(0)
-                .build();
-        //test 400
-        LinkedMultiValueMap<String, String> query = new LinkedMultiValueMap<>();
-        query.add("page", request.getPage().toString());
-        query.add("size", request.getSize().toString());
-
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/channel/public/list")
-                        .params(query)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.errors.page").exists())
-                .andExpect(jsonPath("$.errors.size").exists())
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void profile() throws Exception {
-        //test success
-        GetChannelProfileRequest request = GetChannelProfileRequest.builder()
-                .channelId(channel.getId().toString())
-                .build();
-        LinkedMultiValueMap<String, String> query = new LinkedMultiValueMap<>();
-        query.add("channelId", request.getChannelId());
-        Mockito.doReturn(new PublicChannelProfile(channel))
-                .when(channelService).getChannelProfile(request.getChannelId());
-
-        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/api/channel/public/profile")
-                        .params(query)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        assertEquals(new PublicChannelProfile(channel), objectMapper.readValue(result.getResponse().getContentAsString(), PublicChannelProfile.class));
-    }
-
-    @Test
-    void profileWithError() throws Exception {
-        GetChannelProfileRequest request = GetChannelProfileRequest.builder()
-                .channelId("invalid id")
-                .build();
-        //test 400
-        LinkedMultiValueMap<String, String> query = new LinkedMultiValueMap<>();
-        query.add("channelId", request.getChannelId());
-
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/channel/public/profile")
-                        .params(query)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.errors.channelId").exists())
-                .andExpect(status().isBadRequest());
-        //test 404
-        String id = UUID.randomUUID().toString();
-        while (Objects.equals(channel.getId().toString(), id))
-            id = UUID.randomUUID().toString();
-        request = GetChannelProfileRequest.builder()
-                .channelId(id)
-                .build();
-        query = new LinkedMultiValueMap<>();
-        query.add("channelId", request.getChannelId());
-
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/channel/public/profile")
-                        .params(query)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").exists())
-                .andExpect(status().isNotFound());
-    }
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.get("/api/channel/public/profile")
+                .params(query)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.message").exists())
+        .andExpect(status().isNotFound());
+  }
 }

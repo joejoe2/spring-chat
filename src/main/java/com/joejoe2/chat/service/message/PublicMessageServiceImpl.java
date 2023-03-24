@@ -16,6 +16,8 @@ import com.joejoe2.chat.utils.ChannelSubject;
 import com.joejoe2.chat.validation.validator.MessageValidator;
 import com.joejoe2.chat.validation.validator.PageRequestValidator;
 import com.joejoe2.chat.validation.validator.UUIDValidator;
+import java.time.Instant;
+import java.util.Comparator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
@@ -23,76 +25,92 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
-import java.util.Comparator;
-
 @Service
 public class PublicMessageServiceImpl implements PublicMessageService {
-    @Autowired
-    UserRepository userRepository;
-    @Autowired
-    PublicChannelRepository channelRepository;
-    @Autowired
-    PublicMessageRepository messageRepository;
-    @Autowired
-    NatsService natsService;
+  @Autowired UserRepository userRepository;
+  @Autowired PublicChannelRepository channelRepository;
+  @Autowired PublicMessageRepository messageRepository;
+  @Autowired NatsService natsService;
 
-    UUIDValidator uuidValidator = UUIDValidator.getInstance();
-    MessageValidator messageValidator = MessageValidator.getInstance();
+  UUIDValidator uuidValidator = UUIDValidator.getInstance();
+  MessageValidator messageValidator = MessageValidator.getInstance();
 
-    PageRequestValidator pageValidator = PageRequestValidator.getInstance();
+  PageRequestValidator pageValidator = PageRequestValidator.getInstance();
 
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public PublicMessageDto createMessage(String fromUserId, String channelId, String message) throws UserDoesNotExist, ChannelDoesNotExist {
-        User user = userRepository.findById(uuidValidator.validate(fromUserId))
-                .orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
-        PublicChannel channel = channelRepository.findById(uuidValidator.validate(channelId))
-                .orElseThrow(() -> new ChannelDoesNotExist("channel is not exist !"));
+  @Override
+  @Transactional(rollbackFor = Exception.class)
+  public PublicMessageDto createMessage(String fromUserId, String channelId, String message)
+      throws UserDoesNotExist, ChannelDoesNotExist {
+    User user =
+        userRepository
+            .findById(uuidValidator.validate(fromUserId))
+            .orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
+    PublicChannel channel =
+        channelRepository
+            .findById(uuidValidator.validate(channelId))
+            .orElseThrow(() -> new ChannelDoesNotExist("channel is not exist !"));
 
-        PublicMessage publicMessage = PublicMessage.builder()
-                .from(user)
-                .channel(channel)
-                .messageType(MessageType.MESSAGE)
-                .content(messageValidator.validate(message)).build();
-        messageRepository.save(publicMessage);
-        messageRepository.flush();
-        return new PublicMessageDto(publicMessage);
-    }
+    PublicMessage publicMessage =
+        PublicMessage.builder()
+            .from(user)
+            .channel(channel)
+            .messageType(MessageType.MESSAGE)
+            .content(messageValidator.validate(message))
+            .build();
+    messageRepository.save(publicMessage);
+    messageRepository.flush();
+    return new PublicMessageDto(publicMessage);
+  }
 
-    @Async
-    @Transactional(readOnly = true)
-    @Override
-    public void deliverMessage(PublicMessageDto message) {
-        natsService.publish(ChannelSubject.publicChannelSubject(message.getChannel().toString()), message);
-    }
+  @Async
+  @Transactional(readOnly = true)
+  @Override
+  public void deliverMessage(PublicMessageDto message) {
+    natsService.publish(
+        ChannelSubject.publicChannelSubject(message.getChannel().toString()), message);
+  }
 
-    @Override
-    @Transactional(readOnly = true)
-    public SliceList<PublicMessageDto> getAllMessages(String channelId, com.joejoe2.chat.data.PageRequest pageRequest) throws ChannelDoesNotExist {
-        PageRequest paging = pageValidator.validate(pageRequest);
-        PublicChannel channel = channelRepository.findById(uuidValidator.validate(channelId))
-                .orElseThrow(() -> new ChannelDoesNotExist("channel is not exist !"));
+  @Override
+  @Transactional(readOnly = true)
+  public SliceList<PublicMessageDto> getAllMessages(
+      String channelId, com.joejoe2.chat.data.PageRequest pageRequest) throws ChannelDoesNotExist {
+    PageRequest paging = pageValidator.validate(pageRequest);
+    PublicChannel channel =
+        channelRepository
+            .findById(uuidValidator.validate(channelId))
+            .orElseThrow(() -> new ChannelDoesNotExist("channel is not exist !"));
 
-        Slice<PublicMessage> slice = messageRepository.findAllByChannel(channel, paging);
-        return new SliceList<>(slice.getNumber(), slice.getSize(),
-                slice.getContent().stream().sorted(Comparator.comparing(PublicMessage::getUpdateAt))
-                        .map(PublicMessageDto::new).toList(),
-                slice.hasNext());
-    }
+    Slice<PublicMessage> slice = messageRepository.findAllByChannel(channel, paging);
+    return new SliceList<>(
+        slice.getNumber(),
+        slice.getSize(),
+        slice.getContent().stream()
+            .sorted(Comparator.comparing(PublicMessage::getUpdateAt))
+            .map(PublicMessageDto::new)
+            .toList(),
+        slice.hasNext());
+  }
 
-    @Override
-    @Transactional(readOnly = true)
-    public SliceList<PublicMessageDto> getAllMessages(String channelId, Instant since, com.joejoe2.chat.data.PageRequest pageRequest) throws ChannelDoesNotExist {
-        if (since == null) throw new IllegalArgumentException("since cannot be null !");
-        PageRequest paging = pageValidator.validate(pageRequest);
-        PublicChannel channel = channelRepository.findById(uuidValidator.validate(channelId))
-                .orElseThrow(() -> new ChannelDoesNotExist("channel is not exist !"));
+  @Override
+  @Transactional(readOnly = true)
+  public SliceList<PublicMessageDto> getAllMessages(
+      String channelId, Instant since, com.joejoe2.chat.data.PageRequest pageRequest)
+      throws ChannelDoesNotExist {
+    if (since == null) throw new IllegalArgumentException("since cannot be null !");
+    PageRequest paging = pageValidator.validate(pageRequest);
+    PublicChannel channel =
+        channelRepository
+            .findById(uuidValidator.validate(channelId))
+            .orElseThrow(() -> new ChannelDoesNotExist("channel is not exist !"));
 
-        Slice<PublicMessage> slice = messageRepository.findAllByChannelSince(channel, since, paging);
-        return new SliceList<>(slice.getNumber(), slice.getSize(),
-                slice.getContent().stream().sorted(Comparator.comparing(PublicMessage::getUpdateAt))
-                        .map(PublicMessageDto::new).toList(),
-                slice.hasNext());
-    }
+    Slice<PublicMessage> slice = messageRepository.findAllByChannelSince(channel, since, paging);
+    return new SliceList<>(
+        slice.getNumber(),
+        slice.getSize(),
+        slice.getContent().stream()
+            .sorted(Comparator.comparing(PublicMessage::getUpdateAt))
+            .map(PublicMessageDto::new)
+            .toList(),
+        slice.hasNext());
+  }
 }
