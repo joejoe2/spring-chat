@@ -1,23 +1,23 @@
 package com.joejoe2.chat.controller;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joejoe2.chat.TestContext;
 import com.joejoe2.chat.data.PageRequest;
+import com.joejoe2.chat.data.PageRequestWithSince;
 import com.joejoe2.chat.data.SliceList;
 import com.joejoe2.chat.data.UserDetail;
-import com.joejoe2.chat.data.channel.SliceOfChannel;
+import com.joejoe2.chat.data.channel.SliceOfPrivateChannel;
 import com.joejoe2.chat.data.channel.profile.PrivateChannelProfile;
+import com.joejoe2.chat.data.channel.request.ChannelRequest;
 import com.joejoe2.chat.data.channel.request.CreatePrivateChannelRequest;
-import com.joejoe2.chat.data.channel.request.GetChannelProfileRequest;
 import com.joejoe2.chat.data.message.MessageDto;
 import com.joejoe2.chat.data.message.PrivateMessageDto;
 import com.joejoe2.chat.data.message.SliceOfMessage;
-import com.joejoe2.chat.data.message.request.GetPrivateMessageSinceRequest;
-import com.joejoe2.chat.data.message.request.PublishPrivateMessageRequest;
+import com.joejoe2.chat.data.message.request.PublishMessageRequest;
 import com.joejoe2.chat.exception.AlreadyExist;
 import com.joejoe2.chat.exception.InvalidOperation;
 import com.joejoe2.chat.exception.UserDoesNotExist;
@@ -90,8 +90,8 @@ class PrivateChannelControllerTest {
   @Test
   void publishMessage() throws Exception {
     // test success
-    PublishPrivateMessageRequest request =
-        PublishPrivateMessageRequest.builder()
+    PublishMessageRequest request =
+        PublishMessageRequest.builder()
             .channelId(channel.getId().toString())
             .message("msg")
             .build();
@@ -118,14 +118,15 @@ class PrivateChannelControllerTest {
             .getList()
             .get(0);
     assertEquals(message1, message2);
-    assertEquals(message1.getId(), message.getId());
+    assertEquals(message1, message);
+    Thread.sleep(1000);
     Mockito.verify(messageService, Mockito.times(1)).deliverMessage(Mockito.any());
   }
 
   @Test
   void publishMessageWithError() throws Exception {
-    PublishPrivateMessageRequest request =
-        PublishPrivateMessageRequest.builder().channelId("invalid id").message(" ").build();
+    PublishMessageRequest request =
+        PublishMessageRequest.builder().channelId("invalid id").message(" ").build();
     // test 400
     mockMvc
         .perform(
@@ -139,7 +140,7 @@ class PrivateChannelControllerTest {
     // test 404
     String id = UUID.randomUUID().toString();
     while (Objects.equals(channel.getId().toString(), id)) id = UUID.randomUUID().toString();
-    request = PublishPrivateMessageRequest.builder().channelId(id).message("msg").build();
+    request = PublishMessageRequest.builder().channelId(id).message("msg").build();
 
     mockMvc
         .perform(
@@ -151,7 +152,7 @@ class PrivateChannelControllerTest {
         .andExpect(status().isNotFound());
     // test 403
     request =
-        PublishPrivateMessageRequest.builder()
+        PublishMessageRequest.builder()
             .channelId(channel.getId().toString())
             .message("msg")
             .build();
@@ -188,13 +189,13 @@ class PrivateChannelControllerTest {
                     .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andReturn();
-    SliceOfMessage<MessageDto> slice =
+    SliceOfMessage<PrivateMessageDto> slice =
         objectMapper.readValue(result.getResponse().getContentAsString(), SliceOfMessage.class);
     assertEquals(request.getSize(), slice.getPageSize());
     assertEquals(request.getPage(), slice.getCurrentPage());
     assertEquals(request.getSize(), slice.getMessages().size());
     for (int i = 0; i < messages.size(); i++) {
-      assertEquals(messages.get(i).getId(), slice.getMessages().get(i).getId());
+      assertEquals(messages.get(i), slice.getMessages().get(i));
     }
   }
 
@@ -228,8 +229,8 @@ class PrivateChannelControllerTest {
           messageService.createMessage(
               user1.getId().toString(), channel.getId().toString(), "msg"));
     // test success
-    GetPrivateMessageSinceRequest request =
-        GetPrivateMessageSinceRequest.builder()
+    PageRequestWithSince request =
+        PageRequestWithSince.builder()
             .since(since)
             .pageRequest(PageRequest.builder().page(0).size(messages.size()).build())
             .build();
@@ -258,8 +259,8 @@ class PrivateChannelControllerTest {
   @Test
   void getMessagesSinceWithError() throws Exception {
     // test 400
-    GetPrivateMessageSinceRequest request =
-        GetPrivateMessageSinceRequest.builder()
+    PageRequestWithSince request =
+        PageRequestWithSince.builder()
             .pageRequest(PageRequest.builder().page(-1).size(0).build())
             .build();
     LinkedMultiValueMap<String, String> query = new LinkedMultiValueMap<>();
@@ -353,8 +354,9 @@ class PrivateChannelControllerTest {
                     .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andReturn();
-    SliceOfChannel slice =
-        objectMapper.readValue(result.getResponse().getContentAsString(), SliceOfChannel.class);
+    SliceOfPrivateChannel slice =
+        objectMapper.readValue(
+            result.getResponse().getContentAsString(), SliceOfPrivateChannel.class);
     assertEquals(profiles.getList(), slice.getChannels());
   }
 
@@ -379,8 +381,7 @@ class PrivateChannelControllerTest {
   @Test
   void profile() throws Exception {
     // test success
-    GetChannelProfileRequest request =
-        GetChannelProfileRequest.builder().channelId(channel.getId().toString()).build();
+    ChannelRequest request = ChannelRequest.builder().channelId(channel.getId().toString()).build();
     LinkedMultiValueMap<String, String> query = new LinkedMultiValueMap<>();
     query.add("channelId", request.getChannelId());
 
@@ -402,8 +403,7 @@ class PrivateChannelControllerTest {
 
   @Test
   void profileWithError() throws Exception {
-    GetChannelProfileRequest request =
-        GetChannelProfileRequest.builder().channelId("invalid id").build();
+    ChannelRequest request = ChannelRequest.builder().channelId("invalid id").build();
     // test 400
     LinkedMultiValueMap<String, String> query = new LinkedMultiValueMap<>();
     query.add("channelId", request.getChannelId());
@@ -418,7 +418,7 @@ class PrivateChannelControllerTest {
     // test 404
     String id = UUID.randomUUID().toString();
     while (Objects.equals(channel.getId().toString(), id)) id = UUID.randomUUID().toString();
-    request = GetChannelProfileRequest.builder().channelId(id).build();
+    request = ChannelRequest.builder().channelId(id).build();
     query = new LinkedMultiValueMap<>();
     query.add("channelId", request.getChannelId());
 
@@ -430,7 +430,7 @@ class PrivateChannelControllerTest {
         .andExpect(jsonPath("$.message").exists())
         .andExpect(status().isNotFound());
     // test 403
-    request = GetChannelProfileRequest.builder().channelId(channel.getId().toString()).build();
+    request = ChannelRequest.builder().channelId(channel.getId().toString()).build();
     query = new LinkedMultiValueMap<>();
     query.add("channelId", request.getChannelId());
     // override mock login

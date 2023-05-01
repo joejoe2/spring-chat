@@ -3,8 +3,11 @@ package com.joejoe2.chat.data.message;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.joejoe2.chat.data.UserPublicProfile;
 import com.joejoe2.chat.models.MessageType;
+import com.joejoe2.chat.utils.TimeUtil;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Objects;
 import java.util.UUID;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -51,7 +54,8 @@ public class MessageDto {
       String content,
       String createAt,
       String updateAt) {
-    this.version = version.toEpochMilli() / 1000.0;
+    this.version =
+        ChronoUnit.MICROS.between(Instant.EPOCH, TimeUtil.roundToMicro(version)) / 1000.0;
     this.id = id;
     this.channel = channel;
     this.messageType = messageType;
@@ -71,7 +75,8 @@ public class MessageDto {
       String content,
       String createAt,
       String updateAt) {
-    this.version = version.toEpochMilli() / 1000.0;
+    this.version =
+        ChronoUnit.MICROS.between(Instant.EPOCH, TimeUtil.roundToMicro(version)) / 1000.0;
     this.id = id;
     this.channel = channel;
     this.messageType = messageType;
@@ -80,5 +85,25 @@ public class MessageDto {
     this.content = content;
     this.createAt = createAt;
     this.updateAt = updateAt;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof MessageDto that)) return false;
+    return version.equals(that.version)
+        && id.equals(that.id)
+        && channel.equals(that.channel)
+        && messageType == that.messageType
+        && from.equals(that.from)
+        && Objects.equals(to, that.to)
+        && content.equals(that.content)
+        && createAt.equals(that.createAt)
+        && updateAt.equals(that.updateAt);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(version, id, channel, messageType, from, to, content, createAt, updateAt);
   }
 }

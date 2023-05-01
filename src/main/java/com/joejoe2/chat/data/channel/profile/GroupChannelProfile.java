@@ -1,7 +1,7 @@
 package com.joejoe2.chat.data.channel.profile;
 
 import com.joejoe2.chat.data.UserPublicProfile;
-import com.joejoe2.chat.models.PrivateChannel;
+import com.joejoe2.chat.models.GroupChannel;
 import com.joejoe2.chat.utils.TimeUtil;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
@@ -12,9 +12,12 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class PrivateChannelProfile {
+public class GroupChannelProfile {
   @Schema(description = "id of the channel")
   private String id;
+
+  @Schema(description = "name of the channel")
+  private String name;
 
   @Schema(description = "members of the channel")
   private List<UserPublicProfile> members;
@@ -22,8 +25,9 @@ public class PrivateChannelProfile {
   private String createAt;
   private String updateAt;
 
-  public PrivateChannelProfile(PrivateChannel channel) {
+  public GroupChannelProfile(GroupChannel channel) {
     this.id = channel.getId().toString();
+    this.name = channel.getName();
     this.members =
         channel.getMembers().stream().map(UserPublicProfile::new).collect(Collectors.toList());
     this.createAt = TimeUtil.roundToMicro(channel.getCreateAt()).toString();
@@ -33,7 +37,7 @@ public class PrivateChannelProfile {
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
-    if (!(o instanceof PrivateChannelProfile that)) return false;
+    if (!(o instanceof GroupChannelProfile that)) return false;
     return id.equals(that.id) && members.equals(that.members);
   }
 

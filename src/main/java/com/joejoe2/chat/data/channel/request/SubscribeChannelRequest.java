@@ -1,10 +1,8 @@
-package com.joejoe2.chat.data.message.request;
+package com.joejoe2.chat.data.channel.request;
 
-import com.joejoe2.chat.data.PageRequest;
 import com.joejoe2.chat.validation.constraint.UUID;
 import io.swagger.v3.oas.annotations.Parameter;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,13 +12,12 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class GetAllPublicMessageRequest {
+public class SubscribeChannelRequest {
+  @Parameter(description = "access token in query")
+  @NotEmpty
+  private String access_token;
+
   @Parameter(description = "id of target channel")
   @UUID(message = "invalid channel id !")
   private String channelId;
-
-  @Parameter(description = "page parameters")
-  @Valid
-  @NotNull(message = "page request is missing !")
-  private PageRequest pageRequest;
 }

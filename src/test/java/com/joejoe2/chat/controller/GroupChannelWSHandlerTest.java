@@ -7,18 +7,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joejoe2.chat.TestContext;
 import com.joejoe2.chat.data.message.request.PublishMessageRequest;
-import com.joejoe2.chat.models.PublicChannel;
+import com.joejoe2.chat.models.GroupChannel;
 import com.joejoe2.chat.models.User;
-import com.joejoe2.chat.repository.channel.PublicChannelRepository;
+import com.joejoe2.chat.repository.channel.GroupChannelRepository;
 import com.joejoe2.chat.repository.user.UserRepository;
 import com.joejoe2.chat.utils.JwtUtil;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.net.URI;
 import java.security.interfaces.RSAPrivateKey;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import org.java_websocket.client.WebSocketClient;
@@ -41,30 +37,33 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @ExtendWith(TestContext.class)
-class PublicChannelWSHandlerTest {
-  User user;
-  String accessToken;
-  PublicChannel channel;
+public class GroupChannelWSHandlerTest {
+  User[] users = new User[3];
+  String[] accessTokens = new String[3];
+  GroupChannel channel;
 
   @Value("${jwt.secret.privateKey}")
   RSAPrivateKey privateKey;
 
   @Autowired UserRepository userRepository;
-  @Autowired PublicChannelRepository channelRepository;
-  @Autowired SimpleMeterRegistry meterRegistry;
+  @Autowired GroupChannelRepository channelRepository;
   @Autowired MockMvc mockMvc;
   @Autowired ObjectMapper objectMapper;
 
   @BeforeEach
   void setUp() {
-    user = User.builder().id(UUID.randomUUID()).userName("test").build();
-    userRepository.save(user);
-    channel = new PublicChannel();
-    channel.setName("test");
-    channelRepository.save(channel);
     Calendar exp = Calendar.getInstance();
     exp.add(Calendar.MINUTE, 10);
-    accessToken = JwtUtil.generateAccessToken(privateKey, "jti", "issuer", user, exp);
+    for (int i = 0; i < users.length; i++) {
+      users[i] = User.builder().id(UUID.randomUUID()).userName("test" + i).build();
+      accessTokens[i] = JwtUtil.generateAccessToken(privateKey, "jti", "issuer", users[i], exp);
+    }
+    userRepository.saveAll(Arrays.stream(users).toList());
+    channel = new GroupChannel(Set.of(users));
+    channelRepository.save(channel);
+    for (int i = 0; i < users.length; i++) {
+      accessTokens[i] = JwtUtil.generateAccessToken(privateKey, "jti", "issuer", users[i], exp);
+    }
   }
 
   @AfterEach
@@ -104,13 +103,17 @@ class PublicChannelWSHandlerTest {
 
   @Test
   void subscribe() throws Exception {
-    String uri =
-        "ws://localhost:8081/ws/channel/public/subscribe?access_token="
-            + accessToken
-            + "&channelId="
-            + channel.getId();
-    WsClient client = new WsClient(URI.create(uri), new CountDownLatch(11));
-    client.connectBlocking(5, TimeUnit.SECONDS);
+    int messageCount = 10;
+    WsClient[] clients = new WsClient[users.length];
+    for (int i = 0; i < users.length; i++) {
+      String uri =
+          "ws://localhost:8081/ws/channel/group/subscribe?access_token="
+              + accessTokens[i]
+              + "&channelId="
+              + channel.getId();
+      clients[i] = new WsClient(URI.create(uri), new CountDownLatch(messageCount + 1));
+      clients[i].connectBlocking(5, TimeUnit.SECONDS);
+    }
     // publish some messages
     PublishMessageRequest request =
         PublishMessageRequest.builder()
@@ -119,14 +122,14 @@ class PublicChannelWSHandlerTest {
             .build();
     List<String> messages = new ArrayList<>();
     messages.add("[]");
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < messageCount; i++) {
       String t =
           mockMvc
               .perform(
-                  MockMvcRequestBuilders.post("/api/channel/public/publishMessage")
+                  MockMvcRequestBuilders.post("/api/channel/group/publishMessage")
                       .contentType(MediaType.APPLICATION_JSON)
                       .content(objectMapper.writeValueAsString(request))
-                      .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                      .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessTokens[i % users.length])
                       .accept(MediaType.APPLICATION_JSON))
               .andExpect(status().isOk())
               .andReturn()
@@ -136,38 +139,11 @@ class PublicChannelWSHandlerTest {
     }
     // test success
     Thread.sleep(1000);
-    assertTrue(client.isOpen());
-    assertTrue(client.messageLatch.await(1, TimeUnit.SECONDS));
-    assertEquals(messages, client.messages);
-    client.close();
-  }
-
-  @Test
-  void testMetrics() throws Exception {
-    String uri =
-        "ws://localhost:8081/ws/channel/public/subscribe?access_token="
-            + accessToken
-            + "&channelId="
-            + channel.getId();
-    // test init is 0
-    assertEquals(0, meterRegistry.find("chat.public.channel.online.users").gauge().value());
-    // test with subscribers
-    WsClient client1 = new WsClient(URI.create(uri));
-    client1.connectBlocking(5, TimeUnit.SECONDS);
-    Thread.sleep(1000);
-    assertEquals(1, meterRegistry.find("chat.public.channel.online.users").gauge().value());
-
-    WsClient client2 = new WsClient(URI.create(uri));
-    client2.connectBlocking(5, TimeUnit.SECONDS);
-    Thread.sleep(1000);
-    assertEquals(2, meterRegistry.find("chat.public.channel.online.users").gauge().value());
-
-    client1.close();
-    Thread.sleep(1000);
-    assertEquals(1, meterRegistry.find("chat.public.channel.online.users").gauge().value());
-
-    client2.close();
-    Thread.sleep(1000);
-    assertEquals(0, meterRegistry.find("chat.public.channel.online.users").gauge().value());
+    for (int i = 0; i < users.length; i++) {
+      assertTrue(clients[i].isOpen());
+      assertTrue(clients[i].messageLatch.await(1, TimeUnit.SECONDS));
+      assertEquals(messages, clients[i].messages);
+      clients[i].close();
+    }
   }
 }

@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SubscribePrivateChannelRequest {
+public class SubscribeRequest {
   @Parameter(description = "access token in query")
   @NotEmpty
   private String access_token;

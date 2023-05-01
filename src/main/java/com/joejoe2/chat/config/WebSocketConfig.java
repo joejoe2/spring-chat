@@ -1,5 +1,6 @@
 package com.joejoe2.chat.config;
 
+import com.joejoe2.chat.controller.GroupChannelWSHandler;
 import com.joejoe2.chat.controller.PrivateChannelWSHandler;
 import com.joejoe2.chat.controller.PublicChannelWSHandler;
 import com.joejoe2.chat.interceptor.AuthenticatedHandshakeInterceptor;
@@ -14,6 +15,7 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 public class WebSocketConfig implements WebSocketConfigurer {
   @Autowired PublicChannelWSHandler publicChannelWSHandler;
   @Autowired PrivateChannelWSHandler privateChannelWSHandler;
+  @Autowired GroupChannelWSHandler groupChannelWSHandler;
   @Autowired AuthenticatedHandshakeInterceptor authenticatedHandshakeInterceptor;
 
   @Override
@@ -21,6 +23,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
     registry
         .addHandler(publicChannelWSHandler, "/ws/channel/public/subscribe")
         .addHandler(privateChannelWSHandler, "/ws/channel/private/subscribe")
+        .addHandler(groupChannelWSHandler, "/ws/channel/group/subscribe")
         .addInterceptors(authenticatedHandshakeInterceptor)
         .setAllowedOrigins("*");
   }

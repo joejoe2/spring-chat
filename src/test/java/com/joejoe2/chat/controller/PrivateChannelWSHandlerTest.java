@@ -6,7 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joejoe2.chat.TestContext;
-import com.joejoe2.chat.data.message.request.PublishPrivateMessageRequest;
+import com.joejoe2.chat.data.message.request.PublishMessageRequest;
 import com.joejoe2.chat.models.PrivateChannel;
 import com.joejoe2.chat.models.User;
 import com.joejoe2.chat.repository.channel.PrivateChannelRepository;
@@ -112,8 +112,8 @@ public class PrivateChannelWSHandlerTest {
     WsClient client = new WsClient(URI.create(uri), new CountDownLatch(11));
     client.connectBlocking(5, TimeUnit.SECONDS);
     // publish some messages
-    PublishPrivateMessageRequest request =
-        PublishPrivateMessageRequest.builder()
+    PublishMessageRequest request =
+        PublishMessageRequest.builder()
             .channelId(channel.getId().toString())
             .message("msg")
             .build();

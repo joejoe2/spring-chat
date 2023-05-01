@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PublishPrivateMessageRequest {
+public class PublishMessageRequest {
   @Schema(description = "id of target channel")
   @UUID(message = "invalid channel id !")
   private String channelId;

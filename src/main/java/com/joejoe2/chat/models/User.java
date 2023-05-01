@@ -28,6 +28,12 @@ public class User {
   @ManyToMany(mappedBy = "members")
   Set<PrivateChannel> privateChannels;
 
+  @ManyToMany(mappedBy = "members")
+  Set<GroupChannel> groupChannels;
+
+  @ManyToMany(mappedBy = "pendingUsers")
+  Set<GroupChannel> invitedChannels;
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;

@@ -1,0 +1,277 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1679451663019-3
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_group_channel
+                  name: id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                  name: name
+                  type: VARCHAR(128)
+              - column:
+                  name: create_at
+                  type: DATETIME
+              - column:
+                  name: update_at
+                  type: DATETIME
+              - column:
+                  constraints:
+                    nullable: false
+                  defaultValueComputed: now()
+                  name: version
+                  type: TIMESTAMP
+              - column:
+                  name: last_message_id
+                  type: UUID
+            tableName: group_channel
+  - changeSet:
+      id: 1679451663019-4
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_group_channels_pending_users
+                  name: group_channel_id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_group_channels_pending_users
+                  name: user_id
+                  type: UUID
+            tableName: group_channels_pending_users
+  - changeSet:
+      id: 1679451663019-5
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_group_channels_users
+                  name: group_channel_id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_group_channels_users
+                  name: user_id
+                  type: UUID
+            tableName: group_channels_users
+  - changeSet:
+      id: 1679451663019-6
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_group_message
+                  name: id
+                  type: UUID
+              - column:
+                  name: create_at
+                  type: DATETIME
+              - column:
+                  name: update_at
+                  type: DATETIME
+              - column:
+                  constraints:
+                    nullable: false
+                  defaultValueComputed: now()
+                  name: version
+                  type: TIMESTAMP
+              - column:
+                  constraints:
+                    nullable: false
+                  name: channel_id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                  name: message_type
+                  type: VARCHAR(32)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: from_id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                  name: content
+                  type: TEXT
+            tableName: group_message
+  - changeSet:
+      id: 1679451663019-7
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createIndex:
+            columns:
+              - column:
+                  descending: true
+                  name: update_at
+            indexName: idx_1eede84dc480cfa34ec412455
+            tableName: group_channel
+  - changeSet:
+      id: 1679451663019-8
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createIndex:
+            columns:
+              - column:
+                  descending: true
+                  name: update_at
+            indexName: idx_3d2c2a64aad27f540e6666369
+            tableName: private_message
+  - changeSet:
+      id: 1679451663019-9
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createIndex:
+            columns:
+              - column:
+                  descending: true
+                  name: update_at
+            indexName: idx_3ebf434a98842551f1afffc91
+            tableName: public_message
+  - changeSet:
+      id: 1679451663019-10
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createIndex:
+            columns:
+              - column:
+                  descending: true
+                  name: update_at
+            indexName: idx_4378f1327572d3c067cd8fec0
+            tableName: group_message
+  - changeSet:
+      id: 1679451663019-11
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createIndex:
+            columns:
+              - column:
+                  descending: true
+                  name: update_at
+            indexName: idx_5a1ad47d19394b675c6f59884
+            tableName: private_channel
+  - changeSet:
+      id: 1679451663019-14
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: last_message_id
+            baseTableName: group_channel
+            constraintName: FK_GROUP_CHANNEL_ON_LASTMESSAGE
+            referencedColumnNames: id
+            referencedTableName: group_message
+  - changeSet:
+      id: 1679451663019-15
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: channel_id
+            baseTableName: group_message
+            constraintName: FK_GROUP_MESSAGE_ON_CHANNEL
+            onDelete: CASCADE
+            referencedColumnNames: id
+            referencedTableName: group_channel
+        - createIndex:
+            columns:
+              - column:
+                  name: channel_id
+            indexName: idx_7169c06654decb82e640debdc
+            tableName: group_message
+  - changeSet:
+      id: 1679451663019-16
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: from_id
+            baseTableName: group_message
+            constraintName: FK_GROUP_MESSAGE_ON_FROM
+            referencedColumnNames: id
+            referencedTableName: account_user
+        - createIndex:
+            columns:
+              - column:
+                  name: from_id
+            indexName: idx_612efa5092ee785ab8c169517
+            tableName: group_message
+  - changeSet:
+      id: 1679451663019-17
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: group_channel_id
+            baseTableName: group_channels_pending_users
+            constraintName: fk_grochapenuse_on_group_channel
+            referencedColumnNames: id
+            referencedTableName: group_channel
+  - changeSet:
+      id: 1679451663019-18
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: user_id
+            baseTableName: group_channels_pending_users
+            constraintName: fk_grochapenuse_on_user
+            referencedColumnNames: id
+            referencedTableName: account_user
+  - changeSet:
+      id: 1679451663019-19
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: group_channel_id
+            baseTableName: group_channels_users
+            constraintName: fk_grochause_on_group_channel
+            referencedColumnNames: id
+            referencedTableName: group_channel
+  - changeSet:
+      id: 1679451663019-20
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: user_id
+            baseTableName: group_channels_users
+            constraintName: fk_grochause_on_user
+            referencedColumnNames: id
+            referencedTableName: account_user

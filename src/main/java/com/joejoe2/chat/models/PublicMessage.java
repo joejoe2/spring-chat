@@ -17,7 +17,7 @@ import org.hibernate.annotations.OnDeleteAction;
 @Entity
 @Table(
     name = "public_message",
-    indexes = {@Index(columnList = "channel_id")})
+    indexes = {@Index(columnList = "channel_id"), @Index(columnList = "updateAt DESC")})
 public class PublicMessage extends TimeStampBase {
   @Version
   @Column(nullable = false, columnDefinition = "TIMESTAMP DEFAULT now()")

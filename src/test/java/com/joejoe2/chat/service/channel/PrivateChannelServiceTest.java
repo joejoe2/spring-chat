@@ -13,6 +13,7 @@ import com.joejoe2.chat.models.User;
 import com.joejoe2.chat.repository.channel.PrivateChannelRepository;
 import com.joejoe2.chat.repository.message.PrivateMessageRepository;
 import com.joejoe2.chat.repository.user.UserRepository;
+import java.util.*;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.UUID;
@@ -120,13 +121,18 @@ class PrivateChannelServiceTest {
   @Test
   void getAllChannels() throws Exception {
     // prepare channels
+    PrivateChannelProfile channelOfUserC =
+        channelService.createChannelBetween(userC.getId().toString(), userD.getId().toString());
+    Stack<PrivateChannelProfile> channelsOfUserA = new Stack<>();
     for (User user : Arrays.asList(userB, userC, userD)) {
-      channelService.createChannelBetween(userA.getId().toString(), user.getId().toString());
+      channelsOfUserA.add(
+          channelService.createChannelBetween(userA.getId().toString(), user.getId().toString()));
     }
+    List<PrivateChannelProfile> channelsOfUserB = new ArrayList<>();
     for (User user : Arrays.asList(userC, userD)) {
-      channelService.createChannelBetween(userB.getId().toString(), user.getId().toString());
+      channelsOfUserB.add(
+          channelService.createChannelBetween(userB.getId().toString(), user.getId().toString()));
     }
-    channelService.createChannelBetween(userC.getId().toString(), userD.getId().toString());
     // test IllegalArgument
     assertThrows(
         IllegalArgumentException.class,
@@ -141,21 +147,27 @@ class PrivateChannelServiceTest {
     assertEquals(channels.getCurrentPage(), 0);
     assertTrue(channels.isHasNext());
     // order by updateAt desc
-    assertEquals(
-        new HashSet<>(channels.getList().get(0).getMembers()),
-        new HashSet<>(Arrays.asList(new UserPublicProfile(userA), new UserPublicProfile(userD))));
-    assertEquals(
-        new HashSet<>(channels.getList().get(1).getMembers()),
-        new HashSet<>(Arrays.asList(new UserPublicProfile(userA), new UserPublicProfile(userC))));
+    for (int i = 0; i < channels.getList().size(); i++) {
+      assertEquals(channelsOfUserA.pop(), channels.getList().get(i));
+    }
+    // different page
     channels =
         channelService.getAllChannels(
-            userB.getId().toString(), PageRequest.builder().page(2).size(1).build());
+            userB.getId().toString(), PageRequest.builder().page(1).size(1).build());
+    assertEquals(channels.getPageSize(), 1);
+    assertEquals(channels.getCurrentPage(), 1);
+    assertTrue(channels.isHasNext());
+    for (int i = 0; i < channels.getList().size(); i++) {
+      assertEquals(channelsOfUserB.get(i), channels.getList().get(i));
+    }
+    // last page
+    channels =
+        channelService.getAllChannels(
+            userC.getId().toString(), PageRequest.builder().page(2).size(1).build());
     assertEquals(channels.getPageSize(), 1);
     assertEquals(channels.getCurrentPage(), 2);
     assertFalse(channels.isHasNext());
-    assertEquals(
-        new HashSet<>(channels.getList().get(0).getMembers()),
-        new HashSet<>(Arrays.asList(new UserPublicProfile(userA), new UserPublicProfile(userB))));
+    assertEquals(channelOfUserC, channels.getList().get(0));
   }
 
   @Test

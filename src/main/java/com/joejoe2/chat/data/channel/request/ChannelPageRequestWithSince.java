@@ -1,4 +1,4 @@
-package com.joejoe2.chat.data.message.request;
+package com.joejoe2.chat.data.channel.request;
 
 import com.joejoe2.chat.data.PageRequest;
 import com.joejoe2.chat.validation.constraint.UUID;
@@ -16,7 +16,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class GetPublicMessageSinceRequest {
+public class ChannelPageRequestWithSince {
   @Parameter(description = "id of target channel")
   @UUID(message = "invalid channel id !")
   private String channelId;

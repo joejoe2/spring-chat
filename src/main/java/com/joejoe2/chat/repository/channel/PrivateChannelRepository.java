@@ -18,8 +18,8 @@ public interface PrivateChannelRepository extends JpaRepository<PrivateChannel, 
   Optional<PrivateChannel> findByUniqueUserIds(String id);
 
   @Query(
-      "SELECT DISTINCT ch from PrivateChannel ch "
-          + "join fetch ch.members WHERE :user MEMBER ch.members "
+      "SELECT DISTINCT ch from User u "
+          + "join u.privateChannels ch on u = :user join ch.members m "
           + "ORDER BY ch.updateAt DESC")
   List<PrivateChannel> findByMembersContainingUserByUpdateAtDesc(@Param("user") User user);
 
@@ -28,8 +28,8 @@ public interface PrivateChannelRepository extends JpaRepository<PrivateChannel, 
   }
 
   @Query(
-      "SELECT DISTINCT ch from PrivateChannel ch "
-          + "join fetch ch.members WHERE :user MEMBER ch.members "
+      "SELECT DISTINCT ch from User u "
+          + "join u.privateChannels ch on u = :user join ch.members m "
           + "ORDER BY ch.updateAt DESC")
   Slice<PrivateChannel> findByMembersContainingUserByUpdateAtDesc(
       @Param("user") User user, Pageable pageable);

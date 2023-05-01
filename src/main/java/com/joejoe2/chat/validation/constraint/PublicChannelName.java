@@ -2,7 +2,7 @@ package com.joejoe2.chat.validation.constraint;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-import com.joejoe2.chat.validation.validator.PublicChannelNameValidator;
+import com.joejoe2.chat.validation.validator.ChannelNameValidator;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -16,17 +16,15 @@ import javax.validation.constraints.Size;
 @Constraint(validatedBy = {})
 @Retention(RUNTIME)
 @Size(
-    min = PublicChannelNameValidator.minLength,
-    message = "length of channel name is at least " + PublicChannelNameValidator.minLength + " !")
+    min = ChannelNameValidator.minLength,
+    message = "length of channel name is at least " + ChannelNameValidator.minLength + " !")
 @Size(
-    max = PublicChannelNameValidator.maxLength,
-    message = "length of channel name is at most " + PublicChannelNameValidator.maxLength + " !")
+    max = ChannelNameValidator.maxLength,
+    message = "length of channel name is at most " + ChannelNameValidator.maxLength + " !")
 @NotEmpty(message = "channel name cannot be empty !")
-@Pattern(
-    regexp = PublicChannelNameValidator.REGEX,
-    message = PublicChannelNameValidator.NOT_MATCH_MSG)
+@Pattern(regexp = ChannelNameValidator.REGEX, message = ChannelNameValidator.NOT_MATCH_MSG)
 public @interface PublicChannelName {
-  String message() default PublicChannelNameValidator.NOT_MATCH_MSG;
+  String message() default ChannelNameValidator.NOT_MATCH_MSG;
 
   Class<?>[] groups() default {};
 

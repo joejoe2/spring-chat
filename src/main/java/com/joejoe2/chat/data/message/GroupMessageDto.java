@@ -1,15 +1,15 @@
 package com.joejoe2.chat.data.message;
 
 import com.joejoe2.chat.data.UserPublicProfile;
-import com.joejoe2.chat.models.PrivateMessage;
+import com.joejoe2.chat.models.GroupMessage;
 import com.joejoe2.chat.utils.TimeUtil;
 import lombok.NoArgsConstructor;
 import lombok.extern.jackson.Jacksonized;
 
 @Jacksonized
 @NoArgsConstructor
-public class PrivateMessageDto extends MessageDto {
-  public PrivateMessageDto(PrivateMessage message) {
+public class GroupMessageDto extends MessageDto {
+  public GroupMessageDto(GroupMessage message) {
     super(
         message.getVersion(),
         message.getId(),
@@ -18,10 +18,6 @@ public class PrivateMessageDto extends MessageDto {
         UserPublicProfile.builder()
             .id(message.getFrom().getId().toString())
             .username(message.getFrom().getUserName())
-            .build(),
-        UserPublicProfile.builder()
-            .id(message.getFrom().getId().toString())
-            .username(message.getTo().getUserName())
             .build(),
         message.getContent(),
         TimeUtil.roundToMicro(message.getCreateAt()).toString(),
