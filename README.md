@@ -30,6 +30,8 @@ as authentication service for JWT authentication.
 
 ![image](architecture.png)
 
+You can see technical details at [here](./doc/chat-detail/README.md).
+
 ## Online demo
 
 [https://frontend.joejoe2.com](https://frontend.joejoe2.com)
