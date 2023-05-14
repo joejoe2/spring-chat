@@ -4,6 +4,7 @@
 
 - A public channel allows any user to chat online.
 - Each subscription target is channel id.
+- Poll history message by channel id.
 
 ![image](public-chat.png)
 
@@ -11,14 +12,16 @@
 
 - Every two users can chat with each other in a private channel.
 - Each subscription target is user id.
+- Poll history messages by user id 
 
 ![image](private-chat.png)
 
-## Chat in group channel (Work in process...)
+## Chat in group channel (Work in progess...)
 
 - A group channel allows any members to chat online. A user should 
 be invited to the channel first by any member, and the user should 
 accept the invitation to become a member. 
 - Each subscription target is user id.
+- Poll history messages by channel id.
 
 ![image](group-chat.png)
