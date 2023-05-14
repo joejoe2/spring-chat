@@ -37,7 +37,7 @@ public interface GroupChannelService {
   /**
    * create a group channel
    *
-   * @param fromUserId creator
+   * @param fromUserId creator id
    * @return GroupChannelProfile
    * @throws UserDoesNotExist
    */
@@ -57,7 +57,6 @@ public interface GroupChannelService {
   GroupMessageDto inviteToChannel(String fromUserId, String toUserId, String channelId)
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation;
 
-  @Transactional(readOnly = true)
   SliceList<String> getInvitedChannels(String ofUserId, Instant since, PageRequest pageRequest)
       throws UserDoesNotExist;
 
@@ -72,13 +71,9 @@ public interface GroupChannelService {
   GroupMessageDto acceptInvitationOfChannel(String ofUserId, String channelId)
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation;
 
-  @Retryable(value = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 100))
-  @Transactional(rollbackFor = Exception.class)
   GroupMessageDto removeFromChannel(String fromUserId, String targetUserId, String channelId)
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation;
 
-  @Retryable(value = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 100))
-  @Transactional(rollbackFor = Exception.class)
   GroupMessageDto leaveChannel(String ofUserId, String channelId)
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation;
 
