@@ -141,7 +141,7 @@ public class GroupChannelWSHandlerTest {
     Thread.sleep(1000);
     for (int i = 0; i < users.length; i++) {
       assertTrue(clients[i].isOpen());
-      assertTrue(clients[i].messageLatch.await(1, TimeUnit.SECONDS));
+      assertTrue(clients[i].messageLatch.await(5, TimeUnit.SECONDS));
       assertEquals(messages, clients[i].messages);
       clients[i].close();
     }

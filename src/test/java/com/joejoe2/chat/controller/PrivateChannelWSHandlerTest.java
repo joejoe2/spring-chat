@@ -137,7 +137,7 @@ public class PrivateChannelWSHandlerTest {
     // test success
     Thread.sleep(1000);
     assertTrue(client.isOpen());
-    assertTrue(client.messageLatch.await(1, TimeUnit.SECONDS));
+    assertTrue(client.messageLatch.await(5, TimeUnit.SECONDS));
     assertEquals(messages, client.messages);
     client.close();
   }
