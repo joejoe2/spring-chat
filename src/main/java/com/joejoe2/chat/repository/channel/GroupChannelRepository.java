@@ -17,8 +17,8 @@ public interface GroupChannelRepository extends JpaRepository<GroupChannel, UUID
 
   @Query(
       "SELECT DISTINCT ch from User u "
-          + "join u.groupChannels ch on u = :user join ch.members m "
-          + "on ch.updateAt >= :since ORDER BY ch.updateAt DESC")
+          + "join u.groupChannels ch where u = :user "
+          + "and ch.updateAt >= :since ORDER BY ch.updateAt DESC")
   List<GroupChannel> findByMembersContainingUserByUpdateAtDesc(
       @Param("user") User user, @Param("since") Instant since);
 
@@ -27,9 +27,9 @@ public interface GroupChannelRepository extends JpaRepository<GroupChannel, UUID
   }
 
   @Query(
-      "SELECT DISTINCT ch from User u "
-          + "join u.groupChannels ch on u = :user join ch.members m "
-          + "on ch.updateAt >= :since ORDER BY ch.updateAt DESC")
+          "SELECT DISTINCT ch from User u "
+                  + "join u.groupChannels ch where u = :user "
+                  + "and ch.updateAt >= :since ORDER BY ch.updateAt DESC")
   Slice<GroupChannel> findByMembersContainingUserByUpdateAtDesc(
       @Param("user") User user, @Param("since") Instant since, Pageable pageable);
 
@@ -37,14 +37,14 @@ public interface GroupChannelRepository extends JpaRepository<GroupChannel, UUID
     return findByMembersContainingUserByUpdateAtDesc(user, since, pageable);
   }
 
-  @Query(
+  /*@Query(
       "SELECT DISTINCT ch from User u "
-          + "join u.invitedChannels ch on u = :user join ch.pendingUsers m "
-          + "on ch.updateAt >= :since ORDER BY ch.updateAt DESC")
+          + "join u.invitedChannels ch where u = :user "
+          + "and ch.updateAt >= :since ORDER BY ch.updateAt DESC")
   Slice<GroupChannel> findByPendingContainingUserByUpdateAtDesc(
       @Param("user") User user, @Param("since") Instant since, Pageable pageable);
 
   default Slice<GroupChannel> findByIsUserInvited(User user, Instant since, Pageable pageable) {
     return findByPendingContainingUserByUpdateAtDesc(user, since, pageable);
-  }
+  }*/
 }

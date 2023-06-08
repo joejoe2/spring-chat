@@ -82,8 +82,6 @@ public class GroupChannelController {
     }
   }
 
-  // todo: create channel
-
   @Operation(summary = "get all messages in group channel")
   @AuthenticatedApi
   @SecurityRequirement(name = "jwt")
@@ -127,6 +125,26 @@ public class GroupChannelController {
     } catch (InvalidOperation e) {
       return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()), HttpStatus.FORBIDDEN);
     }
+  }
+
+  @Operation(summary = "create a group channel")
+  @AuthenticatedApi
+  @SecurityRequirement(name = "jwt")
+  @ApiResponses(
+          value = {
+                  @ApiResponse(
+                          responseCode = "200",
+                          description = "create a group channel with given name",
+                          content =
+                          @Content(
+                                  mediaType = "application/json",
+                                  schema = @Schema(implementation = GroupChannelProfile.class))),
+          })
+  @RequestMapping(path = "/create", method = RequestMethod.POST)
+  public ResponseEntity<Object> create(@Valid @RequestBody CreateChannelByNameRequest request) throws UserDoesNotExist {
+      GroupChannelProfile channel = channelService.createChannel(AuthUtil.currentUserDetail().getId(),
+              request.getChannelName());
+      return ResponseEntity.ok(channel);
   }
 
   @Operation(summary = "invite someone to group channel")
@@ -218,26 +236,28 @@ public class GroupChannelController {
     }
   }
 
-  @Operation(summary = "get invited group channels id")
+  @Operation(summary = "get invited group channels")
   @AuthenticatedApi
   @SecurityRequirement(name = "jwt")
   @ApiResponses(
       value = {
         @ApiResponse(
             responseCode = "200",
-            description = "ids of invited channels",
+            description = "invitation messages",
             content =
                 @Content(
                     mediaType = "application/json",
-                    schema = @Schema(implementation = SliceList.class))),
+                    schema = @Schema(implementation = SliceOfMessage.class))),
       })
   @RequestMapping(path = "/invitation", method = RequestMethod.GET)
   public ResponseEntity<Object> getInvitations(@ParameterObject @Valid PageRequestWithSince request)
       throws UserDoesNotExist {
-    SliceList<String> sliceList =
-        channelService.getInvitedChannels(
-            AuthUtil.currentUserDetail().getId(), request.getSince(), request.getPageRequest());
-    return ResponseEntity.ok(sliceList);
+      SliceList<GroupMessageDto> sliceList =
+              messageService.getInvitations(
+                      AuthUtil.currentUserDetail().getId(),
+                      request.getSince(),
+                      request.getPageRequest());
+      return ResponseEntity.ok(new SliceOfMessage<>(sliceList));
   }
 
   @Operation(summary = "kick off someone in group channel")

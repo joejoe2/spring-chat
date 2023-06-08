@@ -29,34 +29,33 @@ public class GroupChannel extends TimeStampBase {
       inverseJoinColumns = {@JoinColumn(name = "user_id", nullable = false)})
   Set<User> members = new HashSet<>();
 
-  @ManyToMany
-  @BatchSize(size = 128) // for each PrivateChannels->getPendingUsers
-  @JoinTable(
-      name = "group_channels_pending_users",
-      joinColumns = {@JoinColumn(name = "group_channel_id", nullable = false)},
-      inverseJoinColumns = {@JoinColumn(name = "user_id", nullable = false)})
-  Set<User> pendingUsers = new HashSet<>();
+  @OneToMany(mappedBy = "channel", cascade = CascadeType.ALL)
+  @BatchSize(size = 32) // for each channels->getInvitations
+  Set<GroupInvitation> invitations = new HashSet<>();
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "channel", orphanRemoval = true)
   List<GroupMessage> messages = new ArrayList<>();
 
-  @OneToOne @JoinColumn GroupMessage lastMessage;
+  @OneToOne
+  @JoinColumn
+  GroupMessage lastMessage;
 
   public GroupChannel(Set<User> members) {
     this.members = members;
   }
 
-  public void invite(User inviter, User invitee) throws InvalidOperation {
+  public GroupMessage invite(User inviter, User invitee) throws InvalidOperation {
     if (!members.contains(inviter))
       throw new InvalidOperation("inviter is not in members of the channel !");
-    if (members.contains(invitee) || pendingUsers.contains(invitee))
+    GroupInvitation invitation = new GroupInvitation(invitee, this);
+    if (members.contains(invitee) || invitations.contains(invitation))
       throw new InvalidOperation("invitee is in the channel !");
-
-    pendingUsers.add(invitee);
 
     GroupMessage invitationMessage = GroupMessage.inviteMessage(this, inviter, invitee);
     messages.add(invitationMessage);
+    invitations.add(new GroupInvitation(invitee, this, invitationMessage));
     lastMessage = invitationMessage;
+    return invitationMessage;
   }
 
   public void kickOff(User actor, User target) throws InvalidOperation {
@@ -85,9 +84,11 @@ public class GroupChannel extends TimeStampBase {
   }
 
   public void acceptInvitation(User invitee) throws InvalidOperation {
-    if (!pendingUsers.contains(invitee)) throw new InvalidOperation("no invitation !");
+    GroupInvitation invitation = new GroupInvitation(invitee, this);
+    if (!invitations.contains(invitation))
+      throw new InvalidOperation("no invitation !");
 
-    pendingUsers.remove(invitee);
+    invitations.remove(invitation);
     members.add(invitee);
 
     GroupMessage joinMessage = GroupMessage.joinMessage(this, invitee);

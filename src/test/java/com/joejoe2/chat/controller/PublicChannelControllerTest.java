@@ -7,13 +7,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joejoe2.chat.TestContext;
 import com.joejoe2.chat.data.PageRequest;
+import com.joejoe2.chat.data.PageRequestWithSince;
 import com.joejoe2.chat.data.UserDetail;
 import com.joejoe2.chat.data.channel.PageOfChannel;
 import com.joejoe2.chat.data.channel.profile.PublicChannelProfile;
 import com.joejoe2.chat.data.channel.request.ChannelPageRequest;
 import com.joejoe2.chat.data.channel.request.ChannelPageRequestWithSince;
 import com.joejoe2.chat.data.channel.request.ChannelRequest;
-import com.joejoe2.chat.data.channel.request.CreatePublicChannelRequest;
+import com.joejoe2.chat.data.channel.request.CreateChannelByNameRequest;
 import com.joejoe2.chat.data.message.MessageDto;
 import com.joejoe2.chat.data.message.PublicMessageDto;
 import com.joejoe2.chat.data.message.SliceOfMessage;
@@ -314,8 +315,8 @@ class PublicChannelControllerTest {
   @Test
   void create() throws Exception {
     // test success
-    CreatePublicChannelRequest request =
-        CreatePublicChannelRequest.builder().channelName("create").build();
+    CreateChannelByNameRequest request =
+        CreateChannelByNameRequest.builder().channelName("create").build();
 
     MvcResult result =
         mockMvc
@@ -334,8 +335,8 @@ class PublicChannelControllerTest {
 
   @Test
   void createWithError() throws Exception {
-    CreatePublicChannelRequest request =
-        CreatePublicChannelRequest.builder().channelName("invalid name !!!").build();
+    CreateChannelByNameRequest request =
+        CreateChannelByNameRequest.builder().channelName("invalid name !!!").build();
     // test 400
     mockMvc
         .perform(
@@ -346,7 +347,7 @@ class PublicChannelControllerTest {
         .andExpect(jsonPath("$.errors.channelName").exists())
         .andExpect(status().isBadRequest());
     // test 403
-    request = CreatePublicChannelRequest.builder().channelName(channel.getName()).build();
+    request = CreateChannelByNameRequest.builder().channelName(channel.getName()).build();
 
     mockMvc
         .perform(

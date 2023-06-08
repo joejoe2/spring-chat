@@ -279,27 +279,7 @@ public class GroupChannelServiceImpl implements GroupChannelService {
     channel.invite(inviter, invitee);
     channelRepository.saveAndFlush(channel);
     GroupMessage invitationMessage = channel.getLastMessage();
-
     return new GroupMessageDto(invitationMessage);
-  }
-
-  @Override
-  @Transactional(readOnly = true)
-  public SliceList<String> getInvitedChannels(
-      String ofUserId, Instant since, PageRequest pageRequest) throws UserDoesNotExist {
-    org.springframework.data.domain.PageRequest paging = pageValidator.validate(pageRequest);
-    User user =
-        userRepository
-            .findById(uuidValidator.validate(ofUserId))
-            .orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
-
-    Slice<GroupChannel> slice = channelRepository.findByIsUserInvited(user, since, paging);
-
-    return new SliceList<>(
-        slice.getNumber(),
-        slice.getSize(),
-        slice.stream().map((ch) -> ch.getId().toString()).collect(Collectors.toList()),
-        slice.hasNext());
   }
 
   @Override

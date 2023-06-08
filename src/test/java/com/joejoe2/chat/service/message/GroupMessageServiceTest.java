@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.joejoe2.chat.TestContext;
 import com.joejoe2.chat.data.PageRequest;
+import com.joejoe2.chat.data.PageRequestWithSince;
 import com.joejoe2.chat.data.SliceList;
 import com.joejoe2.chat.data.channel.profile.GroupChannelProfile;
 import com.joejoe2.chat.data.message.GroupMessageDto;
@@ -201,5 +202,22 @@ public class GroupMessageServiceTest {
     messageService.deliverMessage(message);
     Thread.sleep(1000);
     Mockito.verify(natsService, Mockito.times(2)).publish(Mockito.any(), Mockito.eq(message));
+  }
+
+  @Test
+  void getInvitations() throws Exception{
+    // prepare
+    Instant since = Instant.now();
+    List<GroupMessageDto> messages = new ArrayList<>();
+    for (int i = 0; i < 10; i++) {
+      GroupChannelProfile channel = channelService.createChannel(userA.getId().toString(), "test"+i);
+      GroupMessageDto message = channelService.inviteToChannel(
+              userA.getId().toString(), userB.getId().toString(), channel.getId());
+      messages.add(message);
+    }
+    // test success
+    SliceList<GroupMessageDto> sliceList = messageService.getInvitations(userB.getId().toString(), since, PageRequest.builder()
+            .page(0).size(messages.size()).build());
+    assertEquals(messages, sliceList.getList());
   }
 }

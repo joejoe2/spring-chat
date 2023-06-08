@@ -19,7 +19,7 @@ public interface PrivateChannelRepository extends JpaRepository<PrivateChannel, 
 
   @Query(
       "SELECT DISTINCT ch from User u "
-          + "join u.privateChannels ch on u = :user join ch.members m "
+          + "join u.privateChannels ch where u = :user "
           + "ORDER BY ch.updateAt DESC")
   List<PrivateChannel> findByMembersContainingUserByUpdateAtDesc(@Param("user") User user);
 
@@ -29,7 +29,7 @@ public interface PrivateChannelRepository extends JpaRepository<PrivateChannel, 
 
   @Query(
       "SELECT DISTINCT ch from User u "
-          + "join u.privateChannels ch on u = :user join ch.members m "
+          + "join u.privateChannels ch where u = :user "
           + "ORDER BY ch.updateAt DESC")
   Slice<PrivateChannel> findByMembersContainingUserByUpdateAtDesc(
       @Param("user") User user, Pageable pageable);
@@ -39,8 +39,8 @@ public interface PrivateChannelRepository extends JpaRepository<PrivateChannel, 
   }
 
   default boolean isPrivateChannelExistBetween(User user1, User user2) {
-    String[] ids = new String[] {user1.getId().toString(), user2.getId().toString()};
+    UUID[] ids = new UUID[] {user1.getId(), user2.getId()};
     Arrays.sort(ids);
-    return findByUniqueUserIds(ids[0] + ids[1]).isPresent();
+    return findByUniqueUserIds(ids[0].toString() + ids[1].toString()).isPresent();
   }
 }

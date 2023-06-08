@@ -1,16 +1,13 @@
 package com.joejoe2.chat.controller;
 
 import com.joejoe2.chat.controller.constraint.auth.AuthenticatedApi;
-import com.joejoe2.chat.data.ErrorMessageResponse;
-import com.joejoe2.chat.data.PageList;
-import com.joejoe2.chat.data.PageRequest;
-import com.joejoe2.chat.data.SliceList;
+import com.joejoe2.chat.data.*;
 import com.joejoe2.chat.data.channel.PageOfChannel;
 import com.joejoe2.chat.data.channel.profile.PublicChannelProfile;
 import com.joejoe2.chat.data.channel.request.ChannelPageRequest;
 import com.joejoe2.chat.data.channel.request.ChannelPageRequestWithSince;
 import com.joejoe2.chat.data.channel.request.ChannelRequest;
-import com.joejoe2.chat.data.channel.request.CreatePublicChannelRequest;
+import com.joejoe2.chat.data.channel.request.CreateChannelByNameRequest;
 import com.joejoe2.chat.data.channel.request.SubscribeChannelRequest;
 import com.joejoe2.chat.data.message.PublicMessageDto;
 import com.joejoe2.chat.data.message.SliceOfMessage;
@@ -163,7 +160,7 @@ public class PublicChannelController {
                     schema = @Schema(implementation = PublicChannelProfile.class))),
       })
   @RequestMapping(path = "/create", method = RequestMethod.POST)
-  public ResponseEntity<Object> create(@Valid @RequestBody CreatePublicChannelRequest request) {
+  public ResponseEntity<Object> create(@Valid @RequestBody CreateChannelByNameRequest request) {
     try {
       return ResponseEntity.ok(channelService.createChannel(request.getChannelName()));
     } catch (AlreadyExist e) {

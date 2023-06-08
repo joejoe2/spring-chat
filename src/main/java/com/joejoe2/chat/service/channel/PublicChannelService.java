@@ -2,6 +2,7 @@ package com.joejoe2.chat.service.channel;
 
 import com.joejoe2.chat.data.PageList;
 import com.joejoe2.chat.data.PageRequest;
+import com.joejoe2.chat.data.PageRequestWithSince;
 import com.joejoe2.chat.data.channel.profile.PublicChannelProfile;
 import com.joejoe2.chat.exception.AlreadyExist;
 import com.joejoe2.chat.exception.ChannelDoesNotExist;

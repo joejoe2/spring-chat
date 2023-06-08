@@ -1,11 +1,14 @@
 package com.joejoe2.chat.service.message;
 
 import com.joejoe2.chat.data.PageRequest;
+import com.joejoe2.chat.data.PageRequestWithSince;
 import com.joejoe2.chat.data.SliceList;
 import com.joejoe2.chat.data.message.GroupMessageDto;
 import com.joejoe2.chat.exception.ChannelDoesNotExist;
 import com.joejoe2.chat.exception.InvalidOperation;
 import com.joejoe2.chat.exception.UserDoesNotExist;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.time.Instant;
 
 public interface GroupMessageService {
@@ -17,4 +20,9 @@ public interface GroupMessageService {
   SliceList<GroupMessageDto> getAllMessages(
       String userId, String channelId, Instant since, PageRequest pageRequest)
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation;
+
+  @Transactional(readOnly = true)
+  SliceList<GroupMessageDto> getInvitations(
+          String userId, Instant since, PageRequest pageRequest)
+          throws UserDoesNotExist;
 }

@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.validation.constraints.NotNull;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -14,5 +16,6 @@ import lombok.NoArgsConstructor;
 public class CreatePrivateChannelRequest {
   @Schema(description = "id of target user")
   @UUID(message = "invalid user id")
+  @NotNull(message = "targetUserId is missing !")
   String targetUserId;
 }

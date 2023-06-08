@@ -1,0 +1,61 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1686111589867-3
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addColumn:
+            columns:
+              - column:
+                  name: create_at
+                  type: DATETIME
+              - column:
+                  name: invitation_message_id
+                  type: UUID
+            tableName: group_channels_pending_users
+  - changeSet:
+      id: 1686111589867-5
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addNotNullConstraint:
+            columnName: invitation_message_id
+            tableName: group_channels_pending_users
+  - changeSet:
+      id: 1686111589867-6
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createIndex:
+            columns:
+              - column:
+                  name: user_id
+              - column:
+                  name: group_channel_id
+            indexName: IX_pk_group_channels_pending_users
+            tableName: group_channels_pending_users
+            unique: true
+  - changeSet:
+      id: 1686111589867-7
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createIndex:
+            columns:
+              - column:
+                  descending: true
+                  name: create_at
+            indexName: idx_53b921905893d33dcb72cfdf8
+            tableName: group_channels_pending_users
+  - changeSet:
+      id: 1686111589867-8
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: invitation_message_id
+            baseTableName: group_channels_pending_users
+            constraintName: FK_GROUP_CHANNELS_PENDING_USERS_ON_INVITATIONMESSAGE
+            onDelete: CASCADE
+            referencedColumnNames: id
+            referencedTableName: group_message

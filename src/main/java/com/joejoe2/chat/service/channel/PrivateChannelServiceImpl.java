@@ -3,6 +3,7 @@ package com.joejoe2.chat.service.channel;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joejoe2.chat.data.PageRequest;
+import com.joejoe2.chat.data.PageRequestWithSince;
 import com.joejoe2.chat.data.SliceList;
 import com.joejoe2.chat.data.channel.profile.PrivateChannelProfile;
 import com.joejoe2.chat.data.message.PrivateMessageDto;

@@ -7,11 +7,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joejoe2.chat.TestContext;
 import com.joejoe2.chat.data.PageRequest;
+import com.joejoe2.chat.data.PageRequestWithSince;
 import com.joejoe2.chat.data.SliceList;
 import com.joejoe2.chat.data.UserDetail;
+import com.joejoe2.chat.data.channel.profile.GroupChannelProfile;
 import com.joejoe2.chat.data.channel.request.ChannelPageRequestWithSince;
 import com.joejoe2.chat.data.channel.request.ChannelRequest;
 import com.joejoe2.chat.data.channel.request.ChannelUserRequest;
+import com.joejoe2.chat.data.channel.request.CreateChannelByNameRequest;
 import com.joejoe2.chat.data.message.GroupMessageDto;
 import com.joejoe2.chat.data.message.MessageDto;
 import com.joejoe2.chat.data.message.SliceOfMessage;
@@ -21,6 +24,7 @@ import com.joejoe2.chat.models.User;
 import com.joejoe2.chat.repository.channel.GroupChannelRepository;
 import com.joejoe2.chat.repository.message.GroupMessageRepository;
 import com.joejoe2.chat.repository.user.UserRepository;
+import com.joejoe2.chat.service.channel.GroupChannelService;
 import com.joejoe2.chat.service.message.GroupMessageService;
 import com.joejoe2.chat.service.nats.NatsService;
 import com.joejoe2.chat.utils.AuthUtil;
@@ -53,6 +57,8 @@ public class GroupChannelControllerTest {
   GroupChannel channel;
   @Autowired UserRepository userRepository;
   @Autowired GroupChannelRepository channelRepository;
+  @Autowired
+  GroupChannelService channelService;
   @Autowired GroupMessageRepository messageRepository;
   @SpyBean GroupMessageService messageService;
   @Autowired MockMvc mockMvc;
@@ -222,6 +228,42 @@ public class GroupChannelControllerTest {
   }
 
   @Test
+  void create() throws Exception {
+    // test success
+    CreateChannelByNameRequest request =
+            CreateChannelByNameRequest.builder().channelName("create").build();
+
+    MvcResult result =
+            mockMvc
+                    .perform(
+                            MockMvcRequestBuilders.post("/api/channel/group/create")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(request))
+                                    .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andReturn();
+    GroupChannelProfile profile = objectMapper.readValue(
+            result.getResponse().getContentAsString(), GroupChannelProfile.class);
+    assertEquals(channelService.getChannelProfile(user1.getId().toString(), profile.getId()),
+            profile);
+  }
+
+  @Test
+  void createWithError() throws Exception {
+    CreateChannelByNameRequest request =
+            CreateChannelByNameRequest.builder().channelName("invalid name !!!").build();
+    // test 400
+    mockMvc
+            .perform(
+                    MockMvcRequestBuilders.post("/api/channel/group/create")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request))
+                            .accept(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.errors.channelName").exists())
+            .andExpect(status().isBadRequest());
+  }
+
+  @Test
   void inviteThenAccept() throws Exception {
     Instant since = Instant.now();
     // invite
@@ -259,9 +301,9 @@ public class GroupChannelControllerTest {
                     .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andReturn();
-    SliceList<String> sliceList =
-        objectMapper.readValue(result.getResponse().getContentAsString(), SliceList.class);
-    assertEquals(channel.getId().toString(), sliceList.getList().get(0));
+    SliceOfMessage sliceList =
+        objectMapper.readValue(result.getResponse().getContentAsString(), SliceOfMessage.class);
+    assertEquals(message, sliceList.getMessages().get(0));
     // accept
     result =
         mockMvc

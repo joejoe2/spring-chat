@@ -8,10 +8,7 @@ import com.joejoe2.chat.exception.ChannelDoesNotExist;
 import com.joejoe2.chat.exception.InvalidOperation;
 import com.joejoe2.chat.exception.UserDoesNotExist;
 import java.time.Instant;
-import org.springframework.dao.OptimisticLockingFailureException;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
-import org.springframework.transaction.annotation.Transactional;
+
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.springframework.web.socket.WebSocketSession;
 
@@ -56,9 +53,6 @@ public interface GroupChannelService {
    */
   GroupMessageDto inviteToChannel(String fromUserId, String toUserId, String channelId)
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation;
-
-  SliceList<String> getInvitedChannels(String ofUserId, Instant since, PageRequest pageRequest)
-      throws UserDoesNotExist;
 
   /**
    * @param ofUserId invitee id

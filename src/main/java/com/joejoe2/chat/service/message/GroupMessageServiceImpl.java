@@ -1,7 +1,11 @@
 package com.joejoe2.chat.service.message;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joejoe2.chat.data.PageRequest;
 import com.joejoe2.chat.data.SliceList;
+import com.joejoe2.chat.data.UserPublicProfile;
+import com.joejoe2.chat.data.channel.profile.PublicChannelProfile;
 import com.joejoe2.chat.data.message.GroupMessageDto;
 import com.joejoe2.chat.exception.ChannelDoesNotExist;
 import com.joejoe2.chat.exception.InvalidOperation;
@@ -20,6 +24,9 @@ import com.joejoe2.chat.validation.validator.PageRequestValidator;
 import com.joejoe2.chat.validation.validator.UUIDValidator;
 import java.time.Instant;
 import java.util.Comparator;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Slice;
@@ -35,6 +42,9 @@ public class GroupMessageServiceImpl implements GroupMessageService {
   @Autowired GroupChannelRepository channelRepository;
   @Autowired GroupMessageRepository messageRepository;
   @Autowired NatsService natsService;
+  @Autowired
+  ObjectMapper objectMapper;
+  private static final Logger logger = LoggerFactory.getLogger(GroupMessageService.class);
 
   UUIDValidator uuidValidator = UUIDValidator.getInstance();
 
@@ -74,7 +84,12 @@ public class GroupMessageServiceImpl implements GroupMessageService {
     // also send to invitee or the one just leave channel
     if (MessageType.INVITATION.equals(message.getMessageType())
         || MessageType.LEAVE.equals(message.getMessageType())) {
-      natsService.publish(ChannelSubject.groupChannelSubject(message.getContent()), message);
+      try {
+        UserPublicProfile user = objectMapper.readValue(message.getContent(), UserPublicProfile.class);
+        natsService.publish(ChannelSubject.groupChannelSubject(user.getId()), message);
+      } catch (JsonProcessingException e) {
+       logger.error(e.getMessage());
+      }
     }
   }
 
@@ -105,5 +120,28 @@ public class GroupMessageServiceImpl implements GroupMessageService {
             .map(GroupMessageDto::new)
             .toList(),
         slice.hasNext());
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public SliceList<GroupMessageDto> getInvitations(
+          String userId, Instant since, PageRequest pageRequest)
+          throws UserDoesNotExist {
+    if (since == null) throw new IllegalArgumentException("since cannot be null !");
+    org.springframework.data.domain.PageRequest paging = pageValidator.validate(pageRequest);
+    User user =
+            userRepository
+                    .findById(uuidValidator.validate(userId))
+                    .orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
+
+    Slice<GroupMessage> slice = messageRepository.findInvitations(user, since, paging);
+    return new SliceList<>(
+            slice.getNumber(),
+            slice.getSize(),
+            slice.getContent().stream()
+                    .sorted(Comparator.comparing(GroupMessage::getUpdateAt))
+                    .map(GroupMessageDto::new)
+                    .toList(),
+            slice.hasNext());
   }
 }

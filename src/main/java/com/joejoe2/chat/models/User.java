@@ -31,8 +31,8 @@ public class User {
   @ManyToMany(mappedBy = "members")
   Set<GroupChannel> groupChannels;
 
-  @ManyToMany(mappedBy = "pendingUsers")
-  Set<GroupChannel> invitedChannels;
+  @OneToMany(mappedBy = "user")
+  Set<GroupInvitation> invitations;
 
   @Override
   public boolean equals(Object o) {

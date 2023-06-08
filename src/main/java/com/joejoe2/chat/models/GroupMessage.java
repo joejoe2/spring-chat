@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.Objects;
 import javax.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -19,6 +20,7 @@ import org.hibernate.annotations.OnDeleteAction;
       @Index(columnList = "channel_id"),
       @Index(columnList = "updateAt DESC")
     })
+@BatchSize(size = 32)
 public class GroupMessage extends TimeStampBase {
   @Version
   @Column(nullable = false, columnDefinition = "TIMESTAMP DEFAULT now()")
@@ -48,7 +50,7 @@ public class GroupMessage extends TimeStampBase {
     GroupMessage message = new GroupMessage();
     message.channel = channel;
     message.from = inviter;
-    message.content = invitee.getId().toString();
+    message.content = "{\"id\":\"%s\", \"username\":\"%s\"}".formatted(invitee.getId().toString(), invitee.getUserName());
     message.messageType = MessageType.INVITATION;
     return message;
   }
@@ -57,7 +59,7 @@ public class GroupMessage extends TimeStampBase {
     GroupMessage message = new GroupMessage();
     message.channel = channel;
     message.from = joiner;
-    message.content = joiner.getId().toString();
+    message.content = "{\"id\":\"%s\", \"username\":\"%s\"}".formatted(joiner.getId().toString(), joiner.getUserName());
     message.messageType = MessageType.JOIN;
     return message;
   }
@@ -66,7 +68,7 @@ public class GroupMessage extends TimeStampBase {
     GroupMessage message = new GroupMessage();
     message.channel = channel;
     message.from = actor;
-    message.content = subject.getId().toString();
+    message.content = "{\"id\":\"%s\", \"username\":\"%s\"}".formatted(subject.getId().toString(), subject.getUserName());
     message.messageType = MessageType.LEAVE;
     return message;
   }
