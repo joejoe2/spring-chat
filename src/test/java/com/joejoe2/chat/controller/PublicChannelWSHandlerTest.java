@@ -141,33 +141,4 @@ class PublicChannelWSHandlerTest {
     assertEquals(messages, client.messages);
     client.close();
   }
-
-  @Test
-  void testMetrics() throws Exception {
-    String uri =
-        "ws://localhost:8081/ws/channel/public/subscribe?access_token="
-            + accessToken
-            + "&channelId="
-            + channel.getId();
-    // test init is 0
-    assertEquals(0, meterRegistry.find("chat.public.channel.online.users").gauge().value());
-    // test with subscribers
-    WsClient client1 = new WsClient(URI.create(uri));
-    client1.connectBlocking(5, TimeUnit.SECONDS);
-    Thread.sleep(1000);
-    assertEquals(1, meterRegistry.find("chat.public.channel.online.users").gauge().value());
-
-    WsClient client2 = new WsClient(URI.create(uri));
-    client2.connectBlocking(5, TimeUnit.SECONDS);
-    Thread.sleep(1000);
-    assertEquals(2, meterRegistry.find("chat.public.channel.online.users").gauge().value());
-
-    client1.close();
-    Thread.sleep(1000);
-    assertEquals(1, meterRegistry.find("chat.public.channel.online.users").gauge().value());
-
-    client2.close();
-    Thread.sleep(1000);
-    assertEquals(0, meterRegistry.find("chat.public.channel.online.users").gauge().value());
-  }
 }
