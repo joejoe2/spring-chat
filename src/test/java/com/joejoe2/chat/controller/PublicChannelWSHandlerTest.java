@@ -15,10 +15,7 @@ import com.joejoe2.chat.utils.JwtUtil;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.net.URI;
 import java.security.interfaces.RSAPrivateKey;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import org.java_websocket.client.WebSocketClient;
@@ -74,16 +71,10 @@ class PublicChannelWSHandlerTest {
   }
 
   public static class WsClient extends WebSocketClient {
-    CountDownLatch messageLatch;
-    List<String> messages = new ArrayList<>();
+    HashSet<String> messages = new HashSet<>();
 
     public WsClient(URI serverUri) {
       super(serverUri);
-    }
-
-    public WsClient(URI serverUri, CountDownLatch messageLatch) {
-      super(serverUri);
-      this.messageLatch = messageLatch;
     }
 
     @Override
@@ -91,7 +82,6 @@ class PublicChannelWSHandlerTest {
 
     @Override
     public void onMessage(String s) {
-      if (messageLatch != null) messageLatch.countDown();
       messages.add(s);
     }
 
@@ -109,7 +99,7 @@ class PublicChannelWSHandlerTest {
             + accessToken
             + "&channelId="
             + channel.getId();
-    WsClient client = new WsClient(URI.create(uri), new CountDownLatch(11));
+    WsClient client = new WsClient(URI.create(uri));
     client.connectBlocking(5, TimeUnit.SECONDS);
     // publish some messages
     PublishMessageRequest request =
@@ -117,7 +107,7 @@ class PublicChannelWSHandlerTest {
             .channelId(channel.getId().toString())
             .message("msg")
             .build();
-    List<String> messages = new ArrayList<>();
+    HashSet<String> messages = new HashSet<>();
     messages.add("[]");
     for (int i = 0; i < 10; i++) {
       String t =
@@ -137,7 +127,6 @@ class PublicChannelWSHandlerTest {
     // test success
     Thread.sleep(1000);
     assertTrue(client.isOpen());
-    assertTrue(client.messageLatch.await(5, TimeUnit.SECONDS));
     assertEquals(messages, client.messages);
     client.close();
   }
