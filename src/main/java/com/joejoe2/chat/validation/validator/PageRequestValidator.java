@@ -1,7 +1,6 @@
 package com.joejoe2.chat.validation.validator;
 
 import com.joejoe2.chat.data.PageRequest;
-import com.joejoe2.chat.data.PageRequestWithSince;
 import com.joejoe2.chat.exception.ValidationError;
 
 public class PageRequestValidator

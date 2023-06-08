@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joejoe2.chat.TestContext;
 import com.joejoe2.chat.data.PageRequest;
-import com.joejoe2.chat.data.PageRequestWithSince;
 import com.joejoe2.chat.data.SliceList;
 import com.joejoe2.chat.data.UserPublicProfile;
 import com.joejoe2.chat.data.channel.profile.GroupChannelProfile;
@@ -36,8 +35,7 @@ public class GroupChannelServiceTest {
   @Autowired GroupChannelRepository channelRepository;
   @Autowired GroupMessageRepository messageRepository;
   @Autowired UserRepository userRepository;
-  @Autowired
-  ObjectMapper objectMapper;
+  @Autowired ObjectMapper objectMapper;
   User userA, userB, userC, userD;
 
   @BeforeEach
@@ -94,7 +92,9 @@ public class GroupChannelServiceTest {
             userA.getId().toString(), userB.getId().toString(), channel.getId());
     assertEquals(MessageType.INVITATION, message.getMessageType());
     assertEquals(new UserPublicProfile(userA), message.getFrom());
-    assertEquals(new UserPublicProfile(userB), objectMapper.readValue(message.getContent(), UserPublicProfile.class));
+    assertEquals(
+        new UserPublicProfile(userB),
+        objectMapper.readValue(message.getContent(), UserPublicProfile.class));
   }
 
   @Test
@@ -131,7 +131,9 @@ public class GroupChannelServiceTest {
     channel = channelService.getChannelProfile(userA.getId().toString(), channel.getId());
     assertEquals(MessageType.JOIN, message.getMessageType());
     assertEquals(new UserPublicProfile(userB), message.getFrom());
-    assertEquals(new UserPublicProfile(userB), objectMapper.readValue(message.getContent(), UserPublicProfile.class));
+    assertEquals(
+        new UserPublicProfile(userB),
+        objectMapper.readValue(message.getContent(), UserPublicProfile.class));
     assertTrue(channel.getMembers().contains(new UserPublicProfile(userA)));
     assertTrue(channel.getMembers().contains(new UserPublicProfile(userB)));
   }

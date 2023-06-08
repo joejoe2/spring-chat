@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joejoe2.chat.data.PageRequest;
 import com.joejoe2.chat.data.SliceList;
 import com.joejoe2.chat.data.UserPublicProfile;
-import com.joejoe2.chat.data.channel.profile.PublicChannelProfile;
 import com.joejoe2.chat.data.message.GroupMessageDto;
 import com.joejoe2.chat.exception.ChannelDoesNotExist;
 import com.joejoe2.chat.exception.InvalidOperation;
@@ -24,7 +23,6 @@ import com.joejoe2.chat.validation.validator.PageRequestValidator;
 import com.joejoe2.chat.validation.validator.UUIDValidator;
 import java.time.Instant;
 import java.util.Comparator;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,8 +40,7 @@ public class GroupMessageServiceImpl implements GroupMessageService {
   @Autowired GroupChannelRepository channelRepository;
   @Autowired GroupMessageRepository messageRepository;
   @Autowired NatsService natsService;
-  @Autowired
-  ObjectMapper objectMapper;
+  @Autowired ObjectMapper objectMapper;
   private static final Logger logger = LoggerFactory.getLogger(GroupMessageService.class);
 
   UUIDValidator uuidValidator = UUIDValidator.getInstance();
@@ -85,10 +82,11 @@ public class GroupMessageServiceImpl implements GroupMessageService {
     if (MessageType.INVITATION.equals(message.getMessageType())
         || MessageType.LEAVE.equals(message.getMessageType())) {
       try {
-        UserPublicProfile user = objectMapper.readValue(message.getContent(), UserPublicProfile.class);
+        UserPublicProfile user =
+            objectMapper.readValue(message.getContent(), UserPublicProfile.class);
         natsService.publish(ChannelSubject.groupChannelSubject(user.getId()), message);
       } catch (JsonProcessingException e) {
-       logger.error(e.getMessage());
+        logger.error(e.getMessage());
       }
     }
   }
@@ -125,23 +123,22 @@ public class GroupMessageServiceImpl implements GroupMessageService {
   @Override
   @Transactional(readOnly = true)
   public SliceList<GroupMessageDto> getInvitations(
-          String userId, Instant since, PageRequest pageRequest)
-          throws UserDoesNotExist {
+      String userId, Instant since, PageRequest pageRequest) throws UserDoesNotExist {
     if (since == null) throw new IllegalArgumentException("since cannot be null !");
     org.springframework.data.domain.PageRequest paging = pageValidator.validate(pageRequest);
     User user =
-            userRepository
-                    .findById(uuidValidator.validate(userId))
-                    .orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
+        userRepository
+            .findById(uuidValidator.validate(userId))
+            .orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
 
     Slice<GroupMessage> slice = messageRepository.findInvitations(user, since, paging);
     return new SliceList<>(
-            slice.getNumber(),
-            slice.getSize(),
-            slice.getContent().stream()
-                    .sorted(Comparator.comparing(GroupMessage::getUpdateAt))
-                    .map(GroupMessageDto::new)
-                    .toList(),
-            slice.hasNext());
+        slice.getNumber(),
+        slice.getSize(),
+        slice.getContent().stream()
+            .sorted(Comparator.comparing(GroupMessage::getUpdateAt))
+            .map(GroupMessageDto::new)
+            .toList(),
+        slice.hasNext());
   }
 }

@@ -7,8 +7,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joejoe2.chat.TestContext;
 import com.joejoe2.chat.data.PageRequest;
-import com.joejoe2.chat.data.PageRequestWithSince;
-import com.joejoe2.chat.data.SliceList;
 import com.joejoe2.chat.data.UserDetail;
 import com.joejoe2.chat.data.channel.profile.GroupChannelProfile;
 import com.joejoe2.chat.data.channel.request.ChannelPageRequestWithSince;
@@ -57,8 +55,7 @@ public class GroupChannelControllerTest {
   GroupChannel channel;
   @Autowired UserRepository userRepository;
   @Autowired GroupChannelRepository channelRepository;
-  @Autowired
-  GroupChannelService channelService;
+  @Autowired GroupChannelService channelService;
   @Autowired GroupMessageRepository messageRepository;
   @SpyBean GroupMessageService messageService;
   @Autowired MockMvc mockMvc;
@@ -231,36 +228,37 @@ public class GroupChannelControllerTest {
   void create() throws Exception {
     // test success
     CreateChannelByNameRequest request =
-            CreateChannelByNameRequest.builder().channelName("create").build();
+        CreateChannelByNameRequest.builder().channelName("create").build();
 
     MvcResult result =
-            mockMvc
-                    .perform(
-                            MockMvcRequestBuilders.post("/api/channel/group/create")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request))
-                                    .accept(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk())
-                    .andReturn();
-    GroupChannelProfile profile = objectMapper.readValue(
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.post("/api/channel/group/create")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request))
+                    .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
+    GroupChannelProfile profile =
+        objectMapper.readValue(
             result.getResponse().getContentAsString(), GroupChannelProfile.class);
-    assertEquals(channelService.getChannelProfile(user1.getId().toString(), profile.getId()),
-            profile);
+    assertEquals(
+        channelService.getChannelProfile(user1.getId().toString(), profile.getId()), profile);
   }
 
   @Test
   void createWithError() throws Exception {
     CreateChannelByNameRequest request =
-            CreateChannelByNameRequest.builder().channelName("invalid name !!!").build();
+        CreateChannelByNameRequest.builder().channelName("invalid name !!!").build();
     // test 400
     mockMvc
-            .perform(
-                    MockMvcRequestBuilders.post("/api/channel/group/create")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request))
-                            .accept(MediaType.APPLICATION_JSON))
-            .andExpect(jsonPath("$.errors.channelName").exists())
-            .andExpect(status().isBadRequest());
+        .perform(
+            MockMvcRequestBuilders.post("/api/channel/group/create")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.errors.channelName").exists())
+        .andExpect(status().isBadRequest());
   }
 
   @Test

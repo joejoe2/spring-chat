@@ -27,9 +27,9 @@ public interface GroupChannelRepository extends JpaRepository<GroupChannel, UUID
   }
 
   @Query(
-          "SELECT DISTINCT ch from User u "
-                  + "join u.groupChannels ch where u = :user "
-                  + "and ch.updateAt >= :since ORDER BY ch.updateAt DESC")
+      "SELECT DISTINCT ch from User u "
+          + "join u.groupChannels ch where u = :user "
+          + "and ch.updateAt >= :since ORDER BY ch.updateAt DESC")
   Slice<GroupChannel> findByMembersContainingUserByUpdateAtDesc(
       @Param("user") User user, @Param("since") Instant since, Pageable pageable);
 

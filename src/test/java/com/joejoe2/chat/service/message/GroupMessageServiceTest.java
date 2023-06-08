@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.joejoe2.chat.TestContext;
 import com.joejoe2.chat.data.PageRequest;
-import com.joejoe2.chat.data.PageRequestWithSince;
 import com.joejoe2.chat.data.SliceList;
 import com.joejoe2.chat.data.channel.profile.GroupChannelProfile;
 import com.joejoe2.chat.data.message.GroupMessageDto;
@@ -14,10 +13,9 @@ import com.joejoe2.chat.repository.channel.GroupChannelRepository;
 import com.joejoe2.chat.repository.message.GroupMessageRepository;
 import com.joejoe2.chat.repository.user.UserRepository;
 import com.joejoe2.chat.service.channel.GroupChannelService;
+import com.joejoe2.chat.service.nats.NatsService;
 import java.time.Instant;
 import java.util.*;
-
-import com.joejoe2.chat.service.nats.NatsService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,8 +39,7 @@ public class GroupMessageServiceTest {
   @Autowired GroupChannelRepository channelRepository;
 
   @Autowired GroupMessageRepository messageRepository;
-  @SpyBean
-  NatsService natsService;
+  @SpyBean NatsService natsService;
   User userA, userB, userC, userD;
 
   @BeforeEach
@@ -161,16 +158,20 @@ public class GroupMessageServiceTest {
   }
 
   @Test
-  void deliverMessageToInvitee() throws Exception{
+  void deliverMessageToInvitee() throws Exception {
     // prepare
     GroupChannelProfile channel = channelService.createChannel(userA.getId().toString(), "test");
 
     // member and invitee
-    GroupMessageDto message = channelService.inviteToChannel(userA.getId().toString(), userB.getId().toString(), channel.getId());
+    GroupMessageDto message =
+        channelService.inviteToChannel(
+            userA.getId().toString(), userB.getId().toString(), channel.getId());
     messageService.deliverMessage(message);
     Thread.sleep(1000);
     Mockito.verify(natsService, Mockito.times(2)).publish(Mockito.any(), Mockito.eq(message));
-    message = channelService.inviteToChannel(userA.getId().toString(), userC.getId().toString(), channel.getId());
+    message =
+        channelService.inviteToChannel(
+            userA.getId().toString(), userC.getId().toString(), channel.getId());
     messageService.deliverMessage(message);
     Thread.sleep(1000);
     Mockito.verify(natsService, Mockito.times(2)).publish(Mockito.any(), Mockito.eq(message));
@@ -198,26 +199,33 @@ public class GroupMessageServiceTest {
     Mockito.verify(natsService, Mockito.times(3)).publish(Mockito.any(), Mockito.eq(message));
 
     // member and leaver(by kick off)
-    message = channelService.removeFromChannel(userA.getId().toString(), userC.getId().toString(), channel.getId());
+    message =
+        channelService.removeFromChannel(
+            userA.getId().toString(), userC.getId().toString(), channel.getId());
     messageService.deliverMessage(message);
     Thread.sleep(1000);
     Mockito.verify(natsService, Mockito.times(2)).publish(Mockito.any(), Mockito.eq(message));
   }
 
   @Test
-  void getInvitations() throws Exception{
+  void getInvitations() throws Exception {
     // prepare
     Instant since = Instant.now();
     List<GroupMessageDto> messages = new ArrayList<>();
     for (int i = 0; i < 10; i++) {
-      GroupChannelProfile channel = channelService.createChannel(userA.getId().toString(), "test"+i);
-      GroupMessageDto message = channelService.inviteToChannel(
+      GroupChannelProfile channel =
+          channelService.createChannel(userA.getId().toString(), "test" + i);
+      GroupMessageDto message =
+          channelService.inviteToChannel(
               userA.getId().toString(), userB.getId().toString(), channel.getId());
       messages.add(message);
     }
     // test success
-    SliceList<GroupMessageDto> sliceList = messageService.getInvitations(userB.getId().toString(), since, PageRequest.builder()
-            .page(0).size(messages.size()).build());
+    SliceList<GroupMessageDto> sliceList =
+        messageService.getInvitations(
+            userB.getId().toString(),
+            since,
+            PageRequest.builder().page(0).size(messages.size()).build());
     assertEquals(messages, sliceList.getList());
   }
 }

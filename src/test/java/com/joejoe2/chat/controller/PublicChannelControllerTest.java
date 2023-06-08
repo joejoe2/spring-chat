@@ -7,7 +7,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joejoe2.chat.TestContext;
 import com.joejoe2.chat.data.PageRequest;
-import com.joejoe2.chat.data.PageRequestWithSince;
 import com.joejoe2.chat.data.UserDetail;
 import com.joejoe2.chat.data.channel.PageOfChannel;
 import com.joejoe2.chat.data.channel.profile.PublicChannelProfile;

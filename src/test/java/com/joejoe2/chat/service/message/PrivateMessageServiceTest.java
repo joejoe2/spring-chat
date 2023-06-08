@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.joejoe2.chat.TestContext;
 import com.joejoe2.chat.data.PageRequest;
-import com.joejoe2.chat.data.PageRequestWithSince;
 import com.joejoe2.chat.data.SliceList;
 import com.joejoe2.chat.data.channel.profile.PrivateChannelProfile;
 import com.joejoe2.chat.data.message.PrivateMessageDto;

@@ -50,7 +50,9 @@ public class GroupMessage extends TimeStampBase {
     GroupMessage message = new GroupMessage();
     message.channel = channel;
     message.from = inviter;
-    message.content = "{\"id\":\"%s\", \"username\":\"%s\"}".formatted(invitee.getId().toString(), invitee.getUserName());
+    message.content =
+        "{\"id\":\"%s\", \"username\":\"%s\"}"
+            .formatted(invitee.getId().toString(), invitee.getUserName());
     message.messageType = MessageType.INVITATION;
     return message;
   }
@@ -59,7 +61,9 @@ public class GroupMessage extends TimeStampBase {
     GroupMessage message = new GroupMessage();
     message.channel = channel;
     message.from = joiner;
-    message.content = "{\"id\":\"%s\", \"username\":\"%s\"}".formatted(joiner.getId().toString(), joiner.getUserName());
+    message.content =
+        "{\"id\":\"%s\", \"username\":\"%s\"}"
+            .formatted(joiner.getId().toString(), joiner.getUserName());
     message.messageType = MessageType.JOIN;
     return message;
   }
@@ -68,7 +72,9 @@ public class GroupMessage extends TimeStampBase {
     GroupMessage message = new GroupMessage();
     message.channel = channel;
     message.from = actor;
-    message.content = "{\"id\":\"%s\", \"username\":\"%s\"}".formatted(subject.getId().toString(), subject.getUserName());
+    message.content =
+        "{\"id\":\"%s\", \"username\":\"%s\"}"
+            .formatted(subject.getId().toString(), subject.getUserName());
     message.messageType = MessageType.LEAVE;
     return message;
   }

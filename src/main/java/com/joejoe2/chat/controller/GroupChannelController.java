@@ -131,20 +131,22 @@ public class GroupChannelController {
   @AuthenticatedApi
   @SecurityRequirement(name = "jwt")
   @ApiResponses(
-          value = {
-                  @ApiResponse(
-                          responseCode = "200",
-                          description = "create a group channel with given name",
-                          content =
-                          @Content(
-                                  mediaType = "application/json",
-                                  schema = @Schema(implementation = GroupChannelProfile.class))),
-          })
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "create a group channel with given name",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = GroupChannelProfile.class))),
+      })
   @RequestMapping(path = "/create", method = RequestMethod.POST)
-  public ResponseEntity<Object> create(@Valid @RequestBody CreateChannelByNameRequest request) throws UserDoesNotExist {
-      GroupChannelProfile channel = channelService.createChannel(AuthUtil.currentUserDetail().getId(),
-              request.getChannelName());
-      return ResponseEntity.ok(channel);
+  public ResponseEntity<Object> create(@Valid @RequestBody CreateChannelByNameRequest request)
+      throws UserDoesNotExist {
+    GroupChannelProfile channel =
+        channelService.createChannel(
+            AuthUtil.currentUserDetail().getId(), request.getChannelName());
+    return ResponseEntity.ok(channel);
   }
 
   @Operation(summary = "invite someone to group channel")
@@ -252,12 +254,10 @@ public class GroupChannelController {
   @RequestMapping(path = "/invitation", method = RequestMethod.GET)
   public ResponseEntity<Object> getInvitations(@ParameterObject @Valid PageRequestWithSince request)
       throws UserDoesNotExist {
-      SliceList<GroupMessageDto> sliceList =
-              messageService.getInvitations(
-                      AuthUtil.currentUserDetail().getId(),
-                      request.getSince(),
-                      request.getPageRequest());
-      return ResponseEntity.ok(new SliceOfMessage<>(sliceList));
+    SliceList<GroupMessageDto> sliceList =
+        messageService.getInvitations(
+            AuthUtil.currentUserDetail().getId(), request.getSince(), request.getPageRequest());
+    return ResponseEntity.ok(new SliceOfMessage<>(sliceList));
   }
 
   @Operation(summary = "kick off someone in group channel")

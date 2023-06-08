@@ -36,9 +36,7 @@ public class GroupChannel extends TimeStampBase {
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "channel", orphanRemoval = true)
   List<GroupMessage> messages = new ArrayList<>();
 
-  @OneToOne
-  @JoinColumn
-  GroupMessage lastMessage;
+  @OneToOne @JoinColumn GroupMessage lastMessage;
 
   public GroupChannel(Set<User> members) {
     this.members = members;
@@ -85,8 +83,7 @@ public class GroupChannel extends TimeStampBase {
 
   public void acceptInvitation(User invitee) throws InvalidOperation {
     GroupInvitation invitation = new GroupInvitation(invitee, this);
-    if (!invitations.contains(invitation))
-      throw new InvalidOperation("no invitation !");
+    if (!invitations.contains(invitation)) throw new InvalidOperation("no invitation !");
 
     invitations.remove(invitation);
     members.add(invitee);
