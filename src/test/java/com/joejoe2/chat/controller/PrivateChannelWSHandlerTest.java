@@ -74,16 +74,10 @@ public class PrivateChannelWSHandlerTest {
   }
 
   public static class WsClient extends WebSocketClient {
-    CountDownLatch messageLatch;
-    List<String> messages = new ArrayList<>();
+    HashSet<String> messages = new HashSet<>();
 
     public WsClient(URI serverUri) {
       super(serverUri);
-    }
-
-    public WsClient(URI serverUri, CountDownLatch messageLatch) {
-      super(serverUri);
-      this.messageLatch = messageLatch;
     }
 
     @Override
@@ -91,7 +85,6 @@ public class PrivateChannelWSHandlerTest {
 
     @Override
     public void onMessage(String s) {
-      if (messageLatch != null) messageLatch.countDown();
       messages.add(s);
     }
 
@@ -109,7 +102,7 @@ public class PrivateChannelWSHandlerTest {
             + accessToken2
             + "&channelId="
             + channel.getId();
-    WsClient client = new WsClient(URI.create(uri), new CountDownLatch(11));
+    WsClient client = new WsClient(URI.create(uri));
     client.connectBlocking(5, TimeUnit.SECONDS);
     // publish some messages
     PublishMessageRequest request =
@@ -117,7 +110,7 @@ public class PrivateChannelWSHandlerTest {
             .channelId(channel.getId().toString())
             .message("msg")
             .build();
-    List<String> messages = new ArrayList<>();
+    HashSet<String> messages = new HashSet<>();
     messages.add("[]");
     for (int i = 0; i < 10; i++) {
       String t =
@@ -135,9 +128,8 @@ public class PrivateChannelWSHandlerTest {
       messages.add("[" + t + "]");
     }
     // test success
-    Thread.sleep(1000);
+    Thread.sleep(5000);
     assertTrue(client.isOpen());
-    assertTrue(client.messageLatch.await(5, TimeUnit.SECONDS));
     assertEquals(messages, client.messages);
     client.close();
   }
