@@ -36,13 +36,15 @@ public class GroupChannel extends TimeStampBase {
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "channel", orphanRemoval = true)
   List<GroupMessage> messages = new ArrayList<>();
 
-  @OneToOne @JoinColumn GroupMessage lastMessage;
+  @OneToOne(fetch = FetchType.LAZY)
+  @JoinColumn
+  GroupMessage lastMessage;
 
   public GroupChannel(Set<User> members) {
     this.members = members;
   }
 
-  public GroupMessage invite(User inviter, User invitee) throws InvalidOperation {
+  public void invite(User inviter, User invitee) throws InvalidOperation {
     if (!members.contains(inviter))
       throw new InvalidOperation("inviter is not in members of the channel !");
     GroupInvitation invitation = new GroupInvitation(invitee, this);
@@ -53,7 +55,6 @@ public class GroupChannel extends TimeStampBase {
     messages.add(invitationMessage);
     invitations.add(new GroupInvitation(invitee, this, invitationMessage));
     lastMessage = invitationMessage;
-    return invitationMessage;
   }
 
   public void kickOff(User actor, User target) throws InvalidOperation {
@@ -126,8 +127,6 @@ public class GroupChannel extends TimeStampBase {
     return "GroupChannel{"
         + "members="
         + members
-        + ", lastMessage="
-        + lastMessage
         + ", createAt="
         + createAt
         + ", updateAt="

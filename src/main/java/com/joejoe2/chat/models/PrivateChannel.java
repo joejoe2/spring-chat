@@ -33,7 +33,9 @@ public class PrivateChannel extends TimeStampBase {
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "channel", orphanRemoval = true)
   List<PrivateMessage> messages;
 
-  @OneToOne @JoinColumn PrivateMessage lastMessage;
+  @OneToOne(fetch = FetchType.LAZY)
+  @JoinColumn
+  PrivateMessage lastMessage;
 
   public PrivateChannel(Set<User> members) {
     this.members = members;

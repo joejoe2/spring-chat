@@ -14,10 +14,9 @@ import com.joejoe2.chat.repository.message.GroupMessageRepository;
 import com.joejoe2.chat.repository.user.UserRepository;
 import com.joejoe2.chat.service.channel.GroupChannelService;
 import com.joejoe2.chat.service.nats.NatsService;
+import com.joejoe2.chat.utils.ChannelSubject;
 import java.time.Instant;
 import java.util.*;
-
-import com.joejoe2.chat.utils.ChannelSubject;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -170,52 +169,64 @@ public class GroupMessageServiceTest {
             userA.getId().toString(), userB.getId().toString(), channel.getId());
     messageService.deliverMessage(message);
     Thread.sleep(1000);
-    for (User user:List.of(userA, userB)){
-      Mockito.verify(natsService).
-              publish(Mockito.eq(ChannelSubject.groupChannelSubject(user.getId().toString())), Mockito.eq(message));
+    for (User user : List.of(userA, userB)) {
+      Mockito.verify(natsService)
+          .publish(
+              Mockito.eq(ChannelSubject.groupChannelSubject(user.getId().toString())),
+              Mockito.eq(message));
     }
     message =
         channelService.inviteToChannel(
             userA.getId().toString(), userC.getId().toString(), channel.getId());
     messageService.deliverMessage(message);
     Thread.sleep(1000);
-    for (User user:List.of(userA, userC)){
-      Mockito.verify(natsService).
-              publish(Mockito.eq(ChannelSubject.groupChannelSubject(user.getId().toString())), Mockito.eq(message));
+    for (User user : List.of(userA, userC)) {
+      Mockito.verify(natsService)
+          .publish(
+              Mockito.eq(ChannelSubject.groupChannelSubject(user.getId().toString())),
+              Mockito.eq(message));
     }
 
     // accept invitation
     message = channelService.acceptInvitationOfChannel(userB.getId().toString(), channel.getId());
     messageService.deliverMessage(message);
     Thread.sleep(1000);
-    for (User user:List.of(userA, userB)){
-      Mockito.verify(natsService).
-              publish(Mockito.eq(ChannelSubject.groupChannelSubject(user.getId().toString())), Mockito.eq(message));
+    for (User user : List.of(userA, userB)) {
+      Mockito.verify(natsService)
+          .publish(
+              Mockito.eq(ChannelSubject.groupChannelSubject(user.getId().toString())),
+              Mockito.eq(message));
     }
     message = channelService.acceptInvitationOfChannel(userC.getId().toString(), channel.getId());
     messageService.deliverMessage(message);
     Thread.sleep(1000);
-    for (User user:List.of(userA, userB, userC)){
-      Mockito.verify(natsService).
-              publish(Mockito.eq(ChannelSubject.groupChannelSubject(user.getId().toString())), Mockito.eq(message));
+    for (User user : List.of(userA, userB, userC)) {
+      Mockito.verify(natsService)
+          .publish(
+              Mockito.eq(ChannelSubject.groupChannelSubject(user.getId().toString())),
+              Mockito.eq(message));
     }
 
     // normal messages
     message = messageService.createMessage(userA.getId().toString(), channel.getId(), "msg");
     messageService.deliverMessage(message);
     Thread.sleep(1000);
-    for (User user:List.of(userA, userB, userC)){
-      Mockito.verify(natsService).
-              publish(Mockito.eq(ChannelSubject.groupChannelSubject(user.getId().toString())), Mockito.eq(message));
+    for (User user : List.of(userA, userB, userC)) {
+      Mockito.verify(natsService)
+          .publish(
+              Mockito.eq(ChannelSubject.groupChannelSubject(user.getId().toString())),
+              Mockito.eq(message));
     }
 
     // member and leaver
     message = channelService.leaveChannel(userC.getId().toString(), channel.getId());
     messageService.deliverMessage(message);
     Thread.sleep(1000);
-    for (User user:List.of(userA, userB, userC)){
-      Mockito.verify(natsService).
-              publish(Mockito.eq(ChannelSubject.groupChannelSubject(user.getId().toString())), Mockito.eq(message));
+    for (User user : List.of(userA, userB, userC)) {
+      Mockito.verify(natsService)
+          .publish(
+              Mockito.eq(ChannelSubject.groupChannelSubject(user.getId().toString())),
+              Mockito.eq(message));
     }
 
     // member and leaver(by kick off)
@@ -224,9 +235,11 @@ public class GroupMessageServiceTest {
             userA.getId().toString(), userB.getId().toString(), channel.getId());
     messageService.deliverMessage(message);
     Thread.sleep(1000);
-    for (User user:List.of(userA, userB)){
-      Mockito.verify(natsService).
-              publish(Mockito.eq(ChannelSubject.groupChannelSubject(user.getId().toString())), Mockito.eq(message));
+    for (User user : List.of(userA, userB)) {
+      Mockito.verify(natsService)
+          .publish(
+              Mockito.eq(ChannelSubject.groupChannelSubject(user.getId().toString())),
+              Mockito.eq(message));
     }
   }
 
