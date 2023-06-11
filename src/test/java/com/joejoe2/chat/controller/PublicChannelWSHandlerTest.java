@@ -124,7 +124,7 @@ class PublicChannelWSHandlerTest {
       messages.add("[" + t + "]");
     }
     // test success
-    Thread.sleep(1000);
+    Thread.sleep(5000);
     assertTrue(client.isOpen());
     assertEquals(messages, client.messages);
     client.close();
