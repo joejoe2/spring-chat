@@ -16,22 +16,17 @@ public interface GroupMessageRepository extends JpaRepository<GroupMessage, UUID
   Optional<GroupMessage> findById(UUID id);
 
   @Query(
-      nativeQuery = true,
-      value =
-          "SELECT * FROM group_message WHERE channel_id = :channel "
-              + "AND update_at >= :since ORDER BY update_at DESC")
+      "SELECT msg FROM GroupMessage msg WHERE msg.channel = :channel AND msg.updateAt >= :since"
+          + " ORDER BY msg.updateAt DESC")
   Slice<GroupMessage> findAllByChannelSince(
       @Param("channel") GroupChannel channel, @Param("since") Instant since, Pageable pageable);
 
-  @Query(
-      nativeQuery = true,
-      value =
-          "SELECT * FROM group_message WHERE channel_id = :channel " + "ORDER BY update_at DESC")
+  @Query("SELECT msg FROM GroupMessage msg WHERE msg.channel = :channel ORDER BY msg.updateAt DESC")
   Slice<GroupMessage> findAllByChannel(@Param("channel") GroupChannel channel, Pageable pageable);
 
   @Query(
       "SELECT invitation.invitationMessage from GroupInvitation invitation "
-          + " where invitation.user = :user "
+          + "where invitation.user = :user "
           + "and invitation.createAt >= :since ORDER BY invitation.createAt DESC")
   Slice<GroupMessage> findInvitations(
       @Param("user") User user, @Param("since") Instant since, Pageable pageable);

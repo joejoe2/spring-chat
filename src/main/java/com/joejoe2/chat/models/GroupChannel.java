@@ -50,6 +50,7 @@ public class GroupChannel extends TimeStampBase {
     GroupInvitation invitation = new GroupInvitation(invitee, this);
     if (members.contains(invitee) || invitations.contains(invitation))
       throw new InvalidOperation("invitee is in the channel !");
+    checkNumOfMembers();
 
     GroupMessage invitationMessage = GroupMessage.inviteMessage(this, inviter, invitee);
     messages.add(invitationMessage);
@@ -88,6 +89,7 @@ public class GroupChannel extends TimeStampBase {
 
     invitations.remove(invitation);
     members.add(invitee);
+    checkNumOfMembers();
 
     GroupMessage joinMessage = GroupMessage.joinMessage(this, invitee);
     messages.add(joinMessage);
@@ -102,11 +104,11 @@ public class GroupChannel extends TimeStampBase {
     lastMessage = groupMessage;
   }
 
-  @PrePersist
-  @PreUpdate
-  void checkNumOfMembers() {
-    if (members.size() == 0 || members.size() > 1024)
-      throw new RuntimeException("PrivateChannel must contain [1, 1024] members !");
+  void checkNumOfMembers() throws InvalidOperation {
+    if (members.size() == 0)
+      throw new InvalidOperation("GroupChannel must contain at least 1 members !");
+    else if (members.size() > 1024)
+      throw new InvalidOperation("GroupChannel must contain at most 1024 members !");
   }
 
   @Override
