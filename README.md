@@ -11,8 +11,9 @@ servers as cluster to increase the message delivery speed/throughput.
 
 ## Features
 
-- chat in public channels with any users
-- chat in private channels with another user
+- chat in public channels with any users (1 connection/channel)
+- chat in private channels with another user (1 connection/user)
+- chat in group channel with members (1 connection/user)
 
 ## Supported Protocols
 
@@ -45,6 +46,8 @@ work with this project.
   ![image](demo_public_chat.png)
 - chat in private channel
   ![image](demo_private_chat.png)
+- chat in group channel
+  ![image](demo_group_chat.png)
 
 ## Testing
 

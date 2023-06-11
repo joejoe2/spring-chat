@@ -10,14 +10,14 @@ import com.joejoe2.chat.data.PageRequest;
 import com.joejoe2.chat.data.UserDetail;
 import com.joejoe2.chat.data.channel.PageOfChannel;
 import com.joejoe2.chat.data.channel.profile.PublicChannelProfile;
-import com.joejoe2.chat.data.channel.request.CreatePublicChannelRequest;
-import com.joejoe2.chat.data.channel.request.GetChannelProfileRequest;
+import com.joejoe2.chat.data.channel.request.ChannelPageRequest;
+import com.joejoe2.chat.data.channel.request.ChannelPageRequestWithSince;
+import com.joejoe2.chat.data.channel.request.ChannelRequest;
+import com.joejoe2.chat.data.channel.request.CreateChannelByNameRequest;
 import com.joejoe2.chat.data.message.MessageDto;
 import com.joejoe2.chat.data.message.PublicMessageDto;
 import com.joejoe2.chat.data.message.SliceOfMessage;
-import com.joejoe2.chat.data.message.request.GetAllPublicMessageRequest;
-import com.joejoe2.chat.data.message.request.GetPublicMessageSinceRequest;
-import com.joejoe2.chat.data.message.request.PublishPublicMessageRequest;
+import com.joejoe2.chat.data.message.request.PublishMessageRequest;
 import com.joejoe2.chat.models.PublicChannel;
 import com.joejoe2.chat.models.User;
 import com.joejoe2.chat.repository.channel.PublicChannelRepository;
@@ -87,8 +87,8 @@ class PublicChannelControllerTest {
 
   @Test
   void publishMessage() throws Exception {
-    PublishPublicMessageRequest request =
-        PublishPublicMessageRequest.builder()
+    PublishMessageRequest request =
+        PublishMessageRequest.builder()
             .channelId(channel.getId().toString())
             .message("msg")
             .build();
@@ -109,17 +109,16 @@ class PublicChannelControllerTest {
             .getList()
             .get(0);
     assertEquals(
-        message.getId(),
-        objectMapper
-            .readValue(result.getResponse().getContentAsString(), PublicMessageDto.class)
-            .getId());
+        message,
+        objectMapper.readValue(result.getResponse().getContentAsString(), PublicMessageDto.class));
+    Thread.sleep(1000);
     Mockito.verify(messageService, Mockito.times(1)).deliverMessage(Mockito.any());
   }
 
   @Test
   void publishMessageWithError() throws Exception {
-    PublishPublicMessageRequest request =
-        PublishPublicMessageRequest.builder().channelId("invalid id").message(" ").build();
+    PublishMessageRequest request =
+        PublishMessageRequest.builder().channelId("invalid id").message(" ").build();
     // test 400
     mockMvc
         .perform(
@@ -133,7 +132,7 @@ class PublicChannelControllerTest {
     // test 404
     String id = UUID.randomUUID().toString();
     while (Objects.equals(channel.getId().toString(), id)) id = UUID.randomUUID().toString();
-    request = PublishPublicMessageRequest.builder().channelId(id).message("msg").build();
+    request = PublishMessageRequest.builder().channelId(id).message("msg").build();
 
     mockMvc
         .perform(
@@ -153,8 +152,8 @@ class PublicChannelControllerTest {
       messages.add(
           messageService.createMessage(user.getId().toString(), channel.getId().toString(), "msg"));
     // test success
-    GetAllPublicMessageRequest request =
-        GetAllPublicMessageRequest.builder()
+    ChannelPageRequest request =
+        ChannelPageRequest.builder()
             .pageRequest(PageRequest.builder().page(0).size(messages.size()).build())
             .channelId(channel.getId().toString())
             .build();
@@ -176,14 +175,14 @@ class PublicChannelControllerTest {
     assertEquals(request.getPageRequest().getPage(), slice.getCurrentPage());
     assertEquals(request.getPageRequest().getSize(), slice.getMessages().size());
     for (int i = 0; i < messages.size(); i++) {
-      assertEquals(messages.get(i).getId(), slice.getMessages().get(i).getId());
+      assertEquals(messages.get(i), slice.getMessages().get(i));
     }
   }
 
   @Test
   void getMessagesWithError() throws Exception {
-    GetAllPublicMessageRequest request =
-        GetAllPublicMessageRequest.builder()
+    ChannelPageRequest request =
+        ChannelPageRequest.builder()
             .channelId("invalid id")
             .pageRequest(PageRequest.builder().page(-1).size(0).build())
             .build();
@@ -205,7 +204,7 @@ class PublicChannelControllerTest {
     String id = UUID.randomUUID().toString();
     while (Objects.equals(channel.getId().toString(), id)) id = UUID.randomUUID().toString();
     request =
-        GetAllPublicMessageRequest.builder()
+        ChannelPageRequest.builder()
             .pageRequest(PageRequest.builder().page(0).size(1).build())
             .channelId(id)
             .build();
@@ -234,8 +233,8 @@ class PublicChannelControllerTest {
       messages.add(
           messageService.createMessage(user.getId().toString(), channel.getId().toString(), "msg"));
     // test success
-    GetPublicMessageSinceRequest request =
-        GetPublicMessageSinceRequest.builder()
+    ChannelPageRequestWithSince request =
+        ChannelPageRequestWithSince.builder()
             .pageRequest(PageRequest.builder().page(0).size(messages.size()).build())
             .channelId(channel.getId().toString())
             .since(since)
@@ -260,14 +259,14 @@ class PublicChannelControllerTest {
     assertEquals(request.getPageRequest().getPage(), slice.getCurrentPage());
     assertEquals(request.getPageRequest().getSize(), slice.getMessages().size());
     for (int i = 0; i < messages.size(); i++) {
-      assertEquals(messages.get(i).getId(), slice.getMessages().get(i).getId());
+      assertEquals(messages.get(i), slice.getMessages().get(i));
     }
   }
 
   @Test
   void getMessagesSinceWithError() throws Exception {
-    GetPublicMessageSinceRequest request =
-        GetPublicMessageSinceRequest.builder()
+    ChannelPageRequestWithSince request =
+        ChannelPageRequestWithSince.builder()
             .channelId("invalid id")
             .pageRequest(PageRequest.builder().page(-1).size(0).build())
             .since(Instant.now())
@@ -292,7 +291,7 @@ class PublicChannelControllerTest {
     String id = UUID.randomUUID().toString();
     while (Objects.equals(channel.getId().toString(), id)) id = UUID.randomUUID().toString();
     request =
-        GetPublicMessageSinceRequest.builder()
+        ChannelPageRequestWithSince.builder()
             .pageRequest(PageRequest.builder().page(0).size(1).build())
             .channelId(id)
             .since(Instant.now())
@@ -315,8 +314,8 @@ class PublicChannelControllerTest {
   @Test
   void create() throws Exception {
     // test success
-    CreatePublicChannelRequest request =
-        CreatePublicChannelRequest.builder().channelName("create").build();
+    CreateChannelByNameRequest request =
+        CreateChannelByNameRequest.builder().channelName("create").build();
 
     MvcResult result =
         mockMvc
@@ -335,8 +334,8 @@ class PublicChannelControllerTest {
 
   @Test
   void createWithError() throws Exception {
-    CreatePublicChannelRequest request =
-        CreatePublicChannelRequest.builder().channelName("invalid name !!!").build();
+    CreateChannelByNameRequest request =
+        CreateChannelByNameRequest.builder().channelName("invalid name !!!").build();
     // test 400
     mockMvc
         .perform(
@@ -347,7 +346,7 @@ class PublicChannelControllerTest {
         .andExpect(jsonPath("$.errors.channelName").exists())
         .andExpect(status().isBadRequest());
     // test 403
-    request = CreatePublicChannelRequest.builder().channelName(channel.getName()).build();
+    request = CreateChannelByNameRequest.builder().channelName(channel.getName()).build();
 
     mockMvc
         .perform(
@@ -411,8 +410,7 @@ class PublicChannelControllerTest {
   @Test
   void profile() throws Exception {
     // test success
-    GetChannelProfileRequest request =
-        GetChannelProfileRequest.builder().channelId(channel.getId().toString()).build();
+    ChannelRequest request = ChannelRequest.builder().channelId(channel.getId().toString()).build();
     LinkedMultiValueMap<String, String> query = new LinkedMultiValueMap<>();
     query.add("channelId", request.getChannelId());
     Mockito.doReturn(new PublicChannelProfile(channel))
@@ -435,8 +433,7 @@ class PublicChannelControllerTest {
 
   @Test
   void profileWithError() throws Exception {
-    GetChannelProfileRequest request =
-        GetChannelProfileRequest.builder().channelId("invalid id").build();
+    ChannelRequest request = ChannelRequest.builder().channelId("invalid id").build();
     // test 400
     LinkedMultiValueMap<String, String> query = new LinkedMultiValueMap<>();
     query.add("channelId", request.getChannelId());
@@ -451,7 +448,7 @@ class PublicChannelControllerTest {
     // test 404
     String id = UUID.randomUUID().toString();
     while (Objects.equals(channel.getId().toString(), id)) id = UUID.randomUUID().toString();
-    request = GetChannelProfileRequest.builder().channelId(id).build();
+    request = ChannelRequest.builder().channelId(id).build();
     query = new LinkedMultiValueMap<>();
     query.add("channelId", request.getChannelId());
 

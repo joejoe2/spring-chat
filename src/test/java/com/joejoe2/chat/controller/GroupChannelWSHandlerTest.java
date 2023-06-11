@@ -7,12 +7,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joejoe2.chat.TestContext;
 import com.joejoe2.chat.data.message.request.PublishMessageRequest;
-import com.joejoe2.chat.models.PrivateChannel;
+import com.joejoe2.chat.models.GroupChannel;
 import com.joejoe2.chat.models.User;
-import com.joejoe2.chat.repository.channel.PrivateChannelRepository;
+import com.joejoe2.chat.repository.channel.GroupChannelRepository;
 import com.joejoe2.chat.repository.user.UserRepository;
 import com.joejoe2.chat.utils.JwtUtil;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.net.URI;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.*;
@@ -38,33 +37,33 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @ExtendWith(TestContext.class)
-public class PrivateChannelWSHandlerTest {
-  User user1, user2;
-  String accessToken1, accessToken2;
-  PrivateChannel channel;
+public class GroupChannelWSHandlerTest {
+  User[] users = new User[3];
+  String[] accessTokens = new String[3];
+  GroupChannel channel;
 
   @Value("${jwt.secret.privateKey}")
   RSAPrivateKey privateKey;
 
   @Autowired UserRepository userRepository;
-  @Autowired PrivateChannelRepository channelRepository;
-  @Autowired SimpleMeterRegistry meterRegistry;
+  @Autowired GroupChannelRepository channelRepository;
   @Autowired MockMvc mockMvc;
   @Autowired ObjectMapper objectMapper;
 
   @BeforeEach
   void setUp() {
-    user1 = User.builder().id(UUID.randomUUID()).userName("test1").build();
-    user2 = User.builder().id(UUID.randomUUID()).userName("test2").build();
-    userRepository.save(user1);
-    userRepository.save(user2);
-    channel = new PrivateChannel(Set.of(user1, user2));
-    channelRepository.save(channel);
-
     Calendar exp = Calendar.getInstance();
     exp.add(Calendar.MINUTE, 10);
-    accessToken1 = JwtUtil.generateAccessToken(privateKey, "jti", "issuer", user1, exp);
-    accessToken2 = JwtUtil.generateAccessToken(privateKey, "jti", "issuer", user2, exp);
+    for (int i = 0; i < users.length; i++) {
+      users[i] = User.builder().id(UUID.randomUUID()).userName("test" + i).build();
+      accessTokens[i] = JwtUtil.generateAccessToken(privateKey, "jti", "issuer", users[i], exp);
+    }
+    userRepository.saveAll(Arrays.stream(users).toList());
+    channel = new GroupChannel(Set.of(users));
+    channelRepository.save(channel);
+    for (int i = 0; i < users.length; i++) {
+      accessTokens[i] = JwtUtil.generateAccessToken(privateKey, "jti", "issuer", users[i], exp);
+    }
   }
 
   @AfterEach
@@ -74,12 +73,16 @@ public class PrivateChannelWSHandlerTest {
   }
 
   public static class WsClient extends WebSocketClient {
-    HashSet<String> messages = new HashSet<>();
-    CountDownLatch countDownLatch;
+    CountDownLatch messageLatch;
+    List<String> messages = new ArrayList<>();
 
-    public WsClient(URI serverUri, CountDownLatch countDownLatch) {
+    public WsClient(URI serverUri) {
       super(serverUri);
-      this.countDownLatch = countDownLatch;
+    }
+
+    public WsClient(URI serverUri, CountDownLatch messageLatch) {
+      super(serverUri);
+      this.messageLatch = messageLatch;
     }
 
     @Override
@@ -87,8 +90,8 @@ public class PrivateChannelWSHandlerTest {
 
     @Override
     public void onMessage(String s) {
+      if (messageLatch != null) messageLatch.countDown();
       messages.add(s);
-      countDownLatch.countDown();
     }
 
     @Override
@@ -100,29 +103,33 @@ public class PrivateChannelWSHandlerTest {
 
   @Test
   void subscribe() throws Exception {
-    String uri =
-        "ws://localhost:8081/ws/channel/private/subscribe?access_token="
-            + accessToken2
-            + "&channelId="
-            + channel.getId();
-    WsClient client = new WsClient(URI.create(uri), new CountDownLatch(3));
-    client.connectBlocking(5, TimeUnit.SECONDS);
+    int messageCount = users.length * 2;
+    WsClient[] clients = new WsClient[users.length];
+    for (int i = 0; i < users.length; i++) {
+      String uri =
+          "ws://localhost:8081/ws/channel/group/subscribe?access_token="
+              + accessTokens[i]
+              + "&channelId="
+              + channel.getId();
+      clients[i] = new WsClient(URI.create(uri), new CountDownLatch(messageCount + 1));
+      clients[i].connectBlocking(5, TimeUnit.SECONDS);
+    }
     // publish some messages
     PublishMessageRequest request =
         PublishMessageRequest.builder()
             .channelId(channel.getId().toString())
             .message("msg")
             .build();
-    HashSet<String> messages = new HashSet<>();
+    List<String> messages = new ArrayList<>();
     messages.add("[]");
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < messageCount; i++) {
       String t =
           mockMvc
               .perform(
-                  MockMvcRequestBuilders.post("/api/channel/private/publishMessage")
+                  MockMvcRequestBuilders.post("/api/channel/group/publishMessage")
                       .contentType(MediaType.APPLICATION_JSON)
                       .content(objectMapper.writeValueAsString(request))
-                      .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken1)
+                      .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessTokens[i % users.length])
                       .accept(MediaType.APPLICATION_JSON))
               .andExpect(status().isOk())
               .andReturn()
@@ -131,9 +138,12 @@ public class PrivateChannelWSHandlerTest {
       messages.add("[" + t + "]");
     }
     // test success
-    assertTrue(client.isOpen());
-    client.countDownLatch.await(5, TimeUnit.SECONDS);
-    assertEquals(messages, client.messages);
-    client.closeBlocking();
+    Thread.sleep(1000);
+    for (int i = 0; i < users.length; i++) {
+      assertTrue(clients[i].isOpen());
+      assertTrue(clients[i].messageLatch.await(5, TimeUnit.SECONDS));
+      assertEquals(messages, clients[i].messages);
+      clients[i].closeBlocking();
+    }
   }
 }

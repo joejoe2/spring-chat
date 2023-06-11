@@ -3,10 +3,8 @@ package com.joejoe2.chat.models;
 import java.time.Instant;
 import java.util.Objects;
 import javax.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -16,21 +14,21 @@ import org.hibernate.annotations.OnDeleteAction;
 @Data
 @Entity
 @Table(
-    name = "private_message",
+    name = "group_message",
     indexes = {
-      @Index(columnList = "to_id"),
       @Index(columnList = "from_id"),
       @Index(columnList = "channel_id"),
       @Index(columnList = "updateAt DESC")
     })
-public class PrivateMessage extends TimeStampBase {
+@BatchSize(size = 32)
+public class GroupMessage extends TimeStampBase {
   @Version
   @Column(nullable = false, columnDefinition = "TIMESTAMP DEFAULT now()")
   private Instant version;
 
   @ManyToOne(optional = false, fetch = FetchType.LAZY)
   @OnDelete(action = OnDeleteAction.CASCADE)
-  private PrivateChannel channel;
+  private GroupChannel channel;
 
   @Column(length = 32, nullable = false)
   @Enumerated(EnumType.STRING)
@@ -39,26 +37,53 @@ public class PrivateMessage extends TimeStampBase {
   @ManyToOne(optional = false, fetch = FetchType.LAZY)
   User from;
 
-  @ManyToOne(optional = false, fetch = FetchType.LAZY)
-  User to;
-
   @Column(columnDefinition = "TEXT", nullable = false)
   private String content;
 
-  public PrivateMessage(PrivateChannel channel, User from, User to, String content) {
-    if (Objects.equals(from, to))
-      throw new IllegalArgumentException("from cannot be same with to !");
+  public GroupMessage(GroupChannel channel, User from, String content) {
     this.channel = channel;
     this.from = from;
-    this.to = to;
     this.content = content;
+  }
+
+  public static GroupMessage inviteMessage(GroupChannel channel, User inviter, User invitee) {
+    GroupMessage message = new GroupMessage();
+    message.channel = channel;
+    message.from = inviter;
+    message.content =
+        "{\"id\":\"%s\", \"username\":\"%s\"}"
+            .formatted(invitee.getId().toString(), invitee.getUserName());
+    message.messageType = MessageType.INVITATION;
+    return message;
+  }
+
+  public static GroupMessage joinMessage(GroupChannel channel, User joiner) {
+    GroupMessage message = new GroupMessage();
+    message.channel = channel;
+    message.from = joiner;
+    message.content =
+        "{\"id\":\"%s\", \"username\":\"%s\"}"
+            .formatted(joiner.getId().toString(), joiner.getUserName());
+    message.messageType = MessageType.JOIN;
+    return message;
+  }
+
+  public static GroupMessage leaveMessage(GroupChannel channel, User actor, User subject) {
+    GroupMessage message = new GroupMessage();
+    message.channel = channel;
+    message.from = actor;
+    message.content =
+        "{\"id\":\"%s\", \"username\":\"%s\"}"
+            .formatted(subject.getId().toString(), subject.getUserName());
+    message.messageType = MessageType.LEAVE;
+    return message;
   }
 
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
-    if (!(o instanceof PrivateMessage)) return false;
-    PrivateMessage that = (PrivateMessage) o;
+    if (!(o instanceof GroupChannel)) return false;
+    GroupChannel that = (GroupChannel) o;
     return Objects.equals(id, that.id);
   }
 
@@ -78,8 +103,6 @@ public class PrivateMessage extends TimeStampBase {
         + messageType
         + ", from="
         + from
-        + ", to="
-        + to
         + ", content='"
         + content
         + '\''

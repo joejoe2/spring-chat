@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreatePublicChannelRequest {
+public class CreateChannelByNameRequest {
   @Schema(description = "channel name")
   @PublicChannelName
   private String channelName;

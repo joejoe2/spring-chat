@@ -20,6 +20,13 @@ public interface PrivateChannelService {
    */
   SseEmitter subscribe(String fromUserId) throws UserDoesNotExist;
 
+  /**
+   * subscribe to all private channels of target user
+   *
+   * @param fromUserId id of target user
+   * @param session WebSocketSession
+   * @throws UserDoesNotExist
+   */
   void subscribe(WebSocketSession session, String fromUserId) throws UserDoesNotExist;
 
   /**

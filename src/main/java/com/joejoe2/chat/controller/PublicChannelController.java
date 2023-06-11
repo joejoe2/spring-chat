@@ -1,20 +1,17 @@
 package com.joejoe2.chat.controller;
 
 import com.joejoe2.chat.controller.constraint.auth.AuthenticatedApi;
-import com.joejoe2.chat.data.ErrorMessageResponse;
-import com.joejoe2.chat.data.PageList;
-import com.joejoe2.chat.data.PageRequest;
-import com.joejoe2.chat.data.SliceList;
+import com.joejoe2.chat.data.*;
 import com.joejoe2.chat.data.channel.PageOfChannel;
 import com.joejoe2.chat.data.channel.profile.PublicChannelProfile;
-import com.joejoe2.chat.data.channel.request.CreatePublicChannelRequest;
-import com.joejoe2.chat.data.channel.request.GetChannelProfileRequest;
-import com.joejoe2.chat.data.channel.request.SubscribePublicChannelRequest;
+import com.joejoe2.chat.data.channel.request.ChannelPageRequest;
+import com.joejoe2.chat.data.channel.request.ChannelPageRequestWithSince;
+import com.joejoe2.chat.data.channel.request.ChannelRequest;
+import com.joejoe2.chat.data.channel.request.CreateChannelByNameRequest;
+import com.joejoe2.chat.data.channel.request.SubscribeChannelRequest;
 import com.joejoe2.chat.data.message.PublicMessageDto;
 import com.joejoe2.chat.data.message.SliceOfMessage;
-import com.joejoe2.chat.data.message.request.GetAllPublicMessageRequest;
-import com.joejoe2.chat.data.message.request.GetPublicMessageSinceRequest;
-import com.joejoe2.chat.data.message.request.PublishPublicMessageRequest;
+import com.joejoe2.chat.data.message.request.PublishMessageRequest;
 import com.joejoe2.chat.exception.AlreadyExist;
 import com.joejoe2.chat.exception.ChannelDoesNotExist;
 import com.joejoe2.chat.exception.UserDoesNotExist;
@@ -65,8 +62,8 @@ public class PublicChannelController {
                     schema = @Schema(implementation = PublicMessageDto.class))),
       })
   @RequestMapping(path = "/publishMessage", method = RequestMethod.POST)
-  public ResponseEntity<Object> publishMessage(
-      @Valid @RequestBody PublishPublicMessageRequest request) throws UserDoesNotExist {
+  public ResponseEntity<Object> publishMessage(@Valid @RequestBody PublishMessageRequest request)
+      throws UserDoesNotExist {
     try {
       PublicMessageDto message =
           messageService.createMessage(
@@ -99,8 +96,7 @@ public class PublicChannelController {
                     schema = @Schema(implementation = SliceOfMessage.class))),
       })
   @RequestMapping(path = "/getAllMessages", method = RequestMethod.GET)
-  public ResponseEntity<Object> getMessages(
-      @ParameterObject @Valid GetAllPublicMessageRequest request) {
+  public ResponseEntity<Object> getMessages(@ParameterObject @Valid ChannelPageRequest request) {
     try {
       SliceList<PublicMessageDto> sliceList =
           messageService.getAllMessages(request.getChannelId(), request.getPageRequest());
@@ -132,7 +128,7 @@ public class PublicChannelController {
       })
   @RequestMapping(path = "/getMessagesSince", method = RequestMethod.GET)
   public ResponseEntity<Object> getMessagesSince(
-      @ParameterObject @Valid GetPublicMessageSinceRequest request) {
+      @ParameterObject @Valid ChannelPageRequestWithSince request) {
     try {
       SliceList<PublicMessageDto> sliceList =
           messageService.getAllMessages(
@@ -164,7 +160,7 @@ public class PublicChannelController {
                     schema = @Schema(implementation = PublicChannelProfile.class))),
       })
   @RequestMapping(path = "/create", method = RequestMethod.POST)
-  public ResponseEntity<Object> create(@Valid @RequestBody CreatePublicChannelRequest request) {
+  public ResponseEntity<Object> create(@Valid @RequestBody CreateChannelByNameRequest request) {
     try {
       return ResponseEntity.ok(channelService.createChannel(request.getChannelName()));
     } catch (AlreadyExist e) {
@@ -212,7 +208,7 @@ public class PublicChannelController {
                     schema = @Schema(implementation = PublicChannelProfile.class))),
       })
   @RequestMapping(path = "/profile", method = RequestMethod.GET)
-  public ResponseEntity<Object> profile(@ParameterObject @Valid GetChannelProfileRequest request) {
+  public ResponseEntity<Object> profile(@ParameterObject @Valid ChannelRequest request) {
     try {
       PublicChannelProfile profile = channelService.getChannelProfile(request.getChannelId());
       return ResponseEntity.ok(profile);
@@ -245,7 +241,7 @@ public class PublicChannelController {
                         @ArraySchema(schema = @Schema(implementation = PublicMessageDto.class)))),
       })
   @RequestMapping(path = "/subscribe", method = RequestMethod.GET)
-  public Object subscribe(@ParameterObject @Valid SubscribePublicChannelRequest request) {
+  public Object subscribe(@ParameterObject @Valid SubscribeChannelRequest request) {
     try {
       return channelService.subscribe(request.getChannelId());
     } catch (ChannelDoesNotExist e) {

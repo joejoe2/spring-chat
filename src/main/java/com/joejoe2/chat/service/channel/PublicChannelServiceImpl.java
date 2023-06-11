@@ -12,8 +12,8 @@ import com.joejoe2.chat.repository.channel.PublicChannelRepository;
 import com.joejoe2.chat.utils.ChannelSubject;
 import com.joejoe2.chat.utils.SseUtil;
 import com.joejoe2.chat.utils.WebSocketUtil;
+import com.joejoe2.chat.validation.validator.ChannelNameValidator;
 import com.joejoe2.chat.validation.validator.PageRequestValidator;
-import com.joejoe2.chat.validation.validator.PublicChannelNameValidator;
 import com.joejoe2.chat.validation.validator.UUIDValidator;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -46,7 +46,7 @@ public class PublicChannelServiceImpl implements PublicChannelService {
 
   UUIDValidator uuidValidator = UUIDValidator.getInstance();
 
-  PublicChannelNameValidator channelNameValidator = PublicChannelNameValidator.getInstance();
+  ChannelNameValidator channelNameValidator = ChannelNameValidator.getInstance();
 
   PageRequestValidator pageValidator = PageRequestValidator.getInstance();
 

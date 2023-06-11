@@ -1,7 +1,7 @@
 package com.joejoe2.chat.controller;
 
 import com.joejoe2.chat.exception.UserDoesNotExist;
-import com.joejoe2.chat.service.channel.PrivateChannelService;
+import com.joejoe2.chat.service.channel.GroupChannelService;
 import com.joejoe2.chat.utils.AuthUtil;
 import com.joejoe2.chat.utils.WebSocketUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,8 +12,8 @@ import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorato
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 @Component
-public class PrivateChannelWSHandler extends TextWebSocketHandler {
-  @Autowired PrivateChannelService channelService;
+public class GroupChannelWSHandler extends TextWebSocketHandler {
+  @Autowired GroupChannelService channelService;
 
   @Override
   public void afterConnectionEstablished(WebSocketSession session) throws Exception {

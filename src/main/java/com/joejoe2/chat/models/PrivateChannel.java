@@ -16,10 +16,8 @@ import org.hibernate.annotations.BatchSize;
 @BatchSize(size = 128)
 @Table(
     name = "private_channel",
-    indexes = {@Index(columnList = "uniqueUserIds")})
+    indexes = {@Index(columnList = "uniqueUserIds"), @Index(columnList = "updateAt DESC")})
 public class PrivateChannel extends TimeStampBase {
-  public static final String WITH_MEMBERS = "PrivateChannelGraph.with_members";
-
   @Version
   @Column(nullable = false, columnDefinition = "TIMESTAMP DEFAULT now()")
   private Instant version;
@@ -28,14 +26,16 @@ public class PrivateChannel extends TimeStampBase {
   @BatchSize(size = 128) // for each PrivateChannels->getMembers
   @JoinTable(
       name = "private_channels_users",
-      joinColumns = {@JoinColumn(name = "private_channel_id", unique = false, nullable = false)},
-      inverseJoinColumns = {@JoinColumn(name = "user_id", unique = false, nullable = false)})
+      joinColumns = {@JoinColumn(name = "private_channel_id", nullable = false)},
+      inverseJoinColumns = {@JoinColumn(name = "user_id", nullable = false)})
   Set<User> members;
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "channel", orphanRemoval = true)
   List<PrivateMessage> messages;
 
-  @OneToOne @JoinColumn PrivateMessage lastMessage;
+  @OneToOne(fetch = FetchType.LAZY)
+  @JoinColumn
+  PrivateMessage lastMessage;
 
   public PrivateChannel(Set<User> members) {
     this.members = members;

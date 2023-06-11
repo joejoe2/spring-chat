@@ -3,16 +3,16 @@ package com.joejoe2.chat.controller;
 import com.joejoe2.chat.controller.constraint.auth.AuthenticatedApi;
 import com.joejoe2.chat.data.ErrorMessageResponse;
 import com.joejoe2.chat.data.PageRequest;
+import com.joejoe2.chat.data.PageRequestWithSince;
 import com.joejoe2.chat.data.SliceList;
-import com.joejoe2.chat.data.channel.SliceOfChannel;
+import com.joejoe2.chat.data.channel.SliceOfPrivateChannel;
 import com.joejoe2.chat.data.channel.profile.PrivateChannelProfile;
+import com.joejoe2.chat.data.channel.request.ChannelRequest;
 import com.joejoe2.chat.data.channel.request.CreatePrivateChannelRequest;
-import com.joejoe2.chat.data.channel.request.GetChannelProfileRequest;
-import com.joejoe2.chat.data.channel.request.SubscribePrivateChannelRequest;
+import com.joejoe2.chat.data.channel.request.SubscribeRequest;
 import com.joejoe2.chat.data.message.PrivateMessageDto;
 import com.joejoe2.chat.data.message.SliceOfMessage;
-import com.joejoe2.chat.data.message.request.GetPrivateMessageSinceRequest;
-import com.joejoe2.chat.data.message.request.PublishPrivateMessageRequest;
+import com.joejoe2.chat.data.message.request.PublishMessageRequest;
 import com.joejoe2.chat.exception.AlreadyExist;
 import com.joejoe2.chat.exception.ChannelDoesNotExist;
 import com.joejoe2.chat.exception.InvalidOperation;
@@ -71,8 +71,8 @@ public class PrivateChannelController {
                     schema = @Schema(implementation = PrivateMessageDto.class))),
       })
   @RequestMapping(path = "/publishMessage", method = RequestMethod.POST)
-  public ResponseEntity<Object> publishMessage(
-      @RequestBody @Valid PublishPrivateMessageRequest request) throws UserDoesNotExist {
+  public ResponseEntity<Object> publishMessage(@RequestBody @Valid PublishMessageRequest request)
+      throws UserDoesNotExist {
     try {
       PrivateMessageDto message =
           messageService.createMessage(
@@ -122,7 +122,7 @@ public class PrivateChannelController {
       })
   @RequestMapping(path = "/getMessagesSince", method = RequestMethod.GET)
   public ResponseEntity<Object> getMessagesSince(
-      @ParameterObject @Valid GetPrivateMessageSinceRequest request) throws UserDoesNotExist {
+      @ParameterObject @Valid PageRequestWithSince request) throws UserDoesNotExist {
     SliceList<PrivateMessageDto> sliceList =
         messageService.getAllMessages(
             AuthUtil.currentUserDetail().getId(), request.getSince(), request.getPageRequest());
@@ -174,14 +174,14 @@ public class PrivateChannelController {
             content =
                 @Content(
                     mediaType = "application/json",
-                    schema = @Schema(implementation = SliceOfChannel.class))),
+                    schema = @Schema(implementation = SliceOfPrivateChannel.class))),
       })
   @RequestMapping(path = "/list", method = RequestMethod.GET)
   public ResponseEntity<Object> list(@ParameterObject @Valid PageRequest request)
       throws UserDoesNotExist {
     SliceList<PrivateChannelProfile> sliceList =
         channelService.getAllChannels(AuthUtil.currentUserDetail().getId(), request);
-    return ResponseEntity.ok(new SliceOfChannel(sliceList));
+    return ResponseEntity.ok(new SliceOfPrivateChannel(sliceList));
   }
 
   @Operation(summary = "get profile of private channel")
@@ -212,7 +212,7 @@ public class PrivateChannelController {
                     schema = @Schema(implementation = PrivateChannelProfile.class))),
       })
   @RequestMapping(path = "/profile", method = RequestMethod.GET)
-  public ResponseEntity<Object> profile(@ParameterObject @Valid GetChannelProfileRequest request)
+  public ResponseEntity<Object> profile(@ParameterObject @Valid ChannelRequest request)
       throws UserDoesNotExist {
     try {
       PrivateChannelProfile profile =
@@ -243,7 +243,7 @@ public class PrivateChannelController {
                         @ArraySchema(schema = @Schema(implementation = PrivateMessageDto.class)))),
       })
   @RequestMapping(path = "/subscribe", method = RequestMethod.GET)
-  public Object subscribe(@ParameterObject @Valid SubscribePrivateChannelRequest request)
+  public Object subscribe(@ParameterObject @Valid SubscribeRequest request)
       throws UserDoesNotExist {
     return channelService.subscribe(AuthUtil.currentUserDetail().getId());
   }

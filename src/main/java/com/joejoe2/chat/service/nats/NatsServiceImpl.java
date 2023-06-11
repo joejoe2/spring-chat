@@ -1,6 +1,7 @@
 package com.joejoe2.chat.service.nats;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.joejoe2.chat.data.message.GroupMessageDto;
 import com.joejoe2.chat.data.message.PrivateMessageDto;
 import com.joejoe2.chat.data.message.PublicMessageDto;
 import io.nats.client.Connection;
@@ -36,6 +37,15 @@ public class NatsServiceImpl implements NatsService {
 
   @Override
   public void publish(String subject, PublicMessageDto message) {
+    try {
+      publish(subject, objectMapper.writeValueAsString(message));
+    } catch (Exception e) {
+      logger.error(e.getMessage());
+    }
+  }
+
+  @Override
+  public void publish(String subject, GroupMessageDto message) {
     try {
       publish(subject, objectMapper.writeValueAsString(message));
     } catch (Exception e) {
