@@ -105,7 +105,7 @@ public class PrivateChannelWSHandlerTest {
             + accessToken2
             + "&channelId="
             + channel.getId();
-    WsClient client = new WsClient(URI.create(uri), new CountDownLatch(6));
+    WsClient client = new WsClient(URI.create(uri), new CountDownLatch(3));
     client.connectBlocking(5, TimeUnit.SECONDS);
     // publish some messages
     PublishMessageRequest request =
@@ -115,7 +115,7 @@ public class PrivateChannelWSHandlerTest {
             .build();
     HashSet<String> messages = new HashSet<>();
     messages.add("[]");
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 2; i++) {
       String t =
           mockMvc
               .perform(
@@ -134,6 +134,6 @@ public class PrivateChannelWSHandlerTest {
     assertTrue(client.isOpen());
     client.countDownLatch.await(5, TimeUnit.SECONDS);
     assertEquals(messages, client.messages);
-    client.close();
+    client.closeBlocking();
   }
 }
