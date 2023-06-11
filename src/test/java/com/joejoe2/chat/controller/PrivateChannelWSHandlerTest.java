@@ -16,6 +16,7 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.net.URI;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
@@ -74,9 +75,11 @@ public class PrivateChannelWSHandlerTest {
 
   public static class WsClient extends WebSocketClient {
     HashSet<String> messages = new HashSet<>();
+    CountDownLatch countDownLatch;
 
-    public WsClient(URI serverUri) {
+    public WsClient(URI serverUri, CountDownLatch countDownLatch) {
       super(serverUri);
+      this.countDownLatch = countDownLatch;
     }
 
     @Override
@@ -85,6 +88,7 @@ public class PrivateChannelWSHandlerTest {
     @Override
     public void onMessage(String s) {
       messages.add(s);
+      countDownLatch.countDown();
     }
 
     @Override
@@ -101,7 +105,7 @@ public class PrivateChannelWSHandlerTest {
             + accessToken2
             + "&channelId="
             + channel.getId();
-    WsClient client = new WsClient(URI.create(uri));
+    WsClient client = new WsClient(URI.create(uri), new CountDownLatch(11));
     client.connectBlocking(5, TimeUnit.SECONDS);
     // publish some messages
     PublishMessageRequest request =
@@ -129,6 +133,7 @@ public class PrivateChannelWSHandlerTest {
     // test success
     Thread.sleep(5000);
     assertTrue(client.isOpen());
+    client.countDownLatch.await();
     assertEquals(messages, client.messages);
     client.close();
   }
