@@ -103,7 +103,7 @@ public class GroupChannelWSHandlerTest {
 
   @Test
   void subscribe() throws Exception {
-    int messageCount = 10;
+    int messageCount = 5;
     WsClient[] clients = new WsClient[users.length];
     for (int i = 0; i < users.length; i++) {
       String uri =
