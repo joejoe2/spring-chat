@@ -12,8 +12,8 @@ import org.hibernate.annotations.GenericGenerator;
 @Data
 public class Base {
   @Id
-  @GeneratedValue(generator = "UUID")
-  @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
+  @GeneratedValue(generator = "UUIDv7")
+  @GenericGenerator(name = "UUIDv7", strategy = "com.joejoe2.chat.models.UUIDv7Generator")
   @Column(unique = true, updatable = false, nullable = false)
   UUID id;
 }
