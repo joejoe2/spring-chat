@@ -100,19 +100,17 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
 
   /** deliver private messages to registered users(subscribers) */
   private void sendToSubscribers(Set<Object> subscribers, PrivateMessageDto message) {
-    List.copyOf(subscribers).parallelStream()
-        .forEach(
-            (subscriber) -> {
-              try {
-                if (subscriber instanceof SseEmitter)
-                  SseUtil.sendMessageEvent((SseEmitter) subscriber, message);
-                else if (subscriber instanceof WebSocketSession)
-                  WebSocketUtil.sendMessage(
-                      ((WebSocketSession) subscriber), objectMapper.writeValueAsString(message));
-              } catch (Exception e) {
-                e.printStackTrace();
-              }
-            });
+    for (Object subscriber : subscribers.toArray()) {
+      try {
+        if (subscriber instanceof SseEmitter)
+          SseUtil.sendMessageEvent((SseEmitter) subscriber, message);
+        else if (subscriber instanceof WebSocketSession)
+          WebSocketUtil.sendMessage(
+              ((WebSocketSession) subscriber), objectMapper.writeValueAsString(message));
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
   }
 
   @Override

@@ -63,7 +63,6 @@ public class PublicMessageServiceImpl implements PublicMessageService {
   }
 
   @Async
-  @Transactional(readOnly = true)
   @Override
   public void deliverMessage(PublicMessageDto message) {
     natsService.publish(
