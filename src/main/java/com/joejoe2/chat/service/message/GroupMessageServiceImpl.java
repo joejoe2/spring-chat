@@ -23,6 +23,7 @@ import com.joejoe2.chat.validation.validator.PageRequestValidator;
 import com.joejoe2.chat.validation.validator.UUIDValidator;
 import java.time.Instant;
 import java.util.Comparator;
+import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,8 +76,8 @@ public class GroupMessageServiceImpl implements GroupMessageService {
   public void deliverMessage(GroupMessageDto message) {
     GroupChannel channel = channelRepository.findById(message.getChannel()).orElse(null);
     if (channel == null) return;
-    for (User member : channel.getMembers()) {
-      natsService.publish(ChannelSubject.groupChannelSubject(member.getId().toString()), message);
+    for (UUID memberId : channelRepository.getMembersIdByChannel(channel.getId())) {
+      natsService.publish(ChannelSubject.groupChannelSubject(memberId.toString()), message);
     }
     // also send to invitee or the one just leave channel
     if (MessageType.INVITATION.equals(message.getMessageType())

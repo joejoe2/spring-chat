@@ -159,7 +159,7 @@ public class GroupMessageServiceTest {
   }
 
   @Test
-  void deliverMessageToInvitee() throws Exception {
+  void deliverMessage() throws Exception {
     // prepare
     GroupChannelProfile channel = channelService.createChannel(userA.getId().toString(), "test");
 

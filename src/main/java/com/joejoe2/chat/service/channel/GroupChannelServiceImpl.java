@@ -37,6 +37,7 @@ import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Slice;
 import org.springframework.retry.annotation.Backoff;
@@ -283,6 +284,9 @@ public class GroupChannelServiceImpl implements GroupChannelService {
   @Override
   @Retryable(value = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 100))
   @Transactional(rollbackFor = Exception.class)
+  @CacheEvict(
+      value = "GroupChannelMembers",
+      key = "'GroupChannelMembers:{'+ #channelId.toString() +'}'")
   public GroupMessageDto acceptInvitationOfChannel(String ofUserId, String channelId)
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation {
     User invitee =
@@ -304,6 +308,9 @@ public class GroupChannelServiceImpl implements GroupChannelService {
   @Override
   @Retryable(value = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 100))
   @Transactional(rollbackFor = Exception.class)
+  @CacheEvict(
+      value = "GroupChannelMembers",
+      key = "'GroupChannelMembers:{'+ #channelId.toString() +'}'")
   public GroupMessageDto removeFromChannel(String fromUserId, String targetUserId, String channelId)
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation {
     User actor =
@@ -329,6 +336,9 @@ public class GroupChannelServiceImpl implements GroupChannelService {
   @Override
   @Retryable(value = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 100))
   @Transactional(rollbackFor = Exception.class)
+  @CacheEvict(
+      value = "GroupChannelMembers",
+      key = "'GroupChannelMembers:{'+ #channelId.toString() +'}'")
   public GroupMessageDto leaveChannel(String ofUserId, String channelId)
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation {
     User user =

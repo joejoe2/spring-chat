@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -36,4 +37,8 @@ public interface GroupChannelRepository extends JpaRepository<GroupChannel, UUID
   default Slice<GroupChannel> findByIsUserInMembers(User user, Instant since, Pageable pageable) {
     return findByMembersContainingUserByUpdateAtDesc(user, since, pageable);
   }
+
+  @Cacheable(value = "GroupChannelMembers", key = "'GroupChannelMembers:{'+ #id.toString() +'}'")
+  @Query("SELECT u.id from GroupChannel ch join ch.members u where ch.id = :id")
+  List<UUID> getMembersIdByChannel(@Param("id") UUID id);
 }

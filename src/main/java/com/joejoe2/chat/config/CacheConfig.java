@@ -20,7 +20,7 @@ public class CacheConfig {
     RedisCacheConfiguration defaultCacheConfig = RedisCacheConfiguration.defaultCacheConfig();
     defaultCacheConfig =
         defaultCacheConfig
-            .entryTtl(Duration.ofMinutes(30))
+            .entryTtl(Duration.ofMinutes(10))
             .serializeKeysWith(
                 RedisSerializationContext.SerializationPair.fromSerializer(
                     new StringRedisSerializer()))
