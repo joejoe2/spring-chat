@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -43,4 +44,10 @@ public interface PrivateChannelRepository extends JpaRepository<PrivateChannel, 
     Arrays.sort(ids);
     return findByUniqueUserIds(ids[0].toString() + ids[1].toString()).isPresent();
   }
+
+  @Cacheable(
+      value = "PrivateChannelMembers",
+      key = "'PrivateChannelMembers:{'+ #id.toString() +'}'")
+  @Query("SELECT u.id from PrivateChannel ch join ch.members u where ch.id = :id")
+  List<UUID> getMembersIdByChannel(@Param("id") UUID id);
 }

@@ -24,7 +24,7 @@ public class WebSocketUtil {
     }
   }
 
-  public static void sendMessage(WebSocketSession session, String msg) throws IOException {
-    session.sendMessage(new TextMessage("[" + msg + "]"));
+  public static void sendMessage(WebSocketSession session, TextMessage message) throws IOException {
+    session.sendMessage(message);
   }
 }

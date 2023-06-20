@@ -19,7 +19,7 @@ import com.joejoe2.chat.validation.validator.PageRequestValidator;
 import com.joejoe2.chat.validation.validator.UUIDValidator;
 import java.time.Instant;
 import java.util.Comparator;
-import java.util.Optional;
+import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Slice;
@@ -69,14 +69,11 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
     return new PrivateMessageDto(privateMessage);
   }
 
-  @Async
-  @Transactional(readOnly = true)
+  @Async("asyncExecutor")
   @Override
   public void deliverMessage(PrivateMessageDto message) {
-    Optional<PrivateChannel> channel = channelRepository.findById(message.getChannel());
-    if (channel.isEmpty()) return;
-    for (User member : channel.get().getMembers()) {
-      natsService.publish(ChannelSubject.privateChannelSubject(member.getId().toString()), message);
+    for (UUID memberId : channelRepository.getMembersIdByChannel(message.getChannel())) {
+      natsService.publish(ChannelSubject.privateChannelSubject(memberId.toString()), message);
     }
   }
 

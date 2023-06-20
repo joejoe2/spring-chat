@@ -62,7 +62,7 @@ public class PublicMessageServiceImpl implements PublicMessageService {
     return new PublicMessageDto(publicMessage);
   }
 
-  @Async
+  @Async("asyncExecutor")
   @Override
   public void deliverMessage(PublicMessageDto message) {
     natsService.publish(

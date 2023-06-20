@@ -18,7 +18,7 @@ public class PrivateChannelWSHandler extends TextWebSocketHandler {
   @Override
   public void afterConnectionEstablished(WebSocketSession session) throws Exception {
     WebSocketSession webSocketSession =
-        new ConcurrentWebSocketSessionDecorator(session, 5000, 1024 * 30);
+        new ConcurrentWebSocketSessionDecorator(session, 5000, 1024 * 512);
     try {
       channelService.subscribe(
           webSocketSession, AuthUtil.currentUserDetail(webSocketSession).getId());

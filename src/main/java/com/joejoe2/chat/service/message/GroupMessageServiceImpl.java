@@ -71,12 +71,9 @@ public class GroupMessageServiceImpl implements GroupMessageService {
   }
 
   @Override
-  @Async
-  @Transactional(readOnly = true)
+  @Async("asyncExecutor")
   public void deliverMessage(GroupMessageDto message) {
-    GroupChannel channel = channelRepository.findById(message.getChannel()).orElse(null);
-    if (channel == null) return;
-    for (UUID memberId : channelRepository.getMembersIdByChannel(channel.getId())) {
+    for (UUID memberId : channelRepository.getMembersIdByChannel(message.getChannel())) {
       natsService.publish(ChannelSubject.groupChannelSubject(memberId.toString()), message);
     }
     // also send to invitee or the one just leave channel

@@ -22,10 +22,7 @@ import io.nats.client.Dispatcher;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
@@ -37,6 +34,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 @Service
@@ -52,7 +50,9 @@ public class PublicChannelServiceImpl implements PublicChannelService {
 
   Map<String, Set<Object>> listeningChannels = new ConcurrentHashMap<>();
   private static final int MAX_CONNECT_DURATION = 15;
-  private ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(1);
+  private final ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(1);
+
+  private final Executor sendingScheduler = Executors.newFixedThreadPool(5);
 
   private static final Logger logger = LoggerFactory.getLogger(PublicChannelService.class);
 
@@ -101,17 +101,21 @@ public class PublicChannelServiceImpl implements PublicChannelService {
 
   /** deliver public messages to registered subscribers */
   private void sendToSubscribers(Set<Object> subscribers, PublicMessageDto message) {
-    for (Object subscriber : subscribers.toArray()) {
-      try {
-        if (subscriber instanceof SseEmitter)
-          SseUtil.sendMessageEvent((SseEmitter) subscriber, message);
-        else if (subscriber instanceof WebSocketSession)
-          WebSocketUtil.sendMessage(
-              ((WebSocketSession) subscriber), objectMapper.writeValueAsString(message));
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
-    }
+    sendingScheduler.execute(
+        () -> {
+          try {
+            TextMessage textMessage =
+                new TextMessage("[" + objectMapper.writeValueAsString(message) + "]");
+            for (Object subscriber : subscribers.toArray()) {
+              if (subscriber instanceof SseEmitter)
+                SseUtil.sendMessageEvent((SseEmitter) subscriber, textMessage);
+              else if (subscriber instanceof WebSocketSession)
+                WebSocketUtil.sendMessage(((WebSocketSession) subscriber), textMessage);
+            }
+          } catch (Exception e) {
+            e.printStackTrace();
+          }
+        });
   }
 
   @Override
