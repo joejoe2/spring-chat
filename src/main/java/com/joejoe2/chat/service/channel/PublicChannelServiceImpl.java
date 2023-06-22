@@ -49,8 +49,6 @@ public class PublicChannelServiceImpl implements PublicChannelService {
   PageRequestValidator pageValidator = PageRequestValidator.getInstance();
 
   Map<String, Set<Object>> listeningChannels = new ConcurrentHashMap<>();
-  private static final int MAX_CONNECT_DURATION = 15;
-  private final ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(1);
 
   private final Executor sendingScheduler = Executors.newFixedThreadPool(5);
 
@@ -162,7 +160,6 @@ public class PublicChannelServiceImpl implements PublicChannelService {
   private void addUnSubscribeTriggers(String channelId, SseEmitter subscriber) {
     Runnable unSubscribe = createUnSubscribeTrigger(channelId, subscriber);
     SseUtil.addSseCallbacks(subscriber, unSubscribe);
-    scheduler.schedule(subscriber::complete, MAX_CONNECT_DURATION, TimeUnit.MINUTES);
   }
 
   /**
@@ -175,18 +172,6 @@ public class PublicChannelServiceImpl implements PublicChannelService {
   private void addUnSubscribeTriggers(String channelId, WebSocketSession subscriber) {
     Runnable unSubscribe = createUnSubscribeTrigger(channelId, subscriber);
     WebSocketUtil.addFinishedCallbacks(subscriber, unSubscribe);
-    scheduler.schedule(
-        () -> {
-          try {
-            subscriber.close();
-          } catch (IOException e) {
-            e.printStackTrace();
-          } finally {
-            unSubscribe.run();
-          }
-        },
-        MAX_CONNECT_DURATION,
-        TimeUnit.MINUTES);
   }
 
   private Runnable createUnSubscribeTrigger(String channelId, Object subscriber) {
@@ -232,6 +217,8 @@ public class PublicChannelServiceImpl implements PublicChannelService {
         (key, subscribers) -> {
           // create new subscribers set
           if (subscribers == null) {
+            // subscribe to nats
+            dispatcher.subscribe(ChannelSubject.publicChannelSubject(channelId));
             subscribers = Collections.synchronizedSet(new HashSet<>());
           }
           // add to subscribers
@@ -239,8 +226,6 @@ public class PublicChannelServiceImpl implements PublicChannelService {
           // increase online user
           logger.info(
               "PublicChannel " + channelId + " now has " + subscribers.size() + " subscribers");
-          // subscribe to nats
-          dispatcher.subscribe(ChannelSubject.publicChannelSubject(channelId));
           return subscribers;
         });
   }

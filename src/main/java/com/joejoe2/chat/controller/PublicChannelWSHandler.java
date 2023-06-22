@@ -19,9 +19,8 @@ public class PublicChannelWSHandler extends TextWebSocketHandler {
     WebSocketSession webSocketSession =
         new ConcurrentWebSocketSessionDecorator(session, 5000, 1024 * 512);
     try {
-      channelService.subscribe(
-          webSocketSession,
-          (String) webSocketSession.getAttributes().getOrDefault("channelId", ""));
+      String channelId = (String) webSocketSession.getAttributes().getOrDefault("channelId", "");
+      channelService.subscribe(webSocketSession, channelId);
     } catch (IllegalArgumentException | ChannelDoesNotExist e) {
       webSocketSession.close(CloseStatus.BAD_DATA);
     } catch (Exception e) {
