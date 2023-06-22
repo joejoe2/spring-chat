@@ -41,12 +41,22 @@ public class JwtUtil {
     }
   }
 
+  public static Map<String, Object> parseToken(JwtParser parser, String token) throws JwtException {
+    try {
+      Claims claims = parser.parseClaimsJws(token).getBody();
+      return claims.entrySet().stream()
+              .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    } catch (Exception e) {
+      throw new JwtException(e.getMessage());
+    }
+  }
+
   private static final String[] REQUIRED_FIELDS = new String[] {"type", "id", "username"};
 
-  public static UserDetail extractUserDetailFromAccessToken(RSAPublicKey publicKey, String token)
-      throws InvalidTokenException {
+  public static UserDetail extractUserDetailFromAccessToken(JwtParser parser, String token)
+          throws InvalidTokenException {
     try {
-      Map<String, Object> data = JwtUtil.parseToken(publicKey, token);
+      Map<String, Object> data = JwtUtil.parseToken(parser, token);
       if (Arrays.stream(REQUIRED_FIELDS).anyMatch((f) -> data.get(f) == null)) {
         throw new InvalidTokenException("invalid token !");
       }

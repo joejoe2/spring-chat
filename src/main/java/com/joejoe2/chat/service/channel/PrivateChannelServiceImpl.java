@@ -41,7 +41,6 @@ import org.springframework.web.socket.WebSocketSession;
 
 @Service
 public class PrivateChannelServiceImpl implements PrivateChannelService {
-  private static final int MAX_CONNECT_DURATION = 15;
   private static final Logger logger = LoggerFactory.getLogger(PrivateChannelService.class);
   @Autowired UserRepository userRepository;
   @Autowired PrivateChannelRepository channelRepository;
@@ -53,7 +52,6 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
   Map<String, Set<Object>> listeningUsers = new ConcurrentHashMap<>();
   @Autowired Connection connection;
   Dispatcher dispatcher;
-  private final ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(1);
   private final Executor sendingScheduler = Executors.newFixedThreadPool(5);
 
   @Autowired MeterRegistry meterRegistry;
@@ -160,7 +158,6 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
   private void addUnSubscribeTriggers(String userId, SseEmitter subscriber) {
     Runnable unSubscribe = createUnSubscribeTrigger(userId, subscriber);
     SseUtil.addSseCallbacks(subscriber, unSubscribe);
-    scheduler.schedule(subscriber::complete, MAX_CONNECT_DURATION, TimeUnit.MINUTES);
   }
 
   /**
@@ -173,18 +170,6 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
   private void addUnSubscribeTriggers(String userId, WebSocketSession subscriber) {
     Runnable unSubscribe = createUnSubscribeTrigger(userId, subscriber);
     WebSocketUtil.addFinishedCallbacks(subscriber, unSubscribe);
-    scheduler.schedule(
-        () -> {
-          try {
-            subscriber.close();
-          } catch (IOException e) {
-            e.printStackTrace();
-          } finally {
-            unSubscribe.run();
-          }
-        },
-        MAX_CONNECT_DURATION,
-        TimeUnit.MINUTES);
   }
 
   private Runnable createUnSubscribeTrigger(String userId, Object subscriber) {
@@ -231,13 +216,13 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
         userId,
         (key, subscribers) -> {
           if (subscribers == null) {
+            dispatcher.subscribe(ChannelSubject.privateChannelSubject(userId));
             subscribers = Collections.synchronizedSet(new HashSet<>());
           }
           subscribers.add(subscriber);
           // increase online users
           logger.info(
               "User " + userId + " now has " + subscribers.size() + " active subscriptions");
-          dispatcher.subscribe(ChannelSubject.privateChannelSubject(userId));
           return subscribers;
         });
   }
