@@ -3,6 +3,7 @@ package com.joejoe2.chat.service.message;
 import com.joejoe2.chat.data.PageRequest;
 import com.joejoe2.chat.data.SliceList;
 import com.joejoe2.chat.data.message.PrivateMessageDto;
+import com.joejoe2.chat.exception.BlockedException;
 import com.joejoe2.chat.exception.ChannelDoesNotExist;
 import com.joejoe2.chat.exception.InvalidOperation;
 import com.joejoe2.chat.exception.UserDoesNotExist;
@@ -45,7 +46,8 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
   @Transactional(rollbackFor = Exception.class)
   @Override
   public PrivateMessageDto createMessage(String fromUserId, String channelId, String message)
-      throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation {
+      throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation, BlockedException {
+    message = messageValidator.validate(message);
     User fromUser =
         userRepository
             .findById(uuidValidator.validate(fromUserId))
@@ -54,19 +56,10 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
         channelRepository
             .findById(uuidValidator.validate(channelId))
             .orElseThrow(() -> new ChannelDoesNotExist("channel is not exist !"));
-    if (!channel.getMembers().contains(fromUser))
-      throw new InvalidOperation("user is not in members of the channel !");
 
-    User targetUser = channel.anotherMember(fromUser);
-    PrivateMessage privateMessage =
-        new PrivateMessage(channel, fromUser, targetUser, messageValidator.validate(message));
-    messageRepository.save(privateMessage);
-    messageRepository.flush();
-    channel.setLastMessage(privateMessage);
-    channelRepository.save(channel);
-    channelRepository.flush();
-
-    return new PrivateMessageDto(privateMessage);
+    channel.addMessage(fromUser, message);
+    channelRepository.saveAndFlush(channel);
+    return new PrivateMessageDto(channel.getLastMessage());
   }
 
   @Async("asyncExecutor")

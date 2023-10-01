@@ -7,16 +7,14 @@ import com.joejoe2.chat.data.PageRequestWithSince;
 import com.joejoe2.chat.data.SliceList;
 import com.joejoe2.chat.data.channel.SliceOfPrivateChannel;
 import com.joejoe2.chat.data.channel.profile.PrivateChannelProfile;
+import com.joejoe2.chat.data.channel.request.ChannelBlockRequest;
 import com.joejoe2.chat.data.channel.request.ChannelRequest;
 import com.joejoe2.chat.data.channel.request.CreatePrivateChannelRequest;
 import com.joejoe2.chat.data.channel.request.SubscribeRequest;
 import com.joejoe2.chat.data.message.PrivateMessageDto;
 import com.joejoe2.chat.data.message.SliceOfMessage;
 import com.joejoe2.chat.data.message.request.PublishMessageRequest;
-import com.joejoe2.chat.exception.AlreadyExist;
-import com.joejoe2.chat.exception.ChannelDoesNotExist;
-import com.joejoe2.chat.exception.InvalidOperation;
-import com.joejoe2.chat.exception.UserDoesNotExist;
+import com.joejoe2.chat.exception.*;
 import com.joejoe2.chat.service.channel.PrivateChannelService;
 import com.joejoe2.chat.service.message.PrivateMessageService;
 import com.joejoe2.chat.utils.AuthUtil;
@@ -83,6 +81,8 @@ public class PrivateChannelController {
       return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()), HttpStatus.NOT_FOUND);
     } catch (InvalidOperation e) {
       return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()), HttpStatus.FORBIDDEN);
+    } catch (BlockedException e) {
+      return ResponseEntity.ok().build();
     }
   }
 
@@ -246,5 +246,40 @@ public class PrivateChannelController {
   public Object subscribe(@ParameterObject @Valid SubscribeRequest request)
       throws UserDoesNotExist {
     return channelService.subscribe(AuthUtil.currentUserDetail().getId());
+  }
+
+  @Operation(summary = "set block state of private channel")
+  @AuthenticatedApi
+  @SecurityRequirement(name = "jwt")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "403",
+            description = "you are not the member in target channel",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorMessageResponse.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "target channel is not exist",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorMessageResponse.class))),
+        @ApiResponse(responseCode = "200", content = @Content),
+      })
+  @RequestMapping(path = "/blockage", method = RequestMethod.POST)
+  public ResponseEntity<Object> setBlockage(@Valid @RequestBody ChannelBlockRequest request)
+      throws UserDoesNotExist {
+    try {
+      channelService.setBlockage(
+          AuthUtil.currentUserDetail().getId(), request.getChannelId(), request.getIsBlocked());
+      return ResponseEntity.ok().build();
+    } catch (ChannelDoesNotExist e) {
+      return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()), HttpStatus.NOT_FOUND);
+    } catch (InvalidOperation e) {
+      return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()), HttpStatus.FORBIDDEN);
+    }
   }
 }

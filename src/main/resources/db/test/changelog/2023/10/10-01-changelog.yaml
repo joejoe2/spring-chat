@@ -1,0 +1,34 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1696145356872-3
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addColumn:
+            columns:
+              - column:
+                  defaultValueBoolean: false
+                  name: is_user1blocked
+                  type: BOOLEAN
+              - column:
+                  defaultValueBoolean: false
+                  name: is_user2blocked
+                  type: BOOLEAN
+            tableName: private_channel
+  - changeSet:
+      id: 1696145356872-4
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addNotNullConstraint:
+            columnName: is_user1blocked
+            tableName: private_channel
+  - changeSet:
+      id: 1696145356872-6
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addNotNullConstraint:
+            columnName: is_user2blocked
+            tableName: private_channel
+

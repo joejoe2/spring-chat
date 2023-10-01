@@ -1,5 +1,7 @@
 package com.joejoe2.chat.models;
 
+import com.joejoe2.chat.exception.BlockedException;
+import com.joejoe2.chat.exception.InvalidOperation;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
@@ -45,6 +47,12 @@ public class PrivateChannel extends TimeStampBase {
   @Column(unique = true, nullable = false, updatable = false)
   String uniqueUserIds;
 
+  @Column(columnDefinition = "BOOLEAN NOT NULL DEFAULT FALSE")
+  private boolean isUser1Blocked;
+
+  @Column(columnDefinition = "BOOLEAN NOT NULL DEFAULT FALSE")
+  private boolean isUser2Blocked;
+
   @PrePersist
   void prePersist() {
     // check
@@ -71,6 +79,29 @@ public class PrivateChannel extends TimeStampBase {
 
   public User anotherMember(User member) {
     return getMembers().stream().filter(u -> !member.getId().equals(u.getId())).findFirst().get();
+  }
+
+  public void setBlockage(User user, boolean isBlock) {
+    int pos = uniqueUserIds.indexOf(user.getId().toString());
+    if (pos == 0) {
+      isUser1Blocked = isBlock;
+    } else if (pos > 0) {
+      isUser2Blocked = isBlock;
+    }
+  }
+
+  public boolean isBlocked(User user) {
+    int pos = uniqueUserIds.indexOf(user.getId().toString());
+    return pos != -1 && (pos == 0 ? isUser1Blocked : isUser2Blocked);
+  }
+
+  public void addMessage(User from, String message) throws InvalidOperation, BlockedException {
+    if (!members.contains(from))
+      throw new InvalidOperation("user is not in members of the channel !");
+    if (isBlocked(from)) throw new BlockedException("user has been blocked !");
+    PrivateMessage privateMessage = new PrivateMessage(this, from, anotherMember(from), message);
+    messages.add(privateMessage);
+    lastMessage = privateMessage;
   }
 
   @Override

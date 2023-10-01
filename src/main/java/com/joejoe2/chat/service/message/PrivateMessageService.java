@@ -3,6 +3,7 @@ package com.joejoe2.chat.service.message;
 import com.joejoe2.chat.data.PageRequest;
 import com.joejoe2.chat.data.SliceList;
 import com.joejoe2.chat.data.message.PrivateMessageDto;
+import com.joejoe2.chat.exception.BlockedException;
 import com.joejoe2.chat.exception.ChannelDoesNotExist;
 import com.joejoe2.chat.exception.InvalidOperation;
 import com.joejoe2.chat.exception.UserDoesNotExist;
@@ -10,7 +11,7 @@ import java.time.Instant;
 
 public interface PrivateMessageService {
   PrivateMessageDto createMessage(String fromUserId, String channelId, String message)
-      throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation;
+      throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation, BlockedException;
 
   void deliverMessage(PrivateMessageDto message);
 

@@ -24,6 +24,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -186,5 +187,30 @@ class PrivateChannelServiceTest {
         channel, channelService.getChannelProfile(userA.getId().toString(), channel.getId()));
     assertEquals(
         channel, channelService.getChannelProfile(userB.getId().toString(), channel.getId()));
+  }
+
+  @Test
+  @Transactional
+  void setBlockage() throws Exception {
+    // prepare channels
+    PrivateChannelProfile channel =
+        channelService.createChannelBetween(userA.getId().toString(), userB.getId().toString());
+    // test IllegalArgument
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> channelService.setBlockage("invalid_id", "invalid_id", true));
+    // test InvalidOperation
+    assertThrows(
+        InvalidOperation.class,
+        () -> channelService.setBlockage(userC.getId().toString(), channel.getId(), true));
+    // test success
+    channelService.setBlockage(userA.getId().toString(), channel.getId(), true);
+    assertTrue(channelRepository.getById(UUID.fromString(channel.getId())).isBlocked(userB));
+    channelService.setBlockage(userB.getId().toString(), channel.getId(), true);
+    assertTrue(channelRepository.getById(UUID.fromString(channel.getId())).isBlocked(userA));
+    channelService.setBlockage(userA.getId().toString(), channel.getId(), false);
+    assertFalse(channelRepository.getById(UUID.fromString(channel.getId())).isBlocked(userB));
+    channelService.setBlockage(userB.getId().toString(), channel.getId(), false);
+    assertFalse(channelRepository.getById(UUID.fromString(channel.getId())).isBlocked(userA));
   }
 }
