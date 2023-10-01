@@ -72,9 +72,9 @@ public class GroupChannelWSHandlerTest {
     userRepository.deleteAll();
   }
 
-  public static class WsClient extends WebSocketClient {
+  public class WsClient extends WebSocketClient {
     CountDownLatch messageLatch;
-    List<String> messages = new ArrayList<>();
+    HashSet<String> messages = new HashSet<>();
 
     public WsClient(URI serverUri) {
       super(serverUri);
@@ -105,6 +105,9 @@ public class GroupChannelWSHandlerTest {
   void subscribe() throws Exception {
     int messageCount = users.length * 2;
     WsClient[] clients = new WsClient[users.length];
+    HashSet<String> messages = new HashSet<>();
+    messages.add("[]");
+
     for (int i = 0; i < users.length; i++) {
       String uri =
           "ws://localhost:8081/ws/channel/group/subscribe?access_token="
@@ -120,8 +123,7 @@ public class GroupChannelWSHandlerTest {
             .channelId(channel.getId().toString())
             .message("msg")
             .build();
-    List<String> messages = new ArrayList<>();
-    messages.add("[]");
+
     for (int i = 0; i < messageCount; i++) {
       String t =
           mockMvc
