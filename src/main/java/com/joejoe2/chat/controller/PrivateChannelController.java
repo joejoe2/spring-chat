@@ -273,7 +273,7 @@ public class PrivateChannelController {
   public ResponseEntity<Object> setBlockage(@Valid @RequestBody ChannelBlockRequest request)
       throws UserDoesNotExist {
     try {
-      channelService.setBlockage(
+      channelService.block(
           AuthUtil.currentUserDetail().getId(), request.getChannelId(), request.getIsBlocked());
       return ResponseEntity.ok().build();
     } catch (ChannelDoesNotExist e) {

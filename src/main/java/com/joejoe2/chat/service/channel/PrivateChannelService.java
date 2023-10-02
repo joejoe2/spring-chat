@@ -67,15 +67,15 @@ public interface PrivateChannelService {
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation;
 
   /**
-   * set blockage to another user in the channel
+   * let user block or unblock the channel(another user)
    *
-   * @param ofUserId
-   * @param channelId
-   * @param isBlock
+   * @param userId user id of the initiator
+   * @param channelId id of target channel
+   * @param isBlock block or unblock
    * @throws UserDoesNotExist
    * @throws ChannelDoesNotExist
    * @throws InvalidOperation user is not in members of target channel
    */
-  void setBlockage(String ofUserId, String channelId, boolean isBlock)
+  void block(String userId, String channelId, boolean isBlock)
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation;
 }

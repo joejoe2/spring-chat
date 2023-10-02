@@ -90,22 +90,22 @@ class PrivateMessageServiceTest {
     // prepare channel
     PrivateChannelProfile channel =
         channelService.createChannelBetween(userA.getId().toString(), userC.getId().toString());
-    // test setBlockage
-    channelService.setBlockage(userA.getId().toString(), channel.getId(), true);
+    // test block
+    channelService.block(userA.getId().toString(), channel.getId(), true);
     assertThrows(
         BlockedException.class,
         () -> messageService.createMessage(userC.getId().toString(), channel.getId(), "test"));
     assertDoesNotThrow(
         () -> messageService.createMessage(userA.getId().toString(), channel.getId(), "test"));
-    channelService.setBlockage(userC.getId().toString(), channel.getId(), true);
+    channelService.block(userC.getId().toString(), channel.getId(), true);
     assertThrows(
         BlockedException.class,
         () -> messageService.createMessage(userA.getId().toString(), channel.getId(), "test"));
     // test unblock
-    channelService.setBlockage(userC.getId().toString(), channel.getId(), false);
+    channelService.block(userC.getId().toString(), channel.getId(), false);
     assertDoesNotThrow(
         () -> messageService.createMessage(userA.getId().toString(), channel.getId(), "test"));
-    channelService.setBlockage(userA.getId().toString(), channel.getId(), false);
+    channelService.block(userA.getId().toString(), channel.getId(), false);
     assertDoesNotThrow(
         () -> messageService.createMessage(userC.getId().toString(), channel.getId(), "test"));
   }

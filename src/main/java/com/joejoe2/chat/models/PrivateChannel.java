@@ -48,10 +48,10 @@ public class PrivateChannel extends TimeStampBase {
   String uniqueUserIds;
 
   @Column(columnDefinition = "BOOLEAN NOT NULL DEFAULT FALSE")
-  private boolean isUser1Blocked;
+  private boolean isFirstUserBlocked;
 
   @Column(columnDefinition = "BOOLEAN NOT NULL DEFAULT FALSE")
-  private boolean isUser2Blocked;
+  private boolean isSecondUserBlocked;
 
   @PrePersist
   void prePersist() {
@@ -81,18 +81,24 @@ public class PrivateChannel extends TimeStampBase {
     return getMembers().stream().filter(u -> !member.getId().equals(u.getId())).findFirst().get();
   }
 
-  public void setBlockage(User user, boolean isBlock) {
+  /**
+   * block or unblock the user
+   *
+   * @param user target user, cannot {@link #addMessage} until unblocked
+   * @param isBlock block or unblock
+   */
+  public void block(User user, boolean isBlock) {
     int pos = uniqueUserIds.indexOf(user.getId().toString());
     if (pos == 0) {
-      isUser1Blocked = isBlock;
+      isFirstUserBlocked = isBlock;
     } else if (pos > 0) {
-      isUser2Blocked = isBlock;
+      isSecondUserBlocked = isBlock;
     }
   }
 
   public boolean isBlocked(User user) {
     int pos = uniqueUserIds.indexOf(user.getId().toString());
-    return pos != -1 && (pos == 0 ? isUser1Blocked : isUser2Blocked);
+    return pos != -1 && (pos == 0 ? isFirstUserBlocked : isSecondUserBlocked);
   }
 
   public void addMessage(User from, String message) throws InvalidOperation, BlockedException {

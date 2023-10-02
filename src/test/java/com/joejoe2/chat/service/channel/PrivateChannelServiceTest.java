@@ -198,19 +198,19 @@ class PrivateChannelServiceTest {
     // test IllegalArgument
     assertThrows(
         IllegalArgumentException.class,
-        () -> channelService.setBlockage("invalid_id", "invalid_id", true));
+        () -> channelService.block("invalid_id", "invalid_id", true));
     // test InvalidOperation
     assertThrows(
         InvalidOperation.class,
-        () -> channelService.setBlockage(userC.getId().toString(), channel.getId(), true));
+        () -> channelService.block(userC.getId().toString(), channel.getId(), true));
     // test success
-    channelService.setBlockage(userA.getId().toString(), channel.getId(), true);
+    channelService.block(userA.getId().toString(), channel.getId(), true);
     assertTrue(channelRepository.getById(UUID.fromString(channel.getId())).isBlocked(userB));
-    channelService.setBlockage(userB.getId().toString(), channel.getId(), true);
+    channelService.block(userB.getId().toString(), channel.getId(), true);
     assertTrue(channelRepository.getById(UUID.fromString(channel.getId())).isBlocked(userA));
-    channelService.setBlockage(userA.getId().toString(), channel.getId(), false);
+    channelService.block(userA.getId().toString(), channel.getId(), false);
     assertFalse(channelRepository.getById(UUID.fromString(channel.getId())).isBlocked(userB));
-    channelService.setBlockage(userB.getId().toString(), channel.getId(), false);
+    channelService.block(userB.getId().toString(), channel.getId(), false);
     assertFalse(channelRepository.getById(UUID.fromString(channel.getId())).isBlocked(userA));
   }
 }

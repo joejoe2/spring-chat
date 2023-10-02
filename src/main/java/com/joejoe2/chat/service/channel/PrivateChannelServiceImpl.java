@@ -294,11 +294,11 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
   @Override
   @Retryable(value = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 100))
   @Transactional(rollbackFor = Exception.class)
-  public void setBlockage(String ofUserId, String channelId, boolean isBlock)
+  public void block(String userId, String channelId, boolean isBlock)
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation {
     User user =
         userRepository
-            .findById(uuidValidator.validate(ofUserId))
+            .findById(uuidValidator.validate(userId))
             .orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
     PrivateChannel channel =
         channelRepository
@@ -307,7 +307,7 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
     if (!channel.getMembers().contains(user))
       throw new InvalidOperation("user is not in members of the channel !");
 
-    channel.setBlockage(channel.anotherMember(user), isBlock);
+    channel.block(channel.anotherMember(user), isBlock);
     channelRepository.save(channel);
   }
 }
