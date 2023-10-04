@@ -48,7 +48,7 @@ public class PrivateChannelController {
       value = {
         @ApiResponse(
             responseCode = "403",
-            description = "current user is not a member" + " of target channel",
+            description = "current user is blocked or not a member" + " of target channel",
             content =
                 @Content(
                     mediaType = "application/json",
@@ -79,10 +79,8 @@ public class PrivateChannelController {
       return ResponseEntity.ok(message);
     } catch (ChannelDoesNotExist e) {
       return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()), HttpStatus.NOT_FOUND);
-    } catch (InvalidOperation e) {
+    } catch (InvalidOperation | BlockedException e) {
       return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()), HttpStatus.FORBIDDEN);
-    } catch (BlockedException e) {
-      return ResponseEntity.ok().build();
     }
   }
 

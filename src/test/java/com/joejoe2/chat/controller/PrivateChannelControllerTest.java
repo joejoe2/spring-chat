@@ -194,7 +194,7 @@ class PrivateChannelControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(messageRequest))
                 .accept(MediaType.APPLICATION_JSON))
-        .andExpect(status().isOk());
+        .andExpect(status().isForbidden());
     Thread.sleep(1000);
     Mockito.verify(messageService, Mockito.times(0)).deliverMessage(Mockito.any());
     // override mock login

@@ -16,7 +16,7 @@
 
 ![image](private-chat.png)
 
-## Chat in group channel (Work in progress...)
+## Chat in group channel
 
 - A group channel allows any members to chat online. A user should 
 be invited to the channel first by any member, and the user should 
@@ -25,3 +25,12 @@ accept the invitation to become a member.
 - Query history messages by channel id.
 
 ![image](group-chat.png)
+
+## Block a private channel
+
+If userA block userB, 
+
+- a flag of the private channel in db will be marked
+- any future msgs from userB to userA is invisible, unblocked will not take these msgs back
+- publish msg endpoint will return 403 when userB sends msg to userA (actually do not persist/deliver msgs)
+- userB can still get new msgs from userA until userB block userA
