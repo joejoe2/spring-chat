@@ -23,7 +23,6 @@ import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.nats.client.Connection;
 import io.nats.client.Dispatcher;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.*;
@@ -32,7 +31,10 @@ import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Slice;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -287,5 +289,25 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
       throw new InvalidOperation("user is not in members of the channel !");
 
     return new PrivateChannelProfile(channel);
+  }
+
+  @Override
+  @Retryable(value = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 100))
+  @Transactional(rollbackFor = Exception.class)
+  public void block(String userId, String channelId, boolean isBlock)
+      throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation {
+    User user =
+        userRepository
+            .findById(uuidValidator.validate(userId))
+            .orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
+    PrivateChannel channel =
+        channelRepository
+            .findById(uuidValidator.validate(channelId))
+            .orElseThrow(() -> new ChannelDoesNotExist("channel is not exist !"));
+    if (!channel.getMembers().contains(user))
+      throw new InvalidOperation("user is not in members of the channel !");
+
+    channel.block(channel.anotherMember(user), isBlock);
+    channelRepository.save(channel);
   }
 }

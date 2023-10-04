@@ -14,6 +14,7 @@ servers as cluster to increase the message delivery speed/throughput.
 - chat in public channels with any users (1 connection/channel)
 - chat in private channels with another user (1 connection/user)
 - chat in group channel with members (1 connection/user)
+- user blockage in private channels
 
 ## Supported Protocols
 

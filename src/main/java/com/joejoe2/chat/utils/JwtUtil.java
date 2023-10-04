@@ -45,7 +45,7 @@ public class JwtUtil {
     try {
       Claims claims = parser.parseClaimsJws(token).getBody();
       return claims.entrySet().stream()
-              .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+          .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     } catch (Exception e) {
       throw new JwtException(e.getMessage());
     }
@@ -54,7 +54,7 @@ public class JwtUtil {
   private static final String[] REQUIRED_FIELDS = new String[] {"type", "id", "username"};
 
   public static UserDetail extractUserDetailFromAccessToken(JwtParser parser, String token)
-          throws InvalidTokenException {
+      throws InvalidTokenException {
     try {
       Map<String, Object> data = JwtUtil.parseToken(parser, token);
       if (Arrays.stream(REQUIRED_FIELDS).anyMatch((f) -> data.get(f) == null)) {

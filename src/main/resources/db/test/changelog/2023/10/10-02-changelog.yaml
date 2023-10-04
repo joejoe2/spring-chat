@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1696227686045-3
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - renameColumn:
+            columnDataType: BOOLEAN
+            newColumnName: is_first_user_blocked
+            oldColumnName: is_user1blocked
+            tableName: private_channel
+        - renameColumn:
+            columnDataType: BOOLEAN
+            newColumnName: is_second_user_blocked
+            oldColumnName: is_user2blocked
+            tableName: private_channel
+

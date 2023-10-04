@@ -7,6 +7,7 @@ import com.joejoe2.chat.data.PageRequest;
 import com.joejoe2.chat.data.SliceList;
 import com.joejoe2.chat.data.channel.profile.PrivateChannelProfile;
 import com.joejoe2.chat.data.message.PrivateMessageDto;
+import com.joejoe2.chat.exception.BlockedException;
 import com.joejoe2.chat.models.User;
 import com.joejoe2.chat.repository.channel.PrivateChannelRepository;
 import com.joejoe2.chat.repository.message.PrivateMessageRepository;
@@ -82,6 +83,31 @@ class PrivateMessageServiceTest {
     PrivateMessageDto message =
         messageService.createMessage(userA.getId().toString(), channel.getId(), "test");
     assertTrue(messageRepository.existsById(message.getId()));
+  }
+
+  @Test
+  void messageToBlocked() throws Exception {
+    // prepare channel
+    PrivateChannelProfile channel =
+        channelService.createChannelBetween(userA.getId().toString(), userC.getId().toString());
+    // test block
+    channelService.block(userA.getId().toString(), channel.getId(), true);
+    assertThrows(
+        BlockedException.class,
+        () -> messageService.createMessage(userC.getId().toString(), channel.getId(), "test"));
+    assertDoesNotThrow(
+        () -> messageService.createMessage(userA.getId().toString(), channel.getId(), "test"));
+    channelService.block(userC.getId().toString(), channel.getId(), true);
+    assertThrows(
+        BlockedException.class,
+        () -> messageService.createMessage(userA.getId().toString(), channel.getId(), "test"));
+    // test unblock
+    channelService.block(userC.getId().toString(), channel.getId(), false);
+    assertDoesNotThrow(
+        () -> messageService.createMessage(userA.getId().toString(), channel.getId(), "test"));
+    channelService.block(userA.getId().toString(), channel.getId(), false);
+    assertDoesNotThrow(
+        () -> messageService.createMessage(userC.getId().toString(), channel.getId(), "test"));
   }
 
   @Test

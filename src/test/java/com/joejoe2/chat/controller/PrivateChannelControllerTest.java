@@ -12,6 +12,7 @@ import com.joejoe2.chat.data.SliceList;
 import com.joejoe2.chat.data.UserDetail;
 import com.joejoe2.chat.data.channel.SliceOfPrivateChannel;
 import com.joejoe2.chat.data.channel.profile.PrivateChannelProfile;
+import com.joejoe2.chat.data.channel.request.ChannelBlockRequest;
 import com.joejoe2.chat.data.channel.request.ChannelRequest;
 import com.joejoe2.chat.data.channel.request.CreatePrivateChannelRequest;
 import com.joejoe2.chat.data.message.MessageDto;
@@ -166,6 +167,65 @@ class PrivateChannelControllerTest {
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.message").exists())
         .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void testBlockage() throws Exception {
+    ChannelBlockRequest request =
+        ChannelBlockRequest.builder().channelId(channel.getId().toString()).isBlocked(true).build();
+    // user1 block user2
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.post("/api/channel/private/blockage")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk());
+    // override mock login
+    mockAuthUtil.when(AuthUtil::currentUserDetail).thenReturn(new UserDetail(user2));
+    PublishMessageRequest messageRequest =
+        PublishMessageRequest.builder()
+            .channelId(channel.getId().toString())
+            .message("msg")
+            .build();
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.post("/api/channel/private/publishMessage")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(messageRequest))
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isForbidden());
+    Thread.sleep(1000);
+    Mockito.verify(messageService, Mockito.times(0)).deliverMessage(Mockito.any());
+    // override mock login
+    mockAuthUtil.when(AuthUtil::currentUserDetail).thenReturn(new UserDetail(user1));
+    // user1 unblock user2
+    request =
+        ChannelBlockRequest.builder()
+            .channelId(channel.getId().toString())
+            .isBlocked(false)
+            .build();
+    messageRequest =
+        PublishMessageRequest.builder()
+            .channelId(channel.getId().toString())
+            .message("msg")
+            .build();
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.post("/api/channel/private/blockage")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk());
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.post("/api/channel/private/publishMessage")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(messageRequest))
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk());
+    Thread.sleep(1000);
+    Mockito.verify(messageService, Mockito.times(1)).deliverMessage(Mockito.any());
   }
 
   @Test

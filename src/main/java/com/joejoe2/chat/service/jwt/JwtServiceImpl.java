@@ -15,8 +15,7 @@ import org.springframework.stereotype.Service;
 public class JwtServiceImpl implements JwtService {
   @Autowired JwtConfig jwtConfig;
   @Autowired RedisService redisService;
-  @Autowired
-  JwtParser jwtParser;
+  @Autowired JwtParser jwtParser;
 
   private static final Logger logger = LoggerFactory.getLogger(JwtServiceImpl.class);
 
