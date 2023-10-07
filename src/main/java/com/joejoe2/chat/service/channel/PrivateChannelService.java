@@ -67,6 +67,17 @@ public interface PrivateChannelService {
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation;
 
   /**
+   * get all private channels blocked by the user with page
+   *
+   * @param userId id of the user
+   * @param pageRequest
+   * @return
+   * @throws UserDoesNotExist
+   */
+  SliceList<PrivateChannelProfile> getChannelsBlockedByUser(String userId, PageRequest pageRequest)
+      throws UserDoesNotExist;
+
+  /**
    * let user block or unblock the channel(another user)
    *
    * @param userId user id of the initiator

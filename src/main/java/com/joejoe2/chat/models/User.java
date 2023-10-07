@@ -29,6 +29,9 @@ public class User {
   Set<PrivateChannel> privateChannels;
 
   @ManyToMany(mappedBy = "members")
+  Set<PrivateChannel> blockedPrivateChannels;
+
+  @ManyToMany(mappedBy = "members")
   Set<GroupChannel> groupChannels;
 
   @OneToMany(mappedBy = "user")

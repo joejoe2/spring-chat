@@ -439,6 +439,49 @@ class PrivateChannelControllerTest {
   }
 
   @Test
+  void listBlockedByUser() throws Exception {
+    // prepare
+    PageRequest request = PageRequest.builder().size(1).page(0).build();
+    channelService.block(user1.getId().toString(), channel.getId().toString(), true);
+    SliceList<PrivateChannelProfile> profiles =
+        channelService.getChannelsBlockedByUser(user1.getId().toString(), request);
+    // test success
+    LinkedMultiValueMap<String, String> query = new LinkedMultiValueMap<>();
+    query.add("page", request.getPage().toString());
+    query.add("size", request.getSize().toString());
+    MvcResult result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.get("/api/channel/private/blocked")
+                    .params(query)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
+    SliceOfPrivateChannel slice =
+        objectMapper.readValue(
+            result.getResponse().getContentAsString(), SliceOfPrivateChannel.class);
+    assertEquals(profiles.getList(), slice.getChannels());
+  }
+
+  @Test
+  void listBlockedByUserWithError() throws Exception {
+    // test 400
+    PageRequest request = PageRequest.builder().size(0).page(-1).build();
+    LinkedMultiValueMap<String, String> query = new LinkedMultiValueMap<>();
+    query.add("page", request.getPage().toString());
+    query.add("size", request.getSize().toString());
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.get("/api/channel/private/blocked")
+                .params(query)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.errors.page").exists())
+        .andExpect(jsonPath("$.errors.size").exists())
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
   void profile() throws Exception {
     // test success
     ChannelRequest request = ChannelRequest.builder().channelId(channel.getId().toString()).build();

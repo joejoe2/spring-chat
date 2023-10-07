@@ -294,6 +294,27 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
   }
 
   @Override
+  @Transactional(readOnly = true)
+  public SliceList<PrivateChannelProfile> getChannelsBlockedByUser(
+      String userId, PageRequest pageRequest) throws UserDoesNotExist {
+    org.springframework.data.domain.PageRequest paging = pageValidator.validate(pageRequest);
+    User user =
+        userRepository
+            .findById(uuidValidator.validate(userId))
+            .orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
+
+    Slice<PrivateChannel> slice = channelRepository.findBlockedByUser(user, paging);
+
+    return new SliceList<>(
+        slice.getNumber(),
+        slice.getSize(),
+        slice.stream()
+            .map((ch) -> new PrivateChannelProfile(ch, user))
+            .collect(Collectors.toList()),
+        slice.hasNext());
+  }
+
+  @Override
   @Retryable(value = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 100))
   @Transactional(rollbackFor = Exception.class)
   public void block(String userId, String channelId, boolean isBlock)

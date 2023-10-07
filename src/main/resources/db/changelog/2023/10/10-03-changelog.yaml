@@ -1,0 +1,57 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1696680319949-3
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_private_channels_blockedby
+                  name: private_channel_id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_private_channels_blockedby
+                  name: user_id
+                  type: UUID
+            tableName: private_channels_blocked_by
+  - changeSet:
+      id: 1696680319949-4
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: private_channel_id
+            baseTableName: private_channels_blocked_by
+            constraintName: fk_prichabloby_on_private_channel
+            referencedColumnNames: id
+            referencedTableName: private_channel
+  - changeSet:
+      id: 1696680319949-5
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: user_id
+            baseTableName: private_channels_blocked_by
+            constraintName: fk_prichabloby_on_user
+            referencedColumnNames: id
+            referencedTableName: account_user
+  - changeSet:
+      id: 1696680319949-6
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - dropColumn:
+            columnName: is_first_user_blocked
+            tableName: private_channel
+        - dropColumn:
+            columnName: is_second_user_blocked
+            tableName: private_channel
+
