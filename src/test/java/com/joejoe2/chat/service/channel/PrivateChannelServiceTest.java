@@ -217,8 +217,6 @@ class PrivateChannelServiceTest {
   @Test
   void getChannelsBlockedByUser() throws Exception {
     // prepare channels
-    PrivateChannelProfile channelOfUserC =
-        channelService.createChannelBetween(userC.getId().toString(), userD.getId().toString());
     Stack<PrivateChannelProfile> channelsOfUserA = new Stack<>();
     for (User user : Arrays.asList(userB, userC, userD)) {
       PrivateChannelProfile channel =
@@ -250,23 +248,23 @@ class PrivateChannelServiceTest {
     for (int i = 0; i < channels.getList().size(); i++) {
       assertEquals(channelsOfUserA.pop(), channels.getList().get(i));
     }
-    // different page
+    // last page
     channels =
         channelService.getChannelsBlockedByUser(
             userB.getId().toString(), PageRequest.builder().page(1).size(1).build());
     assertEquals(channels.getPageSize(), 1);
     assertEquals(channels.getCurrentPage(), 1);
-    assertTrue(channels.isHasNext());
+    assertFalse(channels.isHasNext());
     for (int i = 0; i < channels.getList().size(); i++) {
       assertEquals(channelsOfUserB.get(i), channels.getList().get(i));
     }
-    // last page
+    // 0 page
     channels =
         channelService.getChannelsBlockedByUser(
-            userC.getId().toString(), PageRequest.builder().page(2).size(1).build());
+            userC.getId().toString(), PageRequest.builder().page(0).size(1).build());
     assertEquals(channels.getPageSize(), 1);
-    assertEquals(channels.getCurrentPage(), 2);
+    assertEquals(channels.getCurrentPage(), 0);
     assertFalse(channels.isHasNext());
-    assertEquals(channelOfUserC, channels.getList().get(0));
+    assertEquals(0, channels.getList().size());
   }
 }
