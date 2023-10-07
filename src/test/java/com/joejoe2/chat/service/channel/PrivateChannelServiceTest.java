@@ -258,7 +258,7 @@ class PrivateChannelServiceTest {
     for (int i = 0; i < channels.getList().size(); i++) {
       assertEquals(channelsOfUserB.get(i), channels.getList().get(i));
     }
-    // 0 page
+    // no page
     channels =
         channelService.getChannelsBlockedByUser(
             userC.getId().toString(), PageRequest.builder().page(0).size(1).build());
