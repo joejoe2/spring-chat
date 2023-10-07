@@ -251,7 +251,7 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
 
     PrivateChannel channel = new PrivateChannel(new HashSet<>(Arrays.asList(user, targetUser)));
     channelRepository.saveAndFlush(channel);
-    return new PrivateChannelProfile(channel);
+    return new PrivateChannelProfile(channel, user);
   }
 
   @Override
@@ -269,7 +269,9 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
     return new SliceList<>(
         slice.getNumber(),
         slice.getSize(),
-        slice.stream().map(PrivateChannelProfile::new).collect(Collectors.toList()),
+        slice.stream()
+            .map((ch) -> new PrivateChannelProfile(ch, user))
+            .collect(Collectors.toList()),
         slice.hasNext());
   }
 
@@ -288,7 +290,7 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
     if (!channel.getMembers().contains(user))
       throw new InvalidOperation("user is not in members of the channel !");
 
-    return new PrivateChannelProfile(channel);
+    return new PrivateChannelProfile(channel, user);
   }
 
   @Override
