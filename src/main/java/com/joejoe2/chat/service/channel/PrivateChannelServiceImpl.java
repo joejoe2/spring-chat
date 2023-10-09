@@ -120,7 +120,7 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
   public SseEmitter subscribe(String fromUserId) throws UserDoesNotExist {
     userRepository
         .findById(uuidValidator.validate(fromUserId))
-        .orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
+        .orElseThrow(() -> new UserDoesNotExist(fromUserId));
 
     SseEmitter subscriber = createUserSubscriber(fromUserId);
     SseUtil.sendConnectEvent(subscriber);
@@ -131,7 +131,7 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
   public void subscribe(WebSocketSession session, String fromUserId) throws UserDoesNotExist {
     userRepository
         .findById(uuidValidator.validate(fromUserId))
-        .orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
+        .orElseThrow(() -> new UserDoesNotExist(fromUserId));
     addUnSubscribeTriggers(fromUserId, session);
     listenToUser(session, fromUserId);
     WebSocketUtil.sendConnectMessage(session);
@@ -235,11 +235,11 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
     User user =
         userRepository
             .findById(uuidValidator.validate(fromUserId))
-            .orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
+            .orElseThrow(() -> new UserDoesNotExist(fromUserId));
     User targetUser =
         userRepository
             .findById(uuidValidator.validate(toUserId))
-            .orElseThrow(() -> new UserDoesNotExist("target user is not exist !"));
+            .orElseThrow(() -> new UserDoesNotExist(toUserId));
     if (user.equals(targetUser)) throw new InvalidOperation("cannot chat with yourself !");
     if (channelRepository.isPrivateChannelExistBetween(user, targetUser))
       throw new AlreadyExist(
@@ -256,13 +256,13 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
 
   @Override
   @Transactional(readOnly = true)
-  public SliceList<PrivateChannelProfile> getAllChannels(String ofUserId, PageRequest pageRequest)
+  public SliceList<PrivateChannelProfile> getAllChannels(String userId, PageRequest pageRequest)
       throws UserDoesNotExist {
     org.springframework.data.domain.PageRequest paging = pageValidator.validate(pageRequest);
     User user =
         userRepository
-            .findById(uuidValidator.validate(ofUserId))
-            .orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
+            .findById(uuidValidator.validate(userId))
+            .orElseThrow(() -> new UserDoesNotExist(userId));
 
     Slice<PrivateChannel> slice = channelRepository.findByIsUserInMembers(user, paging);
 
@@ -277,16 +277,16 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
 
   @Override
   @Transactional(readOnly = true)
-  public PrivateChannelProfile getChannelProfile(String ofUserId, String channelId)
+  public PrivateChannelProfile getChannelProfile(String userId, String channelId)
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation {
     User user =
         userRepository
-            .findById(uuidValidator.validate(ofUserId))
-            .orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
+            .findById(uuidValidator.validate(userId))
+            .orElseThrow(() -> new UserDoesNotExist(userId));
     PrivateChannel channel =
         channelRepository
             .findById(uuidValidator.validate(channelId))
-            .orElseThrow(() -> new ChannelDoesNotExist("channel is not exist !"));
+            .orElseThrow(() -> new ChannelDoesNotExist(channelId));
     if (!channel.getMembers().contains(user))
       throw new InvalidOperation("user is not in members of the channel !");
 
@@ -301,7 +301,7 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
     User user =
         userRepository
             .findById(uuidValidator.validate(userId))
-            .orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
+            .orElseThrow(() -> new UserDoesNotExist(userId));
 
     Slice<PrivateChannel> slice = channelRepository.findBlockedByUser(user, paging);
 
@@ -322,11 +322,11 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
     User user =
         userRepository
             .findById(uuidValidator.validate(userId))
-            .orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
+            .orElseThrow(() -> new UserDoesNotExist(userId));
     PrivateChannel channel =
         channelRepository
             .findById(uuidValidator.validate(channelId))
-            .orElseThrow(() -> new ChannelDoesNotExist("channel is not exist !"));
+            .orElseThrow(() -> new ChannelDoesNotExist(channelId));
     if (!channel.getMembers().contains(user))
       throw new InvalidOperation("user is not in members of the channel !");
 

@@ -51,11 +51,11 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
     User fromUser =
         userRepository
             .findById(uuidValidator.validate(fromUserId))
-            .orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
+            .orElseThrow(() -> new UserDoesNotExist(fromUserId));
     PrivateChannel channel =
         channelRepository
             .findById(uuidValidator.validate(channelId))
-            .orElseThrow(() -> new ChannelDoesNotExist("channel is not exist !"));
+            .orElseThrow(() -> new ChannelDoesNotExist(channelId));
 
     channel.addMessage(fromUser, message);
     channelRepository.saveAndFlush(channel);
@@ -78,7 +78,7 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
     User user =
         userRepository
             .findById(uuidValidator.validate(userId))
-            .orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
+            .orElseThrow(() -> new UserDoesNotExist(userId));
 
     Slice<PrivateMessage> slice = messageRepository.findAllByUser(user, paging);
     return new SliceList<>(
@@ -100,11 +100,11 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
     User user =
         userRepository
             .findById(uuidValidator.validate(userId))
-            .orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
+            .orElseThrow(() -> new UserDoesNotExist(userId));
     PrivateChannel channel =
         channelRepository
             .findById(uuidValidator.validate(channelId))
-            .orElseThrow(() -> new ChannelDoesNotExist("channel is not exist !"));
+            .orElseThrow(() -> new ChannelDoesNotExist(channelId));
     if (!channel.getMembers().contains(user))
       throw new InvalidOperation("user is not in members of the channel !");
 
@@ -128,7 +128,7 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
     User user =
         userRepository
             .findById(uuidValidator.validate(userId))
-            .orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
+            .orElseThrow(() -> new UserDoesNotExist(userId));
 
     Slice<PrivateMessage> slice = messageRepository.findAllByUserSince(user, since, paging);
     return new SliceList<>(
@@ -151,11 +151,11 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
     User user =
         userRepository
             .findById(uuidValidator.validate(userId))
-            .orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
+            .orElseThrow(() -> new UserDoesNotExist(userId));
     PrivateChannel channel =
         channelRepository
             .findById(uuidValidator.validate(channelId))
-            .orElseThrow(() -> new ChannelDoesNotExist("channel is not exist !"));
+            .orElseThrow(() -> new ChannelDoesNotExist(channelId));
     if (!channel.getMembers().contains(user))
       throw new InvalidOperation("user is not in members of the channel !");
 

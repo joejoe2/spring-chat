@@ -44,11 +44,11 @@ public class PublicMessageServiceImpl implements PublicMessageService {
     User user =
         userRepository
             .findById(uuidValidator.validate(fromUserId))
-            .orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
+            .orElseThrow(() -> new UserDoesNotExist(fromUserId));
     PublicChannel channel =
         channelRepository
             .findById(uuidValidator.validate(channelId))
-            .orElseThrow(() -> new ChannelDoesNotExist("channel is not exist !"));
+            .orElseThrow(() -> new ChannelDoesNotExist(channelId));
 
     PublicMessage publicMessage =
         PublicMessage.builder()
@@ -77,7 +77,7 @@ public class PublicMessageServiceImpl implements PublicMessageService {
     PublicChannel channel =
         channelRepository
             .findById(uuidValidator.validate(channelId))
-            .orElseThrow(() -> new ChannelDoesNotExist("channel is not exist !"));
+            .orElseThrow(() -> new ChannelDoesNotExist(channelId));
 
     Slice<PublicMessage> slice = messageRepository.findAllByChannel(channel, paging);
     return new SliceList<>(
@@ -100,7 +100,7 @@ public class PublicMessageServiceImpl implements PublicMessageService {
     PublicChannel channel =
         channelRepository
             .findById(uuidValidator.validate(channelId))
-            .orElseThrow(() -> new ChannelDoesNotExist("channel is not exist !"));
+            .orElseThrow(() -> new ChannelDoesNotExist(channelId));
 
     Slice<PublicMessage> slice = messageRepository.findAllByChannelSince(channel, since, paging);
     return new SliceList<>(

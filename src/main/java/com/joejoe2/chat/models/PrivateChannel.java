@@ -27,7 +27,7 @@ public class PrivateChannel extends TimeStampBase {
       name = "private_channels_users",
       joinColumns = {@JoinColumn(name = "private_channel_id", nullable = false)},
       inverseJoinColumns = {@JoinColumn(name = "user_id", nullable = false)})
-  Set<User> members;
+  private Set<User> members;
 
   @ManyToMany
   @BatchSize(size = 128)
@@ -35,14 +35,14 @@ public class PrivateChannel extends TimeStampBase {
       name = "private_channels_blockedBy",
       joinColumns = {@JoinColumn(name = "private_channel_id", nullable = false)},
       inverseJoinColumns = {@JoinColumn(name = "user_id", nullable = false)})
-  Set<User> blockedBy = new HashSet<>();
+  private Set<User> blockedBy = new HashSet<>();
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "channel", orphanRemoval = true)
-  List<PrivateMessage> messages;
+  private List<PrivateMessage> messages;
 
   @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn
-  PrivateMessage lastMessage;
+  private PrivateMessage lastMessage;
 
   public PrivateChannel(Set<User> members) {
     this.members = members;
@@ -50,7 +50,7 @@ public class PrivateChannel extends TimeStampBase {
 
   // concat two user ids in sorted to prevent duplicate channel between them
   @Column(unique = true, nullable = false, updatable = false)
-  String uniqueUserIds;
+  private String uniqueUserIds;
 
   @PrePersist
   void prePersist() {
