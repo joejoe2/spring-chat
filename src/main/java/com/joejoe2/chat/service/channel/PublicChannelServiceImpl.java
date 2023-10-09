@@ -119,7 +119,7 @@ public class PublicChannelServiceImpl implements PublicChannelService {
   public SseEmitter subscribe(String channelId) throws ChannelDoesNotExist {
     channelRepository
         .findById(uuidValidator.validate(channelId))
-        .orElseThrow(() -> new ChannelDoesNotExist(channelId));
+        .orElseThrow(() -> ChannelDoesNotExist.ofId(channelId));
 
     SseEmitter subscriber = createChannelSubscriber(channelId);
     SseUtil.sendConnectEvent(subscriber);
@@ -130,7 +130,7 @@ public class PublicChannelServiceImpl implements PublicChannelService {
   public void subscribe(WebSocketSession session, String channelId) throws ChannelDoesNotExist {
     channelRepository
         .findById(uuidValidator.validate(channelId))
-        .orElseThrow(() -> new ChannelDoesNotExist(channelId));
+        .orElseThrow(() -> ChannelDoesNotExist.ofId(channelId));
     addUnSubscribeTriggers(channelId, session);
     listenToChannel(session, channelId);
     WebSocketUtil.sendConnectMessage(session);
@@ -259,7 +259,7 @@ public class PublicChannelServiceImpl implements PublicChannelService {
     PublicChannel channel =
         channelRepository
             .findById(uuidValidator.validate(channelId))
-            .orElseThrow(() -> new ChannelDoesNotExist(channelId));
+            .orElseThrow(() -> ChannelDoesNotExist.ofId(channelId));
 
     return new PublicChannelProfile(channel);
   }

@@ -120,7 +120,7 @@ public class GroupChannelServiceImpl implements GroupChannelService {
   public SseEmitter subscribe(String fromUserId) throws UserDoesNotExist {
     userRepository
         .findById(uuidValidator.validate(fromUserId))
-        .orElseThrow(() -> new UserDoesNotExist(fromUserId));
+        .orElseThrow(() -> UserDoesNotExist.ofId(fromUserId));
 
     SseEmitter subscriber = createUserSubscriber(fromUserId);
     SseUtil.sendConnectEvent(subscriber);
@@ -131,7 +131,7 @@ public class GroupChannelServiceImpl implements GroupChannelService {
   public void subscribe(WebSocketSession session, String fromUserId) throws UserDoesNotExist {
     userRepository
         .findById(uuidValidator.validate(fromUserId))
-        .orElseThrow(() -> new UserDoesNotExist(fromUserId));
+        .orElseThrow(() -> UserDoesNotExist.ofId(fromUserId));
     addUnSubscribeTriggers(fromUserId, session);
     listenToUser(session, fromUserId);
     WebSocketUtil.sendConnectMessage(session);
@@ -235,7 +235,7 @@ public class GroupChannelServiceImpl implements GroupChannelService {
     User user =
         userRepository
             .findById(uuidValidator.validate(fromUserId))
-            .orElseThrow(() -> new UserDoesNotExist(fromUserId));
+            .orElseThrow(() -> UserDoesNotExist.ofId(fromUserId));
     name = ChannelNameValidator.getInstance().validate(name);
 
     GroupChannel channel = new GroupChannel(Set.of(user));
@@ -252,15 +252,15 @@ public class GroupChannelServiceImpl implements GroupChannelService {
     User inviter =
         userRepository
             .findById(uuidValidator.validate(fromUserId))
-            .orElseThrow(() -> new UserDoesNotExist(fromUserId));
+            .orElseThrow(() -> UserDoesNotExist.ofId(fromUserId));
     User invitee =
         userRepository
             .findById(uuidValidator.validate(toUserId))
-            .orElseThrow(() -> new UserDoesNotExist(toUserId));
+            .orElseThrow(() -> UserDoesNotExist.ofId(toUserId));
     GroupChannel channel =
         channelRepository
             .findById(uuidValidator.validate(channelId))
-            .orElseThrow(() -> new ChannelDoesNotExist(channelId));
+            .orElseThrow(() -> ChannelDoesNotExist.ofId(channelId));
 
     channel.invite(inviter, invitee);
     channelRepository.saveAndFlush(channel);
@@ -279,11 +279,11 @@ public class GroupChannelServiceImpl implements GroupChannelService {
     User invitee =
         userRepository
             .findById(uuidValidator.validate(userId))
-            .orElseThrow(() -> new UserDoesNotExist(userId));
+            .orElseThrow(() -> UserDoesNotExist.ofId(userId));
     GroupChannel channel =
         channelRepository
             .findById(uuidValidator.validate(channelId))
-            .orElseThrow(() -> new ChannelDoesNotExist(channelId));
+            .orElseThrow(() -> ChannelDoesNotExist.ofId(channelId));
 
     channel.acceptInvitation(invitee);
     channelRepository.saveAndFlush(channel);
@@ -303,15 +303,15 @@ public class GroupChannelServiceImpl implements GroupChannelService {
     User actor =
         userRepository
             .findById(uuidValidator.validate(fromUserId))
-            .orElseThrow(() -> new UserDoesNotExist(fromUserId));
+            .orElseThrow(() -> UserDoesNotExist.ofId(fromUserId));
     User target =
         userRepository
             .findById(uuidValidator.validate(targetUserId))
-            .orElseThrow(() -> new UserDoesNotExist(targetUserId));
+            .orElseThrow(() -> UserDoesNotExist.ofId(targetUserId));
     GroupChannel channel =
         channelRepository
             .findById(uuidValidator.validate(channelId))
-            .orElseThrow(() -> new ChannelDoesNotExist(channelId));
+            .orElseThrow(() -> ChannelDoesNotExist.ofId(channelId));
 
     channel.kickOff(actor, target);
     channelRepository.saveAndFlush(channel);
@@ -331,11 +331,11 @@ public class GroupChannelServiceImpl implements GroupChannelService {
     User user =
         userRepository
             .findById(uuidValidator.validate(userId))
-            .orElseThrow(() -> new UserDoesNotExist(userId));
+            .orElseThrow(() -> UserDoesNotExist.ofId(userId));
     GroupChannel channel =
         channelRepository
             .findById(uuidValidator.validate(channelId))
-            .orElseThrow(() -> new ChannelDoesNotExist(channelId));
+            .orElseThrow(() -> ChannelDoesNotExist.ofId(channelId));
 
     channel.leave(user);
     channelRepository.saveAndFlush(channel);
@@ -352,7 +352,7 @@ public class GroupChannelServiceImpl implements GroupChannelService {
     User user =
         userRepository
             .findById(uuidValidator.validate(userId))
-            .orElseThrow(() -> new UserDoesNotExist(userId));
+            .orElseThrow(() -> UserDoesNotExist.ofId(userId));
 
     Slice<GroupChannel> slice = channelRepository.findByIsUserInMembers(user, since, paging);
 
@@ -370,11 +370,11 @@ public class GroupChannelServiceImpl implements GroupChannelService {
     User user =
         userRepository
             .findById(uuidValidator.validate(userId))
-            .orElseThrow(() -> new UserDoesNotExist(userId));
+            .orElseThrow(() -> UserDoesNotExist.ofId(userId));
     GroupChannel channel =
         channelRepository
             .findById(uuidValidator.validate(channelId))
-            .orElseThrow(() -> new ChannelDoesNotExist(channelId));
+            .orElseThrow(() -> ChannelDoesNotExist.ofId(channelId));
     if (!channel.getMembers().contains(user))
       throw new InvalidOperation("user is not in members of the channel !");
 
