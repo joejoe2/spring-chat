@@ -42,20 +42,30 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
 
   PageRequestValidator pageValidator = PageRequestValidator.getInstance();
 
+  private User getUserById(String userId) throws UserDoesNotExist {
+    return userRepository
+        .findById(uuidValidator.validate(userId))
+        .orElseThrow(
+            () -> new UserDoesNotExist("user with id=%s does not exist !".formatted(userId)));
+  }
+
+  private PrivateChannel getChannelById(String channelId) throws ChannelDoesNotExist {
+    return channelRepository
+        .findById(uuidValidator.validate(channelId))
+        .orElseThrow(
+            () ->
+                new ChannelDoesNotExist(
+                    "channel with id=%s does not exist !".formatted(channelId)));
+  }
+
   @Retryable(value = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 100))
   @Transactional(rollbackFor = Exception.class)
   @Override
   public PrivateMessageDto createMessage(String fromUserId, String channelId, String message)
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation, BlockedException {
     message = messageValidator.validate(message);
-    User fromUser =
-        userRepository
-            .findById(uuidValidator.validate(fromUserId))
-            .orElseThrow(() -> UserDoesNotExist.ofId(fromUserId));
-    PrivateChannel channel =
-        channelRepository
-            .findById(uuidValidator.validate(channelId))
-            .orElseThrow(() -> ChannelDoesNotExist.ofId(channelId));
+    User fromUser = getUserById(fromUserId);
+    PrivateChannel channel = getChannelById(channelId);
 
     channel.addMessage(fromUser, message);
     channelRepository.saveAndFlush(channel);
@@ -75,10 +85,7 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
   public SliceList<PrivateMessageDto> getAllMessages(String userId, PageRequest pageRequest)
       throws UserDoesNotExist {
     org.springframework.data.domain.PageRequest paging = pageValidator.validate(pageRequest);
-    User user =
-        userRepository
-            .findById(uuidValidator.validate(userId))
-            .orElseThrow(() -> UserDoesNotExist.ofId(userId));
+    User user = getUserById(userId);
 
     Slice<PrivateMessage> slice = messageRepository.findAllByUser(user, paging);
     return new SliceList<>(
@@ -97,14 +104,8 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
       String userId, String channelId, PageRequest pageRequest)
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation {
     org.springframework.data.domain.PageRequest paging = pageValidator.validate(pageRequest);
-    User user =
-        userRepository
-            .findById(uuidValidator.validate(userId))
-            .orElseThrow(() -> UserDoesNotExist.ofId(userId));
-    PrivateChannel channel =
-        channelRepository
-            .findById(uuidValidator.validate(channelId))
-            .orElseThrow(() -> ChannelDoesNotExist.ofId(channelId));
+    User user = getUserById(userId);
+    PrivateChannel channel = getChannelById(channelId);
     if (!channel.getMembers().contains(user))
       throw new InvalidOperation("user is not in members of the channel !");
 
@@ -125,10 +126,7 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
       String userId, Instant since, PageRequest pageRequest) throws UserDoesNotExist {
     if (since == null) throw new IllegalArgumentException("since cannot be null !");
     org.springframework.data.domain.PageRequest paging = pageValidator.validate(pageRequest);
-    User user =
-        userRepository
-            .findById(uuidValidator.validate(userId))
-            .orElseThrow(() -> UserDoesNotExist.ofId(userId));
+    User user = getUserById(userId);
 
     Slice<PrivateMessage> slice = messageRepository.findAllByUserSince(user, since, paging);
     return new SliceList<>(
@@ -148,14 +146,8 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation {
     if (since == null) throw new IllegalArgumentException("since cannot be null !");
     org.springframework.data.domain.PageRequest paging = pageValidator.validate(pageRequest);
-    User user =
-        userRepository
-            .findById(uuidValidator.validate(userId))
-            .orElseThrow(() -> UserDoesNotExist.ofId(userId));
-    PrivateChannel channel =
-        channelRepository
-            .findById(uuidValidator.validate(channelId))
-            .orElseThrow(() -> ChannelDoesNotExist.ofId(channelId));
+    User user = getUserById(userId);
+    PrivateChannel channel = getChannelById(channelId);
     if (!channel.getMembers().contains(user))
       throw new InvalidOperation("user is not in members of the channel !");
 
