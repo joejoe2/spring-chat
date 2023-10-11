@@ -15,8 +15,8 @@ import com.joejoe2.chat.models.MessageType;
 import com.joejoe2.chat.models.User;
 import com.joejoe2.chat.repository.channel.GroupChannelRepository;
 import com.joejoe2.chat.repository.message.GroupMessageRepository;
-import com.joejoe2.chat.repository.user.UserRepository;
 import com.joejoe2.chat.service.nats.NatsService;
+import com.joejoe2.chat.service.user.UserService;
 import com.joejoe2.chat.utils.ChannelSubject;
 import com.joejoe2.chat.validation.validator.MessageValidator;
 import com.joejoe2.chat.validation.validator.PageRequestValidator;
@@ -37,7 +37,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class GroupMessageServiceImpl implements GroupMessageService {
-  @Autowired UserRepository userRepository;
+  @Autowired UserService userService;
   @Autowired GroupChannelRepository channelRepository;
   @Autowired GroupMessageRepository messageRepository;
   @Autowired NatsService natsService;
@@ -49,13 +49,6 @@ public class GroupMessageServiceImpl implements GroupMessageService {
   MessageValidator messageValidator = MessageValidator.getInstance();
 
   PageRequestValidator pageValidator = PageRequestValidator.getInstance();
-
-  private User getUserById(String userId) throws UserDoesNotExist {
-    return userRepository
-        .findById(uuidValidator.validate(userId))
-        .orElseThrow(
-            () -> new UserDoesNotExist("user with id=%s does not exist !".formatted(userId)));
-  }
 
   private GroupChannel getChannelById(String channelId) throws ChannelDoesNotExist {
     return channelRepository
@@ -72,7 +65,7 @@ public class GroupMessageServiceImpl implements GroupMessageService {
   public GroupMessageDto createMessage(String fromUserId, String channelId, String message)
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation {
     message = messageValidator.validate(message);
-    User fromUser = getUserById(fromUserId);
+    User fromUser = userService.getUserById(fromUserId);
     GroupChannel channel = getChannelById(channelId);
 
     channel.addMessage(fromUser, message);
@@ -106,7 +99,7 @@ public class GroupMessageServiceImpl implements GroupMessageService {
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation {
     if (since == null) throw new IllegalArgumentException("since cannot be null !");
     org.springframework.data.domain.PageRequest paging = pageValidator.validate(pageRequest);
-    User user = getUserById(userId);
+    User user = userService.getUserById(userId);
     GroupChannel channel = getChannelById(channelId);
     if (!channel.getMembers().contains(user))
       throw new InvalidOperation("user is not in members of the channel !");
@@ -128,7 +121,7 @@ public class GroupMessageServiceImpl implements GroupMessageService {
       String userId, Instant since, PageRequest pageRequest) throws UserDoesNotExist {
     if (since == null) throw new IllegalArgumentException("since cannot be null !");
     org.springframework.data.domain.PageRequest paging = pageValidator.validate(pageRequest);
-    User user = getUserById(userId);
+    User user = userService.getUserById(userId);
 
     Slice<GroupMessage> slice = messageRepository.findInvitations(user, since, paging);
     return new SliceList<>(

@@ -12,8 +12,8 @@ import com.joejoe2.chat.models.PrivateMessage;
 import com.joejoe2.chat.models.User;
 import com.joejoe2.chat.repository.channel.PrivateChannelRepository;
 import com.joejoe2.chat.repository.message.PrivateMessageRepository;
-import com.joejoe2.chat.repository.user.UserRepository;
 import com.joejoe2.chat.service.nats.NatsService;
+import com.joejoe2.chat.service.user.UserService;
 import com.joejoe2.chat.utils.ChannelSubject;
 import com.joejoe2.chat.validation.validator.MessageValidator;
 import com.joejoe2.chat.validation.validator.PageRequestValidator;
@@ -32,7 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PrivateMessageServiceImpl implements PrivateMessageService {
-  @Autowired UserRepository userRepository;
+  @Autowired UserService userService;
   @Autowired PrivateChannelRepository channelRepository;
   @Autowired PrivateMessageRepository messageRepository;
   @Autowired NatsService natsService;
@@ -41,13 +41,6 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
   MessageValidator messageValidator = MessageValidator.getInstance();
 
   PageRequestValidator pageValidator = PageRequestValidator.getInstance();
-
-  private User getUserById(String userId) throws UserDoesNotExist {
-    return userRepository
-        .findById(uuidValidator.validate(userId))
-        .orElseThrow(
-            () -> new UserDoesNotExist("user with id=%s does not exist !".formatted(userId)));
-  }
 
   private PrivateChannel getChannelById(String channelId) throws ChannelDoesNotExist {
     return channelRepository
@@ -64,7 +57,7 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
   public PrivateMessageDto createMessage(String fromUserId, String channelId, String message)
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation, BlockedException {
     message = messageValidator.validate(message);
-    User fromUser = getUserById(fromUserId);
+    User fromUser = userService.getUserById(fromUserId);
     PrivateChannel channel = getChannelById(channelId);
 
     channel.addMessage(fromUser, message);
@@ -85,7 +78,7 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
   public SliceList<PrivateMessageDto> getAllMessages(String userId, PageRequest pageRequest)
       throws UserDoesNotExist {
     org.springframework.data.domain.PageRequest paging = pageValidator.validate(pageRequest);
-    User user = getUserById(userId);
+    User user = userService.getUserById(userId);
 
     Slice<PrivateMessage> slice = messageRepository.findAllByUser(user, paging);
     return new SliceList<>(
@@ -104,7 +97,7 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
       String userId, String channelId, PageRequest pageRequest)
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation {
     org.springframework.data.domain.PageRequest paging = pageValidator.validate(pageRequest);
-    User user = getUserById(userId);
+    User user = userService.getUserById(userId);
     PrivateChannel channel = getChannelById(channelId);
     if (!channel.getMembers().contains(user))
       throw new InvalidOperation("user is not in members of the channel !");
@@ -126,7 +119,7 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
       String userId, Instant since, PageRequest pageRequest) throws UserDoesNotExist {
     if (since == null) throw new IllegalArgumentException("since cannot be null !");
     org.springframework.data.domain.PageRequest paging = pageValidator.validate(pageRequest);
-    User user = getUserById(userId);
+    User user = userService.getUserById(userId);
 
     Slice<PrivateMessage> slice = messageRepository.findAllByUserSince(user, since, paging);
     return new SliceList<>(
@@ -146,7 +139,7 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation {
     if (since == null) throw new IllegalArgumentException("since cannot be null !");
     org.springframework.data.domain.PageRequest paging = pageValidator.validate(pageRequest);
-    User user = getUserById(userId);
+    User user = userService.getUserById(userId);
     PrivateChannel channel = getChannelById(channelId);
     if (!channel.getMembers().contains(user))
       throw new InvalidOperation("user is not in members of the channel !");
