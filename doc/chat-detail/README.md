@@ -30,7 +30,6 @@ accept the invitation to become a member.
 
 If userA block userB, 
 
-- a flag of the private channel in db will be marked
 - any future msgs from userB to userA is invisible, unblocked will not take these msgs back
 - publish msg endpoint will return 403 when userB sends msg to userA (actually do not persist/deliver msgs)
 - userB can still get new msgs from userA until userB block userA
