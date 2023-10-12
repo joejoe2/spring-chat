@@ -280,4 +280,25 @@ public class PrivateChannelController {
       return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()), HttpStatus.FORBIDDEN);
     }
   }
+
+  @Operation(summary = "get profiles of all private channels blocked by current user")
+  @AuthenticatedApi
+  @SecurityRequirement(name = "jwt")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "profiles of channel",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = SliceOfPrivateChannel.class))),
+      })
+  @RequestMapping(path = "/blocked", method = RequestMethod.GET)
+  public ResponseEntity<Object> listBlockedByUser(@ParameterObject @Valid PageRequest request)
+      throws UserDoesNotExist {
+    SliceList<PrivateChannelProfile> sliceList =
+        channelService.getChannelsBlockedByUser(AuthUtil.currentUserDetail().getId(), request);
+    return ResponseEntity.ok(new SliceOfPrivateChannel(sliceList));
+  }
 }

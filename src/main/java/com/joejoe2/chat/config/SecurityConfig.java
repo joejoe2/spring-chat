@@ -1,7 +1,7 @@
 package com.joejoe2.chat.config;
 
 import com.joejoe2.chat.filter.JwtAuthenticationFilter;
-import com.joejoe2.chat.service.user.auth.UserDetailService;
+import com.joejoe2.chat.service.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,7 +19,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
-  @Autowired UserDetailService userDetailService;
+  @Autowired UserService userService;
   @Autowired JwtAuthenticationFilter jwtAuthenticationFilter;
 
   @Bean
@@ -44,7 +44,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
   @Override
   protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-    auth.userDetailsService(userDetailService).passwordEncoder(passwordEncoder());
+    auth.userDetailsService(userService).passwordEncoder(passwordEncoder());
   }
 
   @Override

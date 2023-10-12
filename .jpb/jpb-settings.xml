@@ -16,4 +16,13 @@
     <exclude-change idName="jobrunr_recurring_jobs" tagName="dropTable" />
     <exclude-change idName="idx_eeb6ebf5fdd9ed6592c37c3e2" tagName="createIndex" />
   </component>
+  <component name="PersistenceUnitSettings">
+    <persistence-units>
+      <persistence-unit name="Default" defaultIncludeChangeLogFile="src/main/resources/db/changelog/db.changelog-master.yaml">
+        <packages>
+          <package value="com.joejoe2.chat" />
+        </packages>
+      </persistence-unit>
+    </persistence-units>
+  </component>
 </project>

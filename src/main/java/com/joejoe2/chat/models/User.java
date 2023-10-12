@@ -26,13 +26,16 @@ public class User {
   private String userName;
 
   @ManyToMany(mappedBy = "members")
-  Set<PrivateChannel> privateChannels;
+  private Set<PrivateChannel> privateChannels;
+
+  @ManyToMany(mappedBy = "blockedBy")
+  private Set<PrivateChannel> blockedPrivateChannels;
 
   @ManyToMany(mappedBy = "members")
-  Set<GroupChannel> groupChannels;
+  private Set<GroupChannel> groupChannels;
 
   @OneToMany(mappedBy = "user")
-  Set<GroupInvitation> invitations;
+  private Set<GroupInvitation> invitations;
 
   @Override
   public boolean equals(Object o) {

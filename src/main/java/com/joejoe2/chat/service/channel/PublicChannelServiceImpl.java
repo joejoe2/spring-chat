@@ -115,11 +115,18 @@ public class PublicChannelServiceImpl implements PublicChannelService {
         });
   }
 
+  private PublicChannel getChannelById(String channelId) throws ChannelDoesNotExist {
+    return channelRepository
+        .findById(uuidValidator.validate(channelId))
+        .orElseThrow(
+            () ->
+                new ChannelDoesNotExist(
+                    "channel with id=%s does not exist !".formatted(channelId)));
+  }
+
   @Override
   public SseEmitter subscribe(String channelId) throws ChannelDoesNotExist {
-    channelRepository
-        .findById(uuidValidator.validate(channelId))
-        .orElseThrow(() -> new ChannelDoesNotExist("channel is not exist !"));
+    getChannelById(channelId);
 
     SseEmitter subscriber = createChannelSubscriber(channelId);
     SseUtil.sendConnectEvent(subscriber);
@@ -128,9 +135,7 @@ public class PublicChannelServiceImpl implements PublicChannelService {
 
   @Override
   public void subscribe(WebSocketSession session, String channelId) throws ChannelDoesNotExist {
-    channelRepository
-        .findById(uuidValidator.validate(channelId))
-        .orElseThrow(() -> new ChannelDoesNotExist("channel is not exist !"));
+    getChannelById(channelId);
     addUnSubscribeTriggers(channelId, session);
     listenToChannel(session, channelId);
     WebSocketUtil.sendConnectMessage(session);
@@ -256,11 +261,7 @@ public class PublicChannelServiceImpl implements PublicChannelService {
   @Override
   @Transactional(readOnly = true)
   public PublicChannelProfile getChannelProfile(String channelId) throws ChannelDoesNotExist {
-    PublicChannel channel =
-        channelRepository
-            .findById(uuidValidator.validate(channelId))
-            .orElseThrow(() -> new ChannelDoesNotExist("channel is not exist !"));
-
+    PublicChannel channel = getChannelById(channelId);
     return new PublicChannelProfile(channel);
   }
 }

@@ -213,4 +213,58 @@ class PrivateChannelServiceTest {
     channelService.block(userB.getId().toString(), channel.getId(), false);
     assertFalse(channelRepository.getById(UUID.fromString(channel.getId())).isBlocked(userA));
   }
+
+  @Test
+  void getChannelsBlockedByUser() throws Exception {
+    // prepare channels
+    Stack<PrivateChannelProfile> channelsOfUserA = new Stack<>();
+    for (User user : Arrays.asList(userB, userC, userD)) {
+      PrivateChannelProfile channel =
+          channelService.createChannelBetween(userA.getId().toString(), user.getId().toString());
+      channelsOfUserA.add(channel);
+      channelService.block(userA.getId().toString(), channel.getId(), true);
+    }
+    List<PrivateChannelProfile> channelsOfUserB = new ArrayList<>();
+    for (User user : Arrays.asList(userC, userD)) {
+      PrivateChannelProfile channel =
+          channelService.createChannelBetween(userB.getId().toString(), user.getId().toString());
+      channelsOfUserB.add(channel);
+      channelService.block(userB.getId().toString(), channel.getId(), true);
+    }
+    // test IllegalArgument
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            channelService.getChannelsBlockedByUser(
+                "invalid_uid", PageRequest.builder().page(-1).size(0).build()));
+    // test success
+    SliceList<PrivateChannelProfile> channels =
+        channelService.getChannelsBlockedByUser(
+            userA.getId().toString(), PageRequest.builder().page(0).size(2).build());
+    assertEquals(channels.getPageSize(), 2);
+    assertEquals(channels.getCurrentPage(), 0);
+    assertTrue(channels.isHasNext());
+    // order by updateAt desc
+    for (int i = 0; i < channels.getList().size(); i++) {
+      assertEquals(channelsOfUserA.pop(), channels.getList().get(i));
+    }
+    // last page
+    channels =
+        channelService.getChannelsBlockedByUser(
+            userB.getId().toString(), PageRequest.builder().page(1).size(1).build());
+    assertEquals(channels.getPageSize(), 1);
+    assertEquals(channels.getCurrentPage(), 1);
+    assertFalse(channels.isHasNext());
+    for (int i = 0; i < channels.getList().size(); i++) {
+      assertEquals(channelsOfUserB.get(i), channels.getList().get(i));
+    }
+    // no page
+    channels =
+        channelService.getChannelsBlockedByUser(
+            userC.getId().toString(), PageRequest.builder().page(0).size(1).build());
+    assertEquals(channels.getPageSize(), 1);
+    assertEquals(channels.getCurrentPage(), 0);
+    assertFalse(channels.isHasNext());
+    assertEquals(0, channels.getList().size());
+  }
 }

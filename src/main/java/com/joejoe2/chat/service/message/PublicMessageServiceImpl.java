@@ -10,8 +10,8 @@ import com.joejoe2.chat.models.PublicMessage;
 import com.joejoe2.chat.models.User;
 import com.joejoe2.chat.repository.channel.PublicChannelRepository;
 import com.joejoe2.chat.repository.message.PublicMessageRepository;
-import com.joejoe2.chat.repository.user.UserRepository;
 import com.joejoe2.chat.service.nats.NatsService;
+import com.joejoe2.chat.service.user.UserService;
 import com.joejoe2.chat.utils.ChannelSubject;
 import com.joejoe2.chat.validation.validator.MessageValidator;
 import com.joejoe2.chat.validation.validator.PageRequestValidator;
@@ -27,7 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PublicMessageServiceImpl implements PublicMessageService {
-  @Autowired UserRepository userRepository;
+  @Autowired UserService userService;
   @Autowired PublicChannelRepository channelRepository;
   @Autowired PublicMessageRepository messageRepository;
   @Autowired NatsService natsService;
@@ -37,18 +37,21 @@ public class PublicMessageServiceImpl implements PublicMessageService {
 
   PageRequestValidator pageValidator = PageRequestValidator.getInstance();
 
+  private PublicChannel getChannelById(String channelId) throws ChannelDoesNotExist {
+    return channelRepository
+        .findById(uuidValidator.validate(channelId))
+        .orElseThrow(
+            () ->
+                new ChannelDoesNotExist(
+                    "channel with id=%s does not exist !".formatted(channelId)));
+  }
+
   @Override
   @Transactional(rollbackFor = Exception.class)
   public PublicMessageDto createMessage(String fromUserId, String channelId, String message)
       throws UserDoesNotExist, ChannelDoesNotExist {
-    User user =
-        userRepository
-            .findById(uuidValidator.validate(fromUserId))
-            .orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
-    PublicChannel channel =
-        channelRepository
-            .findById(uuidValidator.validate(channelId))
-            .orElseThrow(() -> new ChannelDoesNotExist("channel is not exist !"));
+    User user = userService.getUserById(fromUserId);
+    PublicChannel channel = getChannelById(channelId);
 
     PublicMessage publicMessage =
         PublicMessage.builder()
@@ -74,10 +77,7 @@ public class PublicMessageServiceImpl implements PublicMessageService {
   public SliceList<PublicMessageDto> getAllMessages(
       String channelId, com.joejoe2.chat.data.PageRequest pageRequest) throws ChannelDoesNotExist {
     PageRequest paging = pageValidator.validate(pageRequest);
-    PublicChannel channel =
-        channelRepository
-            .findById(uuidValidator.validate(channelId))
-            .orElseThrow(() -> new ChannelDoesNotExist("channel is not exist !"));
+    PublicChannel channel = getChannelById(channelId);
 
     Slice<PublicMessage> slice = messageRepository.findAllByChannel(channel, paging);
     return new SliceList<>(
@@ -97,10 +97,7 @@ public class PublicMessageServiceImpl implements PublicMessageService {
       throws ChannelDoesNotExist {
     if (since == null) throw new IllegalArgumentException("since cannot be null !");
     PageRequest paging = pageValidator.validate(pageRequest);
-    PublicChannel channel =
-        channelRepository
-            .findById(uuidValidator.validate(channelId))
-            .orElseThrow(() -> new ChannelDoesNotExist("channel is not exist !"));
+    PublicChannel channel = getChannelById(channelId);
 
     Slice<PublicMessage> slice = messageRepository.findAllByChannelSince(channel, since, paging);
     return new SliceList<>(

@@ -3,7 +3,7 @@ package com.joejoe2.chat.filter;
 import com.joejoe2.chat.data.UserDetail;
 import com.joejoe2.chat.exception.InvalidTokenException;
 import com.joejoe2.chat.service.jwt.JwtService;
-import com.joejoe2.chat.service.user.auth.UserDetailService;
+import com.joejoe2.chat.service.user.UserService;
 import com.joejoe2.chat.utils.AuthUtil;
 import com.joejoe2.chat.utils.HttpUtil;
 import java.io.IOException;
@@ -18,7 +18,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
   @Autowired JwtService jwtService;
-  @Autowired UserDetailService userDetailService;
+  @Autowired UserService userService;
 
   @Override
   protected void doFilterInternal(
@@ -30,7 +30,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (jwtService.isAccessTokenInBlackList(accessToken))
           throw new InvalidTokenException("access token has been revoked !");
         UserDetail userDetail = jwtService.getUserDetailFromAccessToken(accessToken);
-        userDetailService.createUserIfAbsent(userDetail);
+        userService.createUserIfAbsent(userDetail);
         AuthUtil.setCurrentUserDetail(userDetail);
       }
     } catch (InvalidTokenException e) {

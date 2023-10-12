@@ -3,10 +3,7 @@ package com.joejoe2.chat.models;
 import com.joejoe2.chat.exception.BlockedException;
 import com.joejoe2.chat.exception.InvalidOperation;
 import java.time.Instant;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import javax.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -30,14 +27,22 @@ public class PrivateChannel extends TimeStampBase {
       name = "private_channels_users",
       joinColumns = {@JoinColumn(name = "private_channel_id", nullable = false)},
       inverseJoinColumns = {@JoinColumn(name = "user_id", nullable = false)})
-  Set<User> members;
+  private Set<User> members;
+
+  @ManyToMany
+  @BatchSize(size = 128)
+  @JoinTable(
+      name = "private_channels_blockedBy",
+      joinColumns = {@JoinColumn(name = "private_channel_id", nullable = false)},
+      inverseJoinColumns = {@JoinColumn(name = "user_id", nullable = false)})
+  private Set<User> blockedBy = new HashSet<>();
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "channel", orphanRemoval = true)
-  List<PrivateMessage> messages;
+  private List<PrivateMessage> messages;
 
   @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn
-  PrivateMessage lastMessage;
+  private PrivateMessage lastMessage;
 
   public PrivateChannel(Set<User> members) {
     this.members = members;
@@ -45,13 +50,7 @@ public class PrivateChannel extends TimeStampBase {
 
   // concat two user ids in sorted to prevent duplicate channel between them
   @Column(unique = true, nullable = false, updatable = false)
-  String uniqueUserIds;
-
-  @Column(columnDefinition = "BOOLEAN NOT NULL DEFAULT FALSE")
-  private boolean isFirstUserBlocked;
-
-  @Column(columnDefinition = "BOOLEAN NOT NULL DEFAULT FALSE")
-  private boolean isSecondUserBlocked;
+  private String uniqueUserIds;
 
   @PrePersist
   void prePersist() {
@@ -88,17 +87,16 @@ public class PrivateChannel extends TimeStampBase {
    * @param isBlock block or unblock
    */
   public void block(User user, boolean isBlock) {
-    int pos = uniqueUserIds.indexOf(user.getId().toString());
-    if (pos == 0) {
-      isFirstUserBlocked = isBlock;
-    } else if (pos > 0) {
-      isSecondUserBlocked = isBlock;
+    if (isBlock) {
+      blockedBy.add(anotherMember(user));
+    } else {
+      blockedBy.remove(anotherMember(user));
     }
   }
 
+  /** whether the user is blocked by the other member */
   public boolean isBlocked(User user) {
-    int pos = uniqueUserIds.indexOf(user.getId().toString());
-    return pos != -1 && (pos == 0 ? isFirstUserBlocked : isSecondUserBlocked);
+    return blockedBy.contains(anotherMember(user));
   }
 
   public void addMessage(User from, String message) throws InvalidOperation, BlockedException {

@@ -39,6 +39,12 @@ public interface PrivateChannelRepository extends JpaRepository<PrivateChannel, 
     return findByMembersContainingUserByUpdateAtDesc(user, pageable);
   }
 
+  @Query(
+      "SELECT DISTINCT ch from User u "
+          + "join u.blockedPrivateChannels ch where u = :user "
+          + "ORDER BY ch.createAt DESC")
+  Slice<PrivateChannel> findBlockedByUser(User user, Pageable pageable);
+
   default boolean isPrivateChannelExistBetween(User user1, User user2) {
     UUID[] ids = new UUID[] {user1.getId(), user2.getId()};
     Arrays.sort(ids);
