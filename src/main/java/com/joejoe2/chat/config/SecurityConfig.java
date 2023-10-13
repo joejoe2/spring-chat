@@ -2,7 +2,6 @@ package com.joejoe2.chat.config;
 
 import com.joejoe2.chat.filter.JwtAuthenticationFilter;
 import com.joejoe2.chat.service.user.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -19,8 +18,13 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
-  @Autowired UserService userService;
-  @Autowired JwtAuthenticationFilter jwtAuthenticationFilter;
+  private final UserService userService;
+  private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+  public SecurityConfig(UserService userService, JwtAuthenticationFilter jwtAuthenticationFilter) {
+    this.userService = userService;
+    this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+  }
 
   @Bean
   PasswordEncoder passwordEncoder() {

@@ -18,7 +18,6 @@ import com.joejoe2.chat.validation.validator.PageRequestValidator;
 import com.joejoe2.chat.validation.validator.UUIDValidator;
 import java.time.Instant;
 import java.util.Comparator;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.scheduling.annotation.Async;
@@ -27,15 +26,26 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PublicMessageServiceImpl implements PublicMessageService {
-  @Autowired UserService userService;
-  @Autowired PublicChannelRepository channelRepository;
-  @Autowired PublicMessageRepository messageRepository;
-  @Autowired NatsService natsService;
+  private final UserService userService;
+  private final PublicChannelRepository channelRepository;
+  private final PublicMessageRepository messageRepository;
+  private final NatsService natsService;
 
-  UUIDValidator uuidValidator = UUIDValidator.getInstance();
-  MessageValidator messageValidator = MessageValidator.getInstance();
+  private final UUIDValidator uuidValidator = UUIDValidator.getInstance();
+  private final MessageValidator messageValidator = MessageValidator.getInstance();
 
-  PageRequestValidator pageValidator = PageRequestValidator.getInstance();
+  private final PageRequestValidator pageValidator = PageRequestValidator.getInstance();
+
+  public PublicMessageServiceImpl(
+      UserService userService,
+      PublicChannelRepository channelRepository,
+      PublicMessageRepository messageRepository,
+      NatsService natsService) {
+    this.userService = userService;
+    this.channelRepository = channelRepository;
+    this.messageRepository = messageRepository;
+    this.natsService = natsService;
+  }
 
   private PublicChannel getChannelById(String channelId) throws ChannelDoesNotExist {
     return channelRepository

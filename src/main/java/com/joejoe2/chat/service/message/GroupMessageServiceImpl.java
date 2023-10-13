@@ -26,7 +26,6 @@ import java.util.Comparator;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Slice;
 import org.springframework.retry.annotation.Backoff;
@@ -37,18 +36,31 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class GroupMessageServiceImpl implements GroupMessageService {
-  @Autowired UserService userService;
-  @Autowired GroupChannelRepository channelRepository;
-  @Autowired GroupMessageRepository messageRepository;
-  @Autowired NatsService natsService;
-  @Autowired ObjectMapper objectMapper;
+  private final UserService userService;
+  private final GroupChannelRepository channelRepository;
+  private final GroupMessageRepository messageRepository;
+  private final NatsService natsService;
+  private final ObjectMapper objectMapper;
   private static final Logger logger = LoggerFactory.getLogger(GroupMessageService.class);
 
-  UUIDValidator uuidValidator = UUIDValidator.getInstance();
+  private final UUIDValidator uuidValidator = UUIDValidator.getInstance();
 
-  MessageValidator messageValidator = MessageValidator.getInstance();
+  private final MessageValidator messageValidator = MessageValidator.getInstance();
 
-  PageRequestValidator pageValidator = PageRequestValidator.getInstance();
+  private final PageRequestValidator pageValidator = PageRequestValidator.getInstance();
+
+  public GroupMessageServiceImpl(
+      UserService userService,
+      GroupChannelRepository channelRepository,
+      GroupMessageRepository messageRepository,
+      NatsService natsService,
+      ObjectMapper objectMapper) {
+    this.userService = userService;
+    this.channelRepository = channelRepository;
+    this.messageRepository = messageRepository;
+    this.natsService = natsService;
+    this.objectMapper = objectMapper;
+  }
 
   private GroupChannel getChannelById(String channelId) throws ChannelDoesNotExist {
     return channelRepository

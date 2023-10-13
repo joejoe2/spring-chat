@@ -32,7 +32,6 @@ import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Slice;
@@ -47,20 +46,31 @@ import org.springframework.web.socket.WebSocketSession;
 @Service
 public class GroupChannelServiceImpl implements GroupChannelService {
   private static final Logger logger = LoggerFactory.getLogger(GroupChannelService.class);
-  @Autowired UserService userService;
-  @Autowired GroupChannelRepository channelRepository;
-  @Autowired ObjectMapper objectMapper;
-  UUIDValidator uuidValidator = UUIDValidator.getInstance();
-  PageRequestValidator pageValidator = PageRequestValidator.getInstance();
-  Map<String, Set<Object>> listeningUsers = new ConcurrentHashMap<>();
+  private final UserService userService;
+  private final GroupChannelRepository channelRepository;
+  private final ObjectMapper objectMapper;
+  private final UUIDValidator uuidValidator = UUIDValidator.getInstance();
+  private final PageRequestValidator pageValidator = PageRequestValidator.getInstance();
+  private final Map<String, Set<Object>> listeningUsers = new ConcurrentHashMap<>();
 
-  @Autowired Connection connection;
-  Dispatcher dispatcher;
+  private final Connection connection;
+  private Dispatcher dispatcher;
   private final Executor sendingScheduler = Executors.newFixedThreadPool(5);
 
-  @Autowired MeterRegistry meterRegistry;
+  private final MeterRegistry meterRegistry;
 
-  Gauge onlineUsers;
+  public GroupChannelServiceImpl(
+      UserService userService,
+      GroupChannelRepository channelRepository,
+      ObjectMapper objectMapper,
+      Connection connection,
+      MeterRegistry meterRegistry) {
+    this.userService = userService;
+    this.channelRepository = channelRepository;
+    this.objectMapper = objectMapper;
+    this.connection = connection;
+    this.meterRegistry = meterRegistry;
+  }
 
   @PostConstruct
   private void afterInjection() {
@@ -69,7 +79,7 @@ public class GroupChannelServiceImpl implements GroupChannelService {
   }
 
   private void initMetrics(MeterRegistry meterRegistry) {
-    onlineUsers =
+    Gauge onlineUsers =
         Gauge.builder(
                 "chat.group.channel.online.users",
                 listeningUsers,

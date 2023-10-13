@@ -6,7 +6,6 @@ import com.joejoe2.chat.models.User;
 import com.joejoe2.chat.repository.user.UserRepository;
 import com.joejoe2.chat.validation.validator.UUIDValidator;
 import java.util.UUID;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -15,8 +14,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UserService implements UserDetailsService {
-  @Autowired UserRepository userRepository;
-  UUIDValidator uuidValidator = UUIDValidator.getInstance();
+  private final UserRepository userRepository;
+  private final UUIDValidator uuidValidator = UUIDValidator.getInstance();
+
+  public UserService(UserRepository userRepository) {
+    this.userRepository = userRepository;
+  }
 
   @Transactional
   public User getUserById(String userId) throws UserDoesNotExist {

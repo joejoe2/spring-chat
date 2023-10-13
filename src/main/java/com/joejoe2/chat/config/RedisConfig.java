@@ -1,7 +1,6 @@
 package com.joejoe2.chat.config;
 
 import java.util.Map;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -11,7 +10,11 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
 public class RedisConfig {
-  @Autowired RedisConnectionFactory redisConnectionFactory;
+  private final RedisConnectionFactory redisConnectionFactory;
+
+  public RedisConfig(RedisConnectionFactory redisConnectionFactory) {
+    this.redisConnectionFactory = redisConnectionFactory;
+  }
 
   @Bean
   public RedisTemplate<String, Map<String, Object>> hashRedisTemplate() {

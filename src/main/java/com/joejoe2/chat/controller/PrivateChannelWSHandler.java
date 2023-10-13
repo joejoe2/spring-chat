@@ -4,7 +4,6 @@ import com.joejoe2.chat.exception.UserDoesNotExist;
 import com.joejoe2.chat.service.channel.PrivateChannelService;
 import com.joejoe2.chat.utils.AuthUtil;
 import com.joejoe2.chat.utils.WebSocketUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketSession;
@@ -13,7 +12,11 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 @Component
 public class PrivateChannelWSHandler extends TextWebSocketHandler {
-  @Autowired PrivateChannelService channelService;
+  final PrivateChannelService channelService;
+
+  public PrivateChannelWSHandler(PrivateChannelService channelService) {
+    this.channelService = channelService;
+  }
 
   @Override
   public void afterConnectionEstablished(WebSocketSession session) throws Exception {

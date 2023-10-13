@@ -11,16 +11,22 @@ import io.nats.client.Subscription;
 import java.nio.charset.StandardCharsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class NatsServiceImpl implements NatsService {
-  @Autowired Connection natsConnection;
-  @Autowired Dispatcher natsDispatcher;
-  @Autowired ObjectMapper objectMapper;
+  private final Connection natsConnection;
+  private final Dispatcher natsDispatcher;
+  private final ObjectMapper objectMapper;
 
   private static final Logger logger = LoggerFactory.getLogger(NatsService.class);
+
+  public NatsServiceImpl(
+      Connection natsConnection, Dispatcher natsDispatcher, ObjectMapper objectMapper) {
+    this.natsConnection = natsConnection;
+    this.natsDispatcher = natsDispatcher;
+    this.objectMapper = objectMapper;
+  }
 
   public void publish(String subject, String message) {
     natsConnection.publish(subject, message.getBytes(StandardCharsets.UTF_8));

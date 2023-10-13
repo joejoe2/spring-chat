@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Slice;
 import org.springframework.retry.annotation.Backoff;
@@ -44,21 +43,32 @@ import org.springframework.web.socket.WebSocketSession;
 @Service
 public class PrivateChannelServiceImpl implements PrivateChannelService {
   private static final Logger logger = LoggerFactory.getLogger(PrivateChannelService.class);
-  @Autowired UserService userService;
-  @Autowired PrivateChannelRepository channelRepository;
-  @Autowired ObjectMapper objectMapper;
+  private final UserService userService;
+  private final PrivateChannelRepository channelRepository;
+  private final ObjectMapper objectMapper;
 
-  UUIDValidator uuidValidator = UUIDValidator.getInstance();
+  private final UUIDValidator uuidValidator = UUIDValidator.getInstance();
 
-  PageRequestValidator pageValidator = PageRequestValidator.getInstance();
-  Map<String, Set<Object>> listeningUsers = new ConcurrentHashMap<>();
-  @Autowired Connection connection;
-  Dispatcher dispatcher;
+  private final PageRequestValidator pageValidator = PageRequestValidator.getInstance();
+  private final Map<String, Set<Object>> listeningUsers = new ConcurrentHashMap<>();
+  private final Connection connection;
+  private Dispatcher dispatcher;
   private final Executor sendingScheduler = Executors.newFixedThreadPool(5);
 
-  @Autowired MeterRegistry meterRegistry;
+  private final MeterRegistry meterRegistry;
 
-  Gauge onlineUsers;
+  public PrivateChannelServiceImpl(
+      UserService userService,
+      PrivateChannelRepository channelRepository,
+      ObjectMapper objectMapper,
+      Connection connection,
+      MeterRegistry meterRegistry) {
+    this.userService = userService;
+    this.channelRepository = channelRepository;
+    this.objectMapper = objectMapper;
+    this.connection = connection;
+    this.meterRegistry = meterRegistry;
+  }
 
   @PostConstruct
   private void afterInjection() {
@@ -67,7 +77,7 @@ public class PrivateChannelServiceImpl implements PrivateChannelService {
   }
 
   private void initMetrics(MeterRegistry meterRegistry) {
-    onlineUsers =
+    Gauge onlineUsers =
         Gauge.builder(
                 "chat.private.channel.online.users",
                 listeningUsers,

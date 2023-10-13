@@ -2,13 +2,16 @@ package com.joejoe2.chat.service.redis;
 
 import java.time.Duration;
 import java.util.Optional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
 public class RedisServiceImpl implements RedisService {
-  @Autowired private StringRedisTemplate redisTemplate;
+  private final StringRedisTemplate redisTemplate;
+
+  public RedisServiceImpl(StringRedisTemplate redisTemplate) {
+    this.redisTemplate = redisTemplate;
+  }
 
   @Override
   public void set(String key, String value, Duration duration) {

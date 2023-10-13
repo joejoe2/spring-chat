@@ -26,7 +26,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import javax.validation.Valid;
 import org.springdoc.api.annotations.ParameterObject;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -37,8 +36,14 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @Controller
 @RequestMapping(path = "/api/channel/group")
 public class GroupChannelController {
-  @Autowired GroupChannelService channelService;
-  @Autowired GroupMessageService messageService;
+  final GroupChannelService channelService;
+  final GroupMessageService messageService;
+
+  public GroupChannelController(
+      GroupChannelService channelService, GroupMessageService messageService) {
+    this.channelService = channelService;
+    this.messageService = messageService;
+  }
 
   @Operation(summary = "publish message to group channel")
   @AuthenticatedApi

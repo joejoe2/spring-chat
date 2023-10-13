@@ -27,7 +27,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import javax.validation.Valid;
 import org.springdoc.api.annotations.ParameterObject;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -38,8 +37,14 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @Controller
 @RequestMapping(path = "/api/channel/private")
 public class PrivateChannelController {
-  @Autowired PrivateChannelService channelService;
-  @Autowired PrivateMessageService messageService;
+  final PrivateChannelService channelService;
+  final PrivateMessageService messageService;
+
+  public PrivateChannelController(
+      PrivateChannelService channelService, PrivateMessageService messageService) {
+    this.channelService = channelService;
+    this.messageService = messageService;
+  }
 
   @Operation(summary = "publish message to private channel")
   @AuthenticatedApi

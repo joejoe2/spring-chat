@@ -6,18 +6,17 @@ import com.joejoe2.chat.exception.InvalidTokenException;
 import com.joejoe2.chat.service.redis.RedisService;
 import com.joejoe2.chat.utils.JwtUtil;
 import io.jsonwebtoken.JwtParser;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class JwtServiceImpl implements JwtService {
-  @Autowired JwtConfig jwtConfig;
-  @Autowired RedisService redisService;
-  @Autowired JwtParser jwtParser;
+  private final RedisService redisService;
+  private final JwtParser jwtParser;
 
-  private static final Logger logger = LoggerFactory.getLogger(JwtServiceImpl.class);
+  public JwtServiceImpl(JwtConfig jwtConfig, RedisService redisService, JwtParser jwtParser) {
+    this.redisService = redisService;
+    this.jwtParser = jwtParser;
+  }
 
   @Override
   public UserDetail getUserDetailFromAccessToken(String token) throws InvalidTokenException {

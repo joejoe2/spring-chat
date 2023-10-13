@@ -7,17 +7,20 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 @Component
 public class ControllerConstraintInterceptor implements HandlerInterceptor {
-  @Autowired ControllerAuthConstraintChecker authConstraintChecker;
+  private final ControllerAuthConstraintChecker authConstraintChecker;
 
   private static final Logger logger =
       LoggerFactory.getLogger(ControllerConstraintInterceptor.class);
+
+  public ControllerConstraintInterceptor(ControllerAuthConstraintChecker authConstraintChecker) {
+    this.authConstraintChecker = authConstraintChecker;
+  }
 
   @Override
   public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
