@@ -36,8 +36,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @Controller
 @RequestMapping(path = "/api/channel/group")
 public class GroupChannelController {
-  final GroupChannelService channelService;
-  final GroupMessageService messageService;
+  private final GroupChannelService channelService;
+  private final GroupMessageService messageService;
 
   public GroupChannelController(
       GroupChannelService channelService, GroupMessageService messageService) {

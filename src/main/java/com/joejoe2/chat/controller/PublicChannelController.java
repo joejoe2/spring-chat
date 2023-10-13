@@ -37,8 +37,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @Controller
 @RequestMapping(path = "/api/channel/public")
 public class PublicChannelController {
-  final PublicChannelService channelService;
-  final PublicMessageService messageService;
+  private final PublicChannelService channelService;
+  private final PublicMessageService messageService;
 
   public PublicChannelController(
       PublicChannelService channelService, PublicMessageService messageService) {

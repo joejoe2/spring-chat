@@ -12,7 +12,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 @Component
 public class GroupChannelWSHandler extends TextWebSocketHandler {
-  final GroupChannelService channelService;
+  private final GroupChannelService channelService;
 
   public GroupChannelWSHandler(GroupChannelService channelService) {
     this.channelService = channelService;

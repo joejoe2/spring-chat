@@ -12,7 +12,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 @Component
 public class PrivateChannelWSHandler extends TextWebSocketHandler {
-  final PrivateChannelService channelService;
+  private final PrivateChannelService channelService;
 
   public PrivateChannelWSHandler(PrivateChannelService channelService) {
     this.channelService = channelService;
