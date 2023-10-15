@@ -511,12 +511,17 @@ public class GroupChannelControllerTest {
     // user2 cannot send msg
     mockAuthUtil.when(AuthUtil::currentUserDetail).thenReturn(new UserDetail(user2));
     mockMvc
-            .perform(
-                    MockMvcRequestBuilders.post("/api/channel/group/publishMessage")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(PublishMessageRequest.builder().channelId(channel.getId().toString()).message("test").build()))
-                            .accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isForbidden());
+        .perform(
+            MockMvcRequestBuilders.post("/api/channel/group/publishMessage")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    objectMapper.writeValueAsString(
+                        PublishMessageRequest.builder()
+                            .channelId(channel.getId().toString())
+                            .message("test")
+                            .build()))
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isForbidden());
     mockAuthUtil.when(AuthUtil::currentUserDetail).thenReturn(new UserDetail(user1));
     // 1 banned users
     LinkedMultiValueMap<String, String> query = new LinkedMultiValueMap<>();
@@ -555,12 +560,17 @@ public class GroupChannelControllerTest {
     // user2 can send msg
     mockAuthUtil.when(AuthUtil::currentUserDetail).thenReturn(new UserDetail(user2));
     mockMvc
-            .perform(
-                    MockMvcRequestBuilders.post("/api/channel/group/publishMessage")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(PublishMessageRequest.builder().channelId(channel.getId().toString()).message("test").build()))
-                            .accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk());
+        .perform(
+            MockMvcRequestBuilders.post("/api/channel/group/publishMessage")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    objectMapper.writeValueAsString(
+                        PublishMessageRequest.builder()
+                            .channelId(channel.getId().toString())
+                            .message("test")
+                            .build()))
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk());
     mockAuthUtil.when(AuthUtil::currentUserDetail).thenReturn(new UserDetail(user1));
     // 0 banned users
     result =
