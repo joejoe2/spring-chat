@@ -82,6 +82,7 @@ public class GroupMessage extends TimeStampBase {
     return message;
   }
 
+  /** generate a message for admin banning an user in the GroupChannel */
   public static GroupMessage banMessage(GroupChannel channel, User actor, User subject) {
     GroupMessage message = new GroupMessage();
     message.channel = channel;
@@ -93,6 +94,7 @@ public class GroupMessage extends TimeStampBase {
     return message;
   }
 
+  /** generate a message for admin unbanning an user in the GroupChannel */
   public static GroupMessage unbanMessage(GroupChannel channel, User actor, User subject) {
     GroupMessage message = new GroupMessage();
     message.channel = channel;
