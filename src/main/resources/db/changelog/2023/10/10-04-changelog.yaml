@@ -1,0 +1,90 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1697336677537-3
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_group_channels_administrators
+                  name: group_channel_id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_group_channels_administrators
+                  name: user_id
+                  type: UUID
+            tableName: group_channels_administrators
+  - changeSet:
+      id: 1697336677537-4
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_group_channels_banned_users
+                  name: group_channel_id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_group_channels_banned_users
+                  name: user_id
+                  type: UUID
+            tableName: group_channels_banned_users
+  - changeSet:
+      id: 1697336677537-5
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: group_channel_id
+            baseTableName: group_channels_administrators
+            constraintName: fk_grochaadm_on_group_channel
+            referencedColumnNames: id
+            referencedTableName: group_channel
+  - changeSet:
+      id: 1697336677537-6
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: user_id
+            baseTableName: group_channels_administrators
+            constraintName: fk_grochaadm_on_user
+            referencedColumnNames: id
+            referencedTableName: account_user
+  - changeSet:
+      id: 1697336677537-7
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: group_channel_id
+            baseTableName: group_channels_banned_users
+            constraintName: fk_grochabanuse_on_group_channel
+            referencedColumnNames: id
+            referencedTableName: group_channel
+  - changeSet:
+      id: 1697336677537-8
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: user_id
+            baseTableName: group_channels_banned_users
+            constraintName: fk_grochabanuse_on_user
+            referencedColumnNames: id
+            referencedTableName: account_user
+

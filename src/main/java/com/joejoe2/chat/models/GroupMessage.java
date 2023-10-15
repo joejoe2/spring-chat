@@ -46,6 +46,7 @@ public class GroupMessage extends TimeStampBase {
     this.content = content;
   }
 
+  /** generate a message for someone inviting another to join the GroupChannel */
   public static GroupMessage inviteMessage(GroupChannel channel, User inviter, User invitee) {
     GroupMessage message = new GroupMessage();
     message.channel = channel;
@@ -57,6 +58,7 @@ public class GroupMessage extends TimeStampBase {
     return message;
   }
 
+  /** generate a message for someone joining the GroupChannel */
   public static GroupMessage joinMessage(GroupChannel channel, User joiner) {
     GroupMessage message = new GroupMessage();
     message.channel = channel;
@@ -68,6 +70,7 @@ public class GroupMessage extends TimeStampBase {
     return message;
   }
 
+  /** generate a message for someone leaving or kicked off from the GroupChannel */
   public static GroupMessage leaveMessage(GroupChannel channel, User actor, User subject) {
     GroupMessage message = new GroupMessage();
     message.channel = channel;
@@ -76,6 +79,28 @@ public class GroupMessage extends TimeStampBase {
         "{\"id\":\"%s\", \"username\":\"%s\"}"
             .formatted(subject.getId().toString(), subject.getUserName());
     message.messageType = MessageType.LEAVE;
+    return message;
+  }
+
+  public static GroupMessage banMessage(GroupChannel channel, User actor, User subject) {
+    GroupMessage message = new GroupMessage();
+    message.channel = channel;
+    message.from = actor;
+    message.content =
+        "{\"id\":\"%s\", \"username\":\"%s\"}"
+            .formatted(subject.getId().toString(), subject.getUserName());
+    message.messageType = MessageType.BAN;
+    return message;
+  }
+
+  public static GroupMessage unbanMessage(GroupChannel channel, User actor, User subject) {
+    GroupMessage message = new GroupMessage();
+    message.channel = channel;
+    message.from = actor;
+    message.content =
+        "{\"id\":\"%s\", \"username\":\"%s\"}"
+            .formatted(subject.getId().toString(), subject.getUserName());
+    message.messageType = MessageType.UNBAN;
     return message;
   }
 

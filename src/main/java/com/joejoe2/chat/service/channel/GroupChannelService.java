@@ -2,12 +2,14 @@ package com.joejoe2.chat.service.channel;
 
 import com.joejoe2.chat.data.PageRequest;
 import com.joejoe2.chat.data.SliceList;
+import com.joejoe2.chat.data.UserPublicProfile;
 import com.joejoe2.chat.data.channel.profile.GroupChannelProfile;
 import com.joejoe2.chat.data.message.GroupMessageDto;
 import com.joejoe2.chat.exception.ChannelDoesNotExist;
 import com.joejoe2.chat.exception.InvalidOperation;
 import com.joejoe2.chat.exception.UserDoesNotExist;
 import java.time.Instant;
+import java.util.List;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.springframework.web.socket.WebSocketSession;
 
@@ -64,10 +66,55 @@ public interface GroupChannelService {
   GroupMessageDto acceptInvitationOfChannel(String ofUserId, String channelId)
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation;
 
-  GroupMessageDto removeFromChannel(String fromUserId, String targetUserId, String channelId)
+  /**
+   * let administrator remove target user from the channel
+   *
+   * @param adminId user id of the administrator
+   * @param targetUserId id of target user
+   * @param channelId id of target channel
+   * @throws UserDoesNotExist
+   * @throws ChannelDoesNotExist
+   * @throws InvalidOperation
+   */
+  GroupMessageDto removeFromChannel(String adminId, String targetUserId, String channelId)
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation;
 
-  GroupMessageDto leaveChannel(String ofUserId, String channelId)
+  GroupMessageDto leaveChannel(String userId, String channelId)
+      throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation;
+
+  /**
+   * let administrator of the channel ban or unban target user
+   *
+   * @param adminId user id of the administrator
+   * @param targetUserId id of target user
+   * @param channelId id of target channel
+   * @param isBanned ban or unban
+   * @throws UserDoesNotExist
+   * @throws ChannelDoesNotExist
+   * @throws InvalidOperation
+   */
+  GroupMessageDto editBanned(
+      String adminId, String targetUserId, String channelId, boolean isBanned)
+      throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation;
+
+  List<UserPublicProfile> getBannedUsers(String userId, String channelId)
+      throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation;
+
+  List<UserPublicProfile> getAdministrators(String userId, String channelId)
+      throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation;
+
+  /**
+   * let administrator of the channel set target user to be an administrator or not
+   *
+   * @param adminId user id of the administrator
+   * @param targetUserId id of target user
+   * @param channelId id of target channel
+   * @param isAdmin set target user to be an administrator or not
+   * @throws UserDoesNotExist
+   * @throws ChannelDoesNotExist
+   * @throws InvalidOperation
+   */
+  void editAdministrator(String adminId, String targetUserId, String channelId, boolean isAdmin)
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation;
 
   /**

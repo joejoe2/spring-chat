@@ -19,29 +19,56 @@ public class GroupChannel extends TimeStampBase {
   private Instant version;
 
   @Column(nullable = false, length = 128)
-  String name = "";
+  private String name = "";
 
   @ManyToMany
-  @BatchSize(size = 128) // for each PrivateChannels->getMembers
+  @BatchSize(size = 128)
   @JoinTable(
       name = "group_channels_users",
       joinColumns = {@JoinColumn(name = "group_channel_id", nullable = false)},
       inverseJoinColumns = {@JoinColumn(name = "user_id", nullable = false)})
-  Set<User> members = new HashSet<>();
+  private Set<User> members = new HashSet<>();
+
+  @ManyToMany
+  @BatchSize(size = 128)
+  @JoinTable(
+      name = "group_channels_administrators",
+      joinColumns = {@JoinColumn(name = "group_channel_id", nullable = false)},
+      inverseJoinColumns = {@JoinColumn(name = "user_id", nullable = false)})
+  private Set<User> administrators = new HashSet<>();
+
+  @ManyToMany
+  @BatchSize(size = 128)
+  @JoinTable(
+      name = "group_channels_banned_users",
+      joinColumns = {@JoinColumn(name = "group_channel_id", nullable = false)},
+      inverseJoinColumns = {@JoinColumn(name = "user_id", nullable = false)})
+  private Set<User> banned = new HashSet<>();
 
   @OneToMany(mappedBy = "channel", cascade = CascadeType.ALL)
-  @BatchSize(size = 32) // for each channels->getInvitations
-  Set<GroupInvitation> invitations = new HashSet<>();
+  @BatchSize(size = 32)
+  private Set<GroupInvitation> invitations = new HashSet<>();
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "channel", orphanRemoval = true)
-  List<GroupMessage> messages = new ArrayList<>();
+  private List<GroupMessage> messages = new ArrayList<>();
 
   @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn
-  GroupMessage lastMessage;
+  private GroupMessage lastMessage;
 
-  public GroupChannel(Set<User> members) {
-    this.members = members;
+  public GroupChannel(User creator) {
+    this.members.add(creator);
+    this.administrators.add(creator);
+  }
+
+  /**
+   * check the user have admin permissions for actions, note this will always return true if there
+   * is no administrator due to the old version of the group channel
+   *
+   * @return true if administrators contains user or there is no administrator
+   */
+  private boolean isAdmin(User user) {
+    return administrators.contains(user) || administrators.size() == 0;
   }
 
   public void invite(User inviter, User invitee) throws InvalidOperation {
@@ -58,15 +85,18 @@ public class GroupChannel extends TimeStampBase {
     lastMessage = invitationMessage;
   }
 
-  public void kickOff(User actor, User target) throws InvalidOperation {
-    if (actor.equals(target)) throw new InvalidOperation("actor cannot kick off itself !");
-    if (!members.contains(actor))
-      throw new InvalidOperation("actor is not in members of the channel !");
+  public void kickOff(User admin, User target) throws InvalidOperation {
+    if (admin.equals(target)) throw new InvalidOperation("cannot kick off itself !");
+    if (!isAdmin(admin))
+      throw new InvalidOperation("admin is not an valid administrator in the channel !");
+    if (administrators.contains(target))
+      throw new InvalidOperation("cannot kick off target because it is an administrator !");
     if (!members.contains(target))
-      throw new InvalidOperation("target is not in members of the channel !");
+      throw new InvalidOperation("target user is not in members of the channel !");
 
     members.remove(target);
-    GroupMessage leaveMessage = GroupMessage.leaveMessage(this, actor, target);
+    banned.remove(target);
+    GroupMessage leaveMessage = GroupMessage.leaveMessage(this, admin, target);
     messages.add(leaveMessage);
     lastMessage = leaveMessage;
   }
@@ -74,10 +104,14 @@ public class GroupChannel extends TimeStampBase {
   public void leave(User user) throws InvalidOperation {
     if (!members.contains(user))
       throw new InvalidOperation("user is not in members of the channel !");
+    if (administrators.contains(user) && administrators.size() == 1)
+      throw new InvalidOperation("user is the last administrator of the channel !");
     // todo: handle channel with 0 members ?
     if (members.size() == 1) throw new InvalidOperation("user is the last member of the channel !");
 
     members.remove(user);
+    administrators.remove(user);
+    banned.remove(user);
     GroupMessage leaveMessage = GroupMessage.leaveMessage(this, user, user);
     messages.add(leaveMessage);
     lastMessage = leaveMessage;
@@ -96,9 +130,64 @@ public class GroupChannel extends TimeStampBase {
     lastMessage = joinMessage;
   }
 
+  /** let admin editBanned target user, cannot {@link #addMessage} until unbanned */
+  public void ban(User admin, User target) throws InvalidOperation {
+    if (admin.equals(target)) throw new InvalidOperation("cannot editBanned itself !");
+    if (!isAdmin(admin))
+      throw new InvalidOperation("admin is not an valid administrator in the channel !");
+    if (administrators.contains(target))
+      throw new InvalidOperation("cannot editBanned target because it is an administrator !");
+    if (!members.contains(target))
+      throw new InvalidOperation("target user is not in members of the channel !");
+
+    banned.add(target);
+    GroupMessage banMessage = GroupMessage.banMessage(this, admin, target);
+    messages.add(banMessage);
+    lastMessage = banMessage;
+  }
+
+  /** let admin unban target user */
+  public void unban(User admin, User target) throws InvalidOperation {
+    if (admin.equals(target)) throw new InvalidOperation("cannot unban itself !");
+    if (!isAdmin(admin))
+      throw new InvalidOperation("admin is not an valid administrator in the channel !");
+    if (!members.contains(target))
+      throw new InvalidOperation("target user is not in members of the channel !");
+    if (!banned.contains(target)) throw new InvalidOperation("target user has not been banned !");
+
+    banned.remove(target);
+    GroupMessage unbanMessage = GroupMessage.unbanMessage(this, admin, target);
+    messages.add(unbanMessage);
+    lastMessage = unbanMessage;
+  }
+
+  /** let admin add target user to administrators, no op if target user is an administrator */
+  public void addToAdministrators(User admin, User target) throws InvalidOperation {
+    if (admin.equals(target)) throw new InvalidOperation("cannot add itself !");
+    if (!administrators.contains(admin))
+      throw new InvalidOperation("admin is not an valid administrator in the channel !");
+    if (!members.contains(target))
+      throw new InvalidOperation("target user is not in members of the channel !");
+    if (banned.contains(target)) throw new InvalidOperation("target user has been banned !");
+
+    administrators.add(target);
+  }
+
+  /**
+   * let admin remove target user from administrators, no op if target user is not an administrator
+   */
+  public void removeFromAdministrators(User admin, User target) throws InvalidOperation {
+    if (admin.equals(target)) throw new InvalidOperation("cannot remove itself !");
+    if (!administrators.contains(admin))
+      throw new InvalidOperation("admin is not an valid administrator in the channel !");
+
+    administrators.remove(target);
+  }
+
   public void addMessage(User from, String message) throws InvalidOperation {
     if (!members.contains(from))
       throw new InvalidOperation("user is not in members of the channel !");
+    if (banned.contains(from)) throw new InvalidOperation("user has been banned !");
     GroupMessage groupMessage = new GroupMessage(this, from, message);
     messages.add(groupMessage);
     lastMessage = groupMessage;

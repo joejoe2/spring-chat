@@ -8,11 +8,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joejoe2.chat.TestContext;
 import com.joejoe2.chat.data.PageRequest;
 import com.joejoe2.chat.data.UserDetail;
+import com.joejoe2.chat.data.UserPublicProfile;
 import com.joejoe2.chat.data.channel.profile.GroupChannelProfile;
-import com.joejoe2.chat.data.channel.request.ChannelPageRequestWithSince;
-import com.joejoe2.chat.data.channel.request.ChannelRequest;
-import com.joejoe2.chat.data.channel.request.ChannelUserRequest;
-import com.joejoe2.chat.data.channel.request.CreateChannelByNameRequest;
+import com.joejoe2.chat.data.channel.request.*;
 import com.joejoe2.chat.data.message.GroupMessageDto;
 import com.joejoe2.chat.data.message.MessageDto;
 import com.joejoe2.chat.data.message.SliceOfMessage;
@@ -72,7 +70,9 @@ public class GroupChannelControllerTest {
     userRepository.save(user3);
     otherUser = User.builder().id(UUID.randomUUID()).userName("test4").build();
     userRepository.save(otherUser);
-    channel = new GroupChannel(Set.of(user1, user2, user3));
+    channel = new GroupChannel(user1);
+    channel.getMembers().add(user2);
+    channel.getMembers().add(user3);
     channelRepository.save(channel);
     // mock login
     mockAuthUtil = Mockito.mockStatic(AuthUtil.class);
@@ -442,6 +442,8 @@ public class GroupChannelControllerTest {
   void leave() throws Exception {
     Instant since = Instant.now();
     ChannelRequest request = ChannelRequest.builder().channelId(channel.getId().toString()).build();
+    // override mock login
+    mockAuthUtil.when(AuthUtil::currentUserDetail).thenReturn(new UserDetail(user2));
     MvcResult result =
         mockMvc
             .perform(
@@ -455,16 +457,25 @@ public class GroupChannelControllerTest {
         objectMapper.readValue(result.getResponse().getContentAsString(), GroupMessageDto.class);
     Thread.sleep(1000);
     Mockito.verify(messageService, Mockito.times(1)).deliverMessage(message);
-    assertFalse(channelRepository.findByIsUserInMembers(user1, since).contains(channel));
+    assertFalse(channelRepository.findByIsUserInMembers(user2, since).contains(channel));
   }
 
   @Test
   void leaveWithError() throws Exception {
     // test 403
-    // not a member
     ChannelRequest request = ChannelRequest.builder().channelId(channel.getId().toString()).build();
+    // last admin
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.post("/api/channel/group/leave")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.message").exists())
+        .andExpect(status().isForbidden());
     // override mock login
     mockAuthUtil.when(AuthUtil::currentUserDetail).thenReturn(new UserDetail(otherUser));
+    // not a member
     mockMvc
         .perform(
             MockMvcRequestBuilders.post("/api/channel/group/leave")
@@ -476,5 +487,130 @@ public class GroupChannelControllerTest {
   }
 
   @Test
-  void list() {}
+  void testEditBan() throws Exception {
+    // user1 ban user2
+    EditBannedRequest request =
+        EditBannedRequest.builder()
+            .channelId(channel.getId().toString())
+            .targetUserId(user2.getId().toString())
+            .isBanned(true)
+            .build();
+    MvcResult result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.post("/api/channel/group/editBanned")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request))
+                    .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
+    GroupMessageDto message =
+        objectMapper.readValue(result.getResponse().getContentAsString(), GroupMessageDto.class);
+    Thread.sleep(1000);
+    Mockito.verify(messageService, Mockito.times(1)).deliverMessage(message);
+    // 1 banned users
+    LinkedMultiValueMap<String, String> query = new LinkedMultiValueMap<>();
+    query.add("channelId", channel.getId().toString());
+    result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.get("/api/channel/group/banned")
+                    .params(query)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
+    List<UserPublicProfile> bannedUsers =
+        objectMapper.readValue(result.getResponse().getContentAsString(), List.class);
+    assertEquals(1, bannedUsers.size());
+    // user1 unban user2
+    request =
+        EditBannedRequest.builder()
+            .channelId(channel.getId().toString())
+            .targetUserId(user2.getId().toString())
+            .isBanned(false)
+            .build();
+    result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.post("/api/channel/group/editBanned")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request))
+                    .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
+    message =
+        objectMapper.readValue(result.getResponse().getContentAsString(), GroupMessageDto.class);
+    Thread.sleep(1000);
+    Mockito.verify(messageService, Mockito.times(1)).deliverMessage(message);
+    // 0 banned users
+    result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.get("/api/channel/group/banned")
+                    .params(query)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
+    bannedUsers = objectMapper.readValue(result.getResponse().getContentAsString(), List.class);
+    assertEquals(0, bannedUsers.size());
+  }
+
+  @Test
+  void testEditAdmin() throws Exception {
+    // user1 assign user2 as admin
+    EditAdminRequest request =
+        EditAdminRequest.builder()
+            .channelId(channel.getId().toString())
+            .targetUserId(user2.getId().toString())
+            .isAdmin(true)
+            .build();
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.post("/api/channel/group/editAdmin")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andReturn();
+    // 2 admin
+    LinkedMultiValueMap<String, String> query = new LinkedMultiValueMap<>();
+    query.add("channelId", channel.getId().toString());
+    MvcResult result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.get("/api/channel/group/admin")
+                    .params(query)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
+    List<UserPublicProfile> admin =
+        objectMapper.readValue(result.getResponse().getContentAsString(), List.class);
+    assertEquals(2, admin.size());
+    // user2 unassigned from admin
+    request =
+        EditAdminRequest.builder()
+            .channelId(channel.getId().toString())
+            .targetUserId(user2.getId().toString())
+            .isAdmin(false)
+            .build();
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.post("/api/channel/group/editAdmin")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andReturn();
+    // 1 admin
+    result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.get("/api/channel/group/admin")
+                    .params(query)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
+    admin = objectMapper.readValue(result.getResponse().getContentAsString(), List.class);
+    assertEquals(1, admin.size());
+  }
 }

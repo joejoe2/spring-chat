@@ -59,7 +59,8 @@ public class GroupChannelWSHandlerTest {
       accessTokens[i] = JwtUtil.generateAccessToken(privateKey, "jti", "issuer", users[i], exp);
     }
     userRepository.saveAll(Arrays.stream(users).toList());
-    channel = new GroupChannel(Set.of(users));
+    channel = new GroupChannel(users[0]);
+    channel.getMembers().addAll(Set.of(users));
     channelRepository.save(channel);
     for (int i = 0; i < users.length; i++) {
       accessTokens[i] = JwtUtil.generateAccessToken(privateKey, "jti", "issuer", users[i], exp);

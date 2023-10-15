@@ -15,6 +15,7 @@ import com.joejoe2.chat.models.User;
 import com.joejoe2.chat.repository.channel.GroupChannelRepository;
 import com.joejoe2.chat.repository.message.GroupMessageRepository;
 import com.joejoe2.chat.repository.user.UserRepository;
+import com.joejoe2.chat.service.message.GroupMessageService;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
@@ -32,6 +33,7 @@ import org.springframework.test.context.ActiveProfiles;
 @ExtendWith(TestContext.class)
 public class GroupChannelServiceTest {
   @Autowired GroupChannelService channelService;
+  @Autowired GroupMessageService messageService;
   @Autowired GroupChannelRepository channelRepository;
   @Autowired GroupMessageRepository messageRepository;
   @Autowired UserRepository userRepository;
@@ -274,6 +276,12 @@ public class GroupChannelServiceTest {
         () ->
             channelService.removeFromChannel(
                 userA.getId().toString(), userA.getId().toString(), channel.getId()));
+    // test with non admin
+    assertThrows(
+        InvalidOperation.class,
+        () ->
+            channelService.removeFromChannel(
+                userB.getId().toString(), userC.getId().toString(), channel.getId()));
     // test with non member
     assertThrows(
         InvalidOperation.class,
@@ -329,5 +337,184 @@ public class GroupChannelServiceTest {
     assertThrows(
         InvalidOperation.class,
         () -> channelService.leaveChannel(userA.getId().toString(), channel.getId()));
+  }
+
+  @Test
+  void editBanned() throws Exception {
+    // prepare
+    GroupChannelProfile channel = channelService.createChannel(userA.getId().toString(), "test");
+    for (User user : Arrays.asList(userB, userC, userD)) {
+      channelService.inviteToChannel(
+          userA.getId().toString(), user.getId().toString(), channel.getId());
+      channelService.acceptInvitationOfChannel(user.getId().toString(), channel.getId());
+    }
+    // test ban
+    channelService.editBanned(
+        userA.getId().toString(), userB.getId().toString(), channel.getId(), true);
+    assertThrows(
+        InvalidOperation.class,
+        () -> messageService.createMessage(userB.getId().toString(), channel.getId(), "test"));
+    channelService.editBanned(
+        userA.getId().toString(), userC.getId().toString(), channel.getId(), true);
+    assertThrows(
+        InvalidOperation.class,
+        () -> messageService.createMessage(userC.getId().toString(), channel.getId(), "test"));
+    channelService.editBanned(
+        userA.getId().toString(), userD.getId().toString(), channel.getId(), true);
+    assertThrows(
+        InvalidOperation.class,
+        () -> messageService.createMessage(userD.getId().toString(), channel.getId(), "test"));
+    assertEquals(
+        3, channelService.getBannedUsers(userA.getId().toString(), channel.getId()).size());
+    // test unban
+    channelService.editBanned(
+        userA.getId().toString(), userB.getId().toString(), channel.getId(), false);
+    assertDoesNotThrow(
+        () -> messageService.createMessage(userB.getId().toString(), channel.getId(), "test"));
+    channelService.editBanned(
+        userA.getId().toString(), userC.getId().toString(), channel.getId(), false);
+    assertDoesNotThrow(
+        () -> messageService.createMessage(userC.getId().toString(), channel.getId(), "test"));
+    channelService.editBanned(
+        userA.getId().toString(), userD.getId().toString(), channel.getId(), false);
+    assertDoesNotThrow(
+        () -> messageService.createMessage(userD.getId().toString(), channel.getId(), "test"));
+    assertEquals(
+        0, channelService.getBannedUsers(userA.getId().toString(), channel.getId()).size());
+  }
+
+  @Test
+  void editBannedWithError() throws Exception {
+    // prepare
+    GroupChannelProfile channel = channelService.createChannel(userA.getId().toString(), "test");
+    for (User user : Arrays.asList(userB, userC)) {
+      channelService.inviteToChannel(
+          userA.getId().toString(), user.getId().toString(), channel.getId());
+      channelService.acceptInvitationOfChannel(user.getId().toString(), channel.getId());
+    }
+    channelService.editAdministrator(
+        userA.getId().toString(), userB.getId().toString(), channel.getId(), true);
+    // test ban self
+    assertThrows(
+        InvalidOperation.class,
+        () ->
+            channelService.editBanned(
+                userA.getId().toString(), userA.getId().toString(), channel.getId(), true));
+    // test ban from non admin
+    assertThrows(
+        InvalidOperation.class,
+        () ->
+            channelService.editBanned(
+                userC.getId().toString(), userA.getId().toString(), channel.getId(), true));
+    // test ban an admin
+    assertThrows(
+        InvalidOperation.class,
+        () ->
+            channelService.editBanned(
+                userA.getId().toString(), userB.getId().toString(), channel.getId(), true));
+    // test ban non member
+    assertThrows(
+        InvalidOperation.class,
+        () ->
+            channelService.editBanned(
+                userA.getId().toString(), userD.getId().toString(), channel.getId(), true));
+    // test unban self
+    assertThrows(
+        InvalidOperation.class,
+        () ->
+            channelService.editBanned(
+                userA.getId().toString(), userA.getId().toString(), channel.getId(), false));
+    // test unban from non admin
+    assertThrows(
+        InvalidOperation.class,
+        () ->
+            channelService.editBanned(
+                userC.getId().toString(), userA.getId().toString(), channel.getId(), false));
+    // test unban non member
+    assertThrows(
+        InvalidOperation.class,
+        () ->
+            channelService.editBanned(
+                userA.getId().toString(), userD.getId().toString(), channel.getId(), false));
+  }
+
+  @Test
+  void administrator() throws Exception {
+    // prepare
+    GroupChannelProfile channel = channelService.createChannel(userA.getId().toString(), "test");
+    for (User user : Arrays.asList(userB, userC, userD)) {
+      channelService.inviteToChannel(
+          userA.getId().toString(), user.getId().toString(), channel.getId());
+      channelService.acceptInvitationOfChannel(user.getId().toString(), channel.getId());
+    }
+    // test add admin
+    channelService.editAdministrator(
+        userA.getId().toString(), userB.getId().toString(), channel.getId(), true);
+    channelService.editAdministrator(
+        userB.getId().toString(), userC.getId().toString(), channel.getId(), true);
+    channelService.editAdministrator(
+        userC.getId().toString(), userD.getId().toString(), channel.getId(), true);
+    assertEquals(
+        4, channelService.getAdministrators(userA.getId().toString(), channel.getId()).size());
+    // test remove admin
+    channelService.editAdministrator(
+        userD.getId().toString(), userC.getId().toString(), channel.getId(), false);
+    channelService.editAdministrator(
+        userD.getId().toString(), userB.getId().toString(), channel.getId(), false);
+    channelService.editAdministrator(
+        userD.getId().toString(), userA.getId().toString(), channel.getId(), false);
+    assertEquals(
+        1, channelService.getAdministrators(userD.getId().toString(), channel.getId()).size());
+  }
+
+  @Test
+  void administratorWithError() throws Exception {
+    // prepare
+    GroupChannelProfile channel = channelService.createChannel(userA.getId().toString(), "test");
+    for (User user : Arrays.asList(userB, userC)) {
+      channelService.inviteToChannel(
+          userA.getId().toString(), user.getId().toString(), channel.getId());
+      channelService.acceptInvitationOfChannel(user.getId().toString(), channel.getId());
+    }
+    // test add self
+    assertThrows(
+        InvalidOperation.class,
+        () ->
+            channelService.editAdministrator(
+                userA.getId().toString(), userA.getId().toString(), channel.getId(), true));
+    // test add from non admin
+    assertThrows(
+        InvalidOperation.class,
+        () ->
+            channelService.editAdministrator(
+                userB.getId().toString(), userC.getId().toString(), channel.getId(), true));
+    // test add an banned user
+    channelService.editBanned(
+        userA.getId().toString(), userC.getId().toString(), channel.getId(), true);
+    assertThrows(
+        InvalidOperation.class,
+        () ->
+            channelService.editAdministrator(
+                userA.getId().toString(), userC.getId().toString(), channel.getId(), true));
+    channelService.editBanned(
+        userA.getId().toString(), userC.getId().toString(), channel.getId(), false);
+    // test add non member
+    assertThrows(
+        InvalidOperation.class,
+        () ->
+            channelService.editAdministrator(
+                userA.getId().toString(), userD.getId().toString(), channel.getId(), true));
+    // test remove self
+    assertThrows(
+        InvalidOperation.class,
+        () ->
+            channelService.editAdministrator(
+                userA.getId().toString(), userA.getId().toString(), channel.getId(), false));
+    // test add from non admin
+    assertThrows(
+        InvalidOperation.class,
+        () ->
+            channelService.editAdministrator(
+                userB.getId().toString(), userC.getId().toString(), channel.getId(), true));
   }
 }
