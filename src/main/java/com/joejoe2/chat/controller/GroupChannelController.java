@@ -53,7 +53,7 @@ public class GroupChannelController {
       value = {
         @ApiResponse(
             responseCode = "403",
-            description = "current user is not a member" + " of target channel",
+            description = "current user is not a member" + " of target channel or got banned",
             content =
                 @Content(
                     mediaType = "application/json",
@@ -165,7 +165,7 @@ public class GroupChannelController {
             responseCode = "403",
             description =
                 "cannot invite target user into the group channel, you may not in the channel or"
-                    + " target user already in the channel",
+                    + " target user got banned or already in the channel",
             content =
                 @Content(
                     mediaType = "application/json",
@@ -274,7 +274,8 @@ public class GroupChannelController {
       value = {
         @ApiResponse(
             responseCode = "403",
-            description = "ypu or target user is not in the channel",
+            description =
+                "you or target user is not in the channel, or only admin can perform this action",
             content =
                 @Content(
                     mediaType = "application/json",
@@ -467,7 +468,8 @@ public class GroupChannelController {
       value = {
         @ApiResponse(
             responseCode = "403",
-            description = "fail to editBanned or unban the user",
+            description =
+                "fail to editBanned or unban the user, or only admin can perform this action",
             content =
                 @Content(
                     mediaType = "application/json",
@@ -556,7 +558,7 @@ public class GroupChannelController {
       value = {
         @ApiResponse(
             responseCode = "403",
-            description = "fail to set the user to admin or not",
+            description = "fail to set the user to admin, only admin can perform this action",
             content =
                 @Content(
                     mediaType = "application/json",

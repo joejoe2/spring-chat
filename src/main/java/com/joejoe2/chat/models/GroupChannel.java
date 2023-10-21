@@ -77,6 +77,7 @@ public class GroupChannel extends TimeStampBase {
     GroupInvitation invitation = new GroupInvitation(invitee, this);
     if (members.contains(invitee) || invitations.contains(invitation))
       throw new InvalidOperation("invitee is in the channel !");
+    if (banned.contains(invitee)) throw new InvalidOperation("invitee has been banned !");
     checkNumOfMembers();
 
     GroupMessage invitationMessage = GroupMessage.inviteMessage(this, inviter, invitee);
@@ -95,7 +96,6 @@ public class GroupChannel extends TimeStampBase {
       throw new InvalidOperation("target user is not in members of the channel !");
 
     members.remove(target);
-    banned.remove(target);
     GroupMessage leaveMessage = GroupMessage.leaveMessage(this, admin, target);
     messages.add(leaveMessage);
     lastMessage = leaveMessage;
@@ -111,7 +111,6 @@ public class GroupChannel extends TimeStampBase {
 
     members.remove(user);
     administrators.remove(user);
-    banned.remove(user);
     GroupMessage leaveMessage = GroupMessage.leaveMessage(this, user, user);
     messages.add(leaveMessage);
     lastMessage = leaveMessage;
@@ -130,15 +129,16 @@ public class GroupChannel extends TimeStampBase {
     lastMessage = joinMessage;
   }
 
-  /** let admin editBanned target user, cannot {@link #addMessage} until unbanned */
+  /**
+   * let admin ban target user(may be not in members), cannot {@link #addMessage} or be {@link
+   * #invite invited} until unbanned
+   */
   public void ban(User admin, User target) throws InvalidOperation {
     if (admin.equals(target)) throw new InvalidOperation("cannot editBanned itself !");
     if (!isAdmin(admin))
       throw new InvalidOperation("admin is not an valid administrator in the channel !");
     if (administrators.contains(target))
       throw new InvalidOperation("cannot editBanned target because it is an administrator !");
-    if (!members.contains(target))
-      throw new InvalidOperation("target user is not in members of the channel !");
 
     banned.add(target);
     GroupMessage banMessage = GroupMessage.banMessage(this, admin, target);
@@ -146,13 +146,11 @@ public class GroupChannel extends TimeStampBase {
     lastMessage = banMessage;
   }
 
-  /** let admin unban target user */
+  /** let admin unban target user(may be not in members) */
   public void unban(User admin, User target) throws InvalidOperation {
     if (admin.equals(target)) throw new InvalidOperation("cannot unban itself !");
     if (!isAdmin(admin))
       throw new InvalidOperation("admin is not an valid administrator in the channel !");
-    if (!members.contains(target))
-      throw new InvalidOperation("target user is not in members of the channel !");
     if (!banned.contains(target)) throw new InvalidOperation("target user has not been banned !");
 
     banned.remove(target);

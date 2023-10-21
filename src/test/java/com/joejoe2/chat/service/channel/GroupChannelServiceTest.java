@@ -343,12 +343,12 @@ public class GroupChannelServiceTest {
   void editBanned() throws Exception {
     // prepare
     GroupChannelProfile channel = channelService.createChannel(userA.getId().toString(), "test");
-    for (User user : Arrays.asList(userB, userC, userD)) {
+    for (User user : Arrays.asList(userB, userC)) {
       channelService.inviteToChannel(
           userA.getId().toString(), user.getId().toString(), channel.getId());
       channelService.acceptInvitationOfChannel(user.getId().toString(), channel.getId());
     }
-    // test ban
+    // test ban member
     channelService.editBanned(
         userA.getId().toString(), userB.getId().toString(), channel.getId(), true);
     assertThrows(
@@ -359,14 +359,17 @@ public class GroupChannelServiceTest {
     assertThrows(
         InvalidOperation.class,
         () -> messageService.createMessage(userC.getId().toString(), channel.getId(), "test"));
+    // test ban non member
     channelService.editBanned(
         userA.getId().toString(), userD.getId().toString(), channel.getId(), true);
     assertThrows(
         InvalidOperation.class,
-        () -> messageService.createMessage(userD.getId().toString(), channel.getId(), "test"));
+        () ->
+            channelService.inviteToChannel(
+                userA.getId().toString(), userD.getId().toString(), channel.getId()));
     assertEquals(
         3, channelService.getBannedUsers(userA.getId().toString(), channel.getId()).size());
-    // test unban
+    // test unban member
     channelService.editBanned(
         userA.getId().toString(), userB.getId().toString(), channel.getId(), false);
     assertDoesNotThrow(
@@ -377,8 +380,11 @@ public class GroupChannelServiceTest {
         () -> messageService.createMessage(userC.getId().toString(), channel.getId(), "test"));
     channelService.editBanned(
         userA.getId().toString(), userD.getId().toString(), channel.getId(), false);
+    // test unban member
     assertDoesNotThrow(
-        () -> messageService.createMessage(userD.getId().toString(), channel.getId(), "test"));
+        () ->
+            channelService.inviteToChannel(
+                userA.getId().toString(), userD.getId().toString(), channel.getId()));
     assertEquals(
         0, channelService.getBannedUsers(userA.getId().toString(), channel.getId()).size());
   }
@@ -412,12 +418,6 @@ public class GroupChannelServiceTest {
         () ->
             channelService.editBanned(
                 userA.getId().toString(), userB.getId().toString(), channel.getId(), true));
-    // test ban non member
-    assertThrows(
-        InvalidOperation.class,
-        () ->
-            channelService.editBanned(
-                userA.getId().toString(), userD.getId().toString(), channel.getId(), true));
     // test unban self
     assertThrows(
         InvalidOperation.class,
@@ -430,12 +430,6 @@ public class GroupChannelServiceTest {
         () ->
             channelService.editBanned(
                 userC.getId().toString(), userA.getId().toString(), channel.getId(), false));
-    // test unban non member
-    assertThrows(
-        InvalidOperation.class,
-        () ->
-            channelService.editBanned(
-                userA.getId().toString(), userD.getId().toString(), channel.getId(), false));
   }
 
   @Test
