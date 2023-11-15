@@ -62,7 +62,7 @@ public class GroupChannel extends TimeStampBase {
   }
 
   /**
-   * check the user have admin permissions for actions, note this will always return true if there
+   * Check the user have admin permissions for actions, note this will always return true if there
    * is no administrator due to the old version of the group channel
    *
    * @return true if administrators contains user or there is no administrator
@@ -71,6 +71,12 @@ public class GroupChannel extends TimeStampBase {
     return administrators.contains(user) || administrators.size() == 0;
   }
 
+  /**
+   * Invite a user(who is not banned) to join the group channel. Any member can perform this action.
+   *
+   * @param inviter member
+   * @param invitee an user who is neither banned or a member
+   */
   public void invite(User inviter, User invitee) throws InvalidOperation {
     if (!members.contains(inviter))
       throw new InvalidOperation("inviter is not in members of the channel !");
@@ -86,6 +92,7 @@ public class GroupChannel extends TimeStampBase {
     lastMessage = invitationMessage;
   }
 
+  /** Let admin(see {@link #isAdmin}) kick off target user(who is not an admin). */
   public void kickOff(User admin, User target) throws InvalidOperation {
     if (admin.equals(target)) throw new InvalidOperation("cannot kick off itself !");
     if (!isAdmin(admin))
@@ -116,6 +123,7 @@ public class GroupChannel extends TimeStampBase {
     lastMessage = leaveMessage;
   }
 
+  /** Accept the invitation and join the group channel */
   public void acceptInvitation(User invitee) throws InvalidOperation {
     GroupInvitation invitation = new GroupInvitation(invitee, this);
     if (!invitations.contains(invitation)) throw new InvalidOperation("no invitation !");
@@ -130,8 +138,8 @@ public class GroupChannel extends TimeStampBase {
   }
 
   /**
-   * let admin ban target user(may be not in members), cannot {@link #addMessage} or be {@link
-   * #invite invited} until unbanned
+   * Let admin(see {@link #isAdmin}) ban target user(may be not in members), cannot {@link
+   * #addMessage} or be {@link #invite invited} until unbanned
    */
   public void ban(User admin, User target) throws InvalidOperation {
     if (admin.equals(target)) throw new InvalidOperation("cannot editBanned itself !");
@@ -146,7 +154,7 @@ public class GroupChannel extends TimeStampBase {
     lastMessage = banMessage;
   }
 
-  /** let admin unban target user(may be not in members) */
+  /** Let admin(see {@link #isAdmin}) unban target user(may be not in members) */
   public void unban(User admin, User target) throws InvalidOperation {
     if (admin.equals(target)) throw new InvalidOperation("cannot unban itself !");
     if (!isAdmin(admin))
@@ -159,7 +167,7 @@ public class GroupChannel extends TimeStampBase {
     lastMessage = unbanMessage;
   }
 
-  /** let admin add target user to administrators, no op if target user is an administrator */
+  /** Let admin add target user to administrators, no op if target user is an administrator */
   public void addToAdministrators(User admin, User target) throws InvalidOperation {
     if (admin.equals(target)) throw new InvalidOperation("cannot add itself !");
     if (!administrators.contains(admin))
@@ -172,7 +180,7 @@ public class GroupChannel extends TimeStampBase {
   }
 
   /**
-   * let admin remove target user from administrators, no op if target user is not an administrator
+   * Let admin remove target user from administrators, no op if target user is not an administrator
    */
   public void removeFromAdministrators(User admin, User target) throws InvalidOperation {
     if (admin.equals(target)) throw new InvalidOperation("cannot remove itself !");
