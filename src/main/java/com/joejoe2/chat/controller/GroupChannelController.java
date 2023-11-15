@@ -267,15 +267,14 @@ public class GroupChannelController {
     return ResponseEntity.ok(new SliceOfMessage<>(sliceList));
   }
 
-  @Operation(summary = "kick off someone in group channel")
+  @Operation(summary = "kick off someone in group channel, only admin can perform this action")
   @AuthenticatedApi
   @SecurityRequirement(name = "jwt")
   @ApiResponses(
       value = {
         @ApiResponse(
             responseCode = "403",
-            description =
-                "you or target user is not in the channel, or only admin can perform this action",
+            description = "you or target user is not in the channel",
             content =
                 @Content(
                     mediaType = "application/json",
@@ -461,15 +460,15 @@ public class GroupChannelController {
     }
   }
 
-  @Operation(summary = "editBanned or unban an user in group channel")
+  @Operation(
+      summary = "editBanned or unban an user in group channel, only admin can perform this action")
   @AuthenticatedApi
   @SecurityRequirement(name = "jwt")
   @ApiResponses(
       value = {
         @ApiResponse(
             responseCode = "403",
-            description =
-                "fail to editBanned or unban the user, or only admin can perform this action",
+            description = "fail to editBanned or unban the user",
             content =
                 @Content(
                     mediaType = "application/json",
@@ -551,14 +550,15 @@ public class GroupChannelController {
     }
   }
 
-  @Operation(summary = "set an user to admin or not in group channel")
+  @Operation(
+      summary = "set an user to admin or not in group channel, only admin can perform this action")
   @AuthenticatedApi
   @SecurityRequirement(name = "jwt")
   @ApiResponses(
       value = {
         @ApiResponse(
             responseCode = "403",
-            description = "fail to set the user to admin, only admin can perform this action",
+            description = "fail to set the user to admin",
             content =
                 @Content(
                     mediaType = "application/json",
