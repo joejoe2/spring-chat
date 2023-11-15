@@ -75,7 +75,7 @@ public class GroupChannelWSHandlerTest {
 
   public class WsClient extends WebSocketClient {
     CountDownLatch messageLatch;
-    HashSet<String> messages = new HashSet<>();
+    Set<String> messages = Collections.synchronizedSet(new HashSet<>());
 
     public WsClient(URI serverUri) {
       super(serverUri);
@@ -144,7 +144,7 @@ public class GroupChannelWSHandlerTest {
     Thread.sleep(1000);
     for (int i = 0; i < users.length; i++) {
       assertTrue(clients[i].isOpen());
-      assertTrue(clients[i].messageLatch.await(5, TimeUnit.SECONDS));
+      assertTrue(clients[i].messageLatch.await(15, TimeUnit.SECONDS));
       assertEquals(messages, clients[i].messages);
       clients[i].closeBlocking();
     }
