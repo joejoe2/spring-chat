@@ -62,13 +62,42 @@ public class GroupChannel extends TimeStampBase {
   }
 
   /**
-   * Check the user have admin permissions for actions, note this will always return true if there
-   * is no administrator due to the old version of the group channel
+   * Check the user has admin permissions for actions.
    *
-   * @return true if administrators contains user or there is no administrator
+   * @param user the given user to check
+   * @param ignoreWhenNoAdmin return true if there is no administrator due to the old version of the
+   *     group channel
+   * @throws InvalidOperation if user does not have admin permissions
    */
-  private boolean isAdmin(User user) {
-    return administrators.contains(user) || administrators.size() == 0;
+  private void checkIsAdmin(User user, boolean ignoreWhenNoAdmin) throws InvalidOperation {
+    if (ignoreWhenNoAdmin && administrators.size() == 0) return;
+    if (!administrators.contains(user))
+      throw new InvalidOperation(
+          "user with id=%s is not an valid administrator in the channel !".formatted(user.getId()));
+  }
+
+  /**
+   * Check if the initiator of an action is equal to itself.
+   *
+   * @param initiator initiator of an action
+   * @param target target user of an action
+   * @throws InvalidOperation if initiator is equal to target
+   */
+  private void checkActionOnSameUser(User initiator, User target) throws InvalidOperation {
+    if (initiator.equals(target))
+      throw new InvalidOperation(
+          "user with id=%s cannot perform actions on itself !".formatted(initiator.getId()));
+  }
+
+  /**
+   * Check the user has been banned or not.
+   *
+   * @param user the given user to check
+   * @throws InvalidOperation if user has been banned
+   */
+  private void checkIsNotBanned(User user) throws InvalidOperation {
+    if (banned.contains(user))
+      throw new InvalidOperation("user with id=%s has benn banned !".formatted(user.getId()));
   }
 
   /**
@@ -83,7 +112,7 @@ public class GroupChannel extends TimeStampBase {
     GroupInvitation invitation = new GroupInvitation(invitee, this);
     if (members.contains(invitee) || invitations.contains(invitation))
       throw new InvalidOperation("invitee is in the channel !");
-    if (banned.contains(invitee)) throw new InvalidOperation("invitee has been banned !");
+    checkIsNotBanned(invitee);
     checkNumOfMembers();
 
     GroupMessage invitationMessage = GroupMessage.inviteMessage(this, inviter, invitee);
@@ -92,11 +121,15 @@ public class GroupChannel extends TimeStampBase {
     lastMessage = invitationMessage;
   }
 
-  /** Let admin(see {@link #isAdmin}) kick off target user(who is not an admin). */
+  /**
+   * Let admin(see {@link #checkIsAdmin}) kick off target user(who is not an admin).
+   *
+   * @param admin admin
+   * @param target target user
+   */
   public void kickOff(User admin, User target) throws InvalidOperation {
-    if (admin.equals(target)) throw new InvalidOperation("cannot kick off itself !");
-    if (!isAdmin(admin))
-      throw new InvalidOperation("admin is not an valid administrator in the channel !");
+    checkActionOnSameUser(admin, target);
+    checkIsAdmin(admin, true);
     if (administrators.contains(target))
       throw new InvalidOperation("cannot kick off target because it is an administrator !");
     if (!members.contains(target))
@@ -138,13 +171,15 @@ public class GroupChannel extends TimeStampBase {
   }
 
   /**
-   * Let admin(see {@link #isAdmin}) ban target user(may be not in members), cannot {@link
+   * Let admin(see {@link #checkIsAdmin}) ban target user(may be not in members), cannot {@link
    * #addMessage} or be {@link #invite invited} until unbanned
+   *
+   * @param admin admin
+   * @param target target user
    */
   public void ban(User admin, User target) throws InvalidOperation {
-    if (admin.equals(target)) throw new InvalidOperation("cannot editBanned itself !");
-    if (!isAdmin(admin))
-      throw new InvalidOperation("admin is not an valid administrator in the channel !");
+    checkActionOnSameUser(admin, target);
+    checkIsAdmin(admin, true);
     if (administrators.contains(target))
       throw new InvalidOperation("cannot editBanned target because it is an administrator !");
 
@@ -154,11 +189,15 @@ public class GroupChannel extends TimeStampBase {
     lastMessage = banMessage;
   }
 
-  /** Let admin(see {@link #isAdmin}) unban target user(may be not in members) */
+  /**
+   * Let admin(see {@link #checkIsAdmin}) unban target user(may be not in members)
+   *
+   * @param admin admin
+   * @param target target user
+   */
   public void unban(User admin, User target) throws InvalidOperation {
-    if (admin.equals(target)) throw new InvalidOperation("cannot unban itself !");
-    if (!isAdmin(admin))
-      throw new InvalidOperation("admin is not an valid administrator in the channel !");
+    checkActionOnSameUser(admin, target);
+    checkIsAdmin(admin, true);
     if (!banned.contains(target)) throw new InvalidOperation("target user has not been banned !");
 
     banned.remove(target);
@@ -167,23 +206,31 @@ public class GroupChannel extends TimeStampBase {
     lastMessage = unbanMessage;
   }
 
-  /** Let admin add target user to administrators, no op if target user is an administrator */
+  /**
+   * Let admin add target user to administrators, no op if target user is an administrator
+   *
+   * @param admin admin
+   * @param target target user
+   */
   public void addToAdministrators(User admin, User target) throws InvalidOperation {
-    if (admin.equals(target)) throw new InvalidOperation("cannot add itself !");
+    checkActionOnSameUser(admin, target);
     if (!administrators.contains(admin))
       throw new InvalidOperation("admin is not an valid administrator in the channel !");
     if (!members.contains(target))
       throw new InvalidOperation("target user is not in members of the channel !");
-    if (banned.contains(target)) throw new InvalidOperation("target user has been banned !");
+    checkIsNotBanned(target);
 
     administrators.add(target);
   }
 
   /**
    * Let admin remove target user from administrators, no op if target user is not an administrator
+   *
+   * @param admin admin
+   * @param target target user
    */
   public void removeFromAdministrators(User admin, User target) throws InvalidOperation {
-    if (admin.equals(target)) throw new InvalidOperation("cannot remove itself !");
+    checkActionOnSameUser(admin, target);
     if (!administrators.contains(admin))
       throw new InvalidOperation("admin is not an valid administrator in the channel !");
 
@@ -193,7 +240,8 @@ public class GroupChannel extends TimeStampBase {
   public void addMessage(User from, String message) throws InvalidOperation {
     if (!members.contains(from))
       throw new InvalidOperation("user is not in members of the channel !");
-    if (banned.contains(from)) throw new InvalidOperation("user has been banned !");
+    checkIsNotBanned(from);
+
     GroupMessage groupMessage = new GroupMessage(this, from, message);
     messages.add(groupMessage);
     lastMessage = groupMessage;

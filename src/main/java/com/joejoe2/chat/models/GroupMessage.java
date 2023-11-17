@@ -82,27 +82,28 @@ public class GroupMessage extends TimeStampBase {
     return message;
   }
 
-  /** generate a message for admin banning an user in the GroupChannel */
-  public static GroupMessage banMessage(GroupChannel channel, User actor, User subject) {
+  private static GroupMessage banOrUnBanMessageFormat(
+      GroupChannel channel, User actor, User subject) {
     GroupMessage message = new GroupMessage();
     message.channel = channel;
     message.from = actor;
     message.content =
         "{\"id\":\"%s\", \"username\":\"%s\"}"
             .formatted(subject.getId().toString(), subject.getUserName());
-    message.messageType = MessageType.BAN;
     return message;
   }
 
-  /** generate a message for admin unbanning an user in the GroupChannel */
+  /** generate a message for admin banning an user */
+  public static GroupMessage banMessage(GroupChannel channel, User actor, User subject) {
+    GroupMessage message = banOrUnBanMessageFormat(channel, actor, subject);
+    message.setMessageType(MessageType.BAN);
+    return message;
+  }
+
+  /** generate a message for admin unbanning an user */
   public static GroupMessage unbanMessage(GroupChannel channel, User actor, User subject) {
-    GroupMessage message = new GroupMessage();
-    message.channel = channel;
-    message.from = actor;
-    message.content =
-        "{\"id\":\"%s\", \"username\":\"%s\"}"
-            .formatted(subject.getId().toString(), subject.getUserName());
-    message.messageType = MessageType.UNBAN;
+    GroupMessage message = banOrUnBanMessageFormat(channel, actor, subject);
+    message.setMessageType(MessageType.UNBAN);
     return message;
   }
 

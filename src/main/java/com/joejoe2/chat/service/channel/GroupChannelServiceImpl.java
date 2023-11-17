@@ -346,14 +346,19 @@ public class GroupChannelServiceImpl implements GroupChannelService {
     return new GroupMessageDto(banMessage);
   }
 
+  private void checkIsMember(GroupChannel channel, User user) throws InvalidOperation {
+    if (!channel.getMembers().contains(user))
+      throw new InvalidOperation(
+          "user with id=%s is not in members of the channel !".formatted(user.getId()));
+  }
+
   @Override
   @Transactional(readOnly = true)
   public List<UserPublicProfile> getBannedUsers(String userId, String channelId)
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation {
     User user = userService.getUserById(userId);
     GroupChannel channel = getChannelById(channelId);
-    if (!channel.getMembers().contains(user))
-      throw new InvalidOperation("user is not in members of the channel !");
+    checkIsMember(channel, user);
 
     return channel.getBanned().stream().map(UserPublicProfile::new).collect(Collectors.toList());
   }
@@ -364,8 +369,7 @@ public class GroupChannelServiceImpl implements GroupChannelService {
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation {
     User user = userService.getUserById(userId);
     GroupChannel channel = getChannelById(channelId);
-    if (!channel.getMembers().contains(user))
-      throw new InvalidOperation("user is not in members of the channel !");
+    checkIsMember(channel, user);
 
     return channel.getAdministrators().stream()
         .map(UserPublicProfile::new)
@@ -409,8 +413,7 @@ public class GroupChannelServiceImpl implements GroupChannelService {
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation {
     User user = userService.getUserById(userId);
     GroupChannel channel = getChannelById(channelId);
-    if (!channel.getMembers().contains(user))
-      throw new InvalidOperation("user is not in members of the channel !");
+    checkIsMember(channel, user);
 
     return new GroupChannelProfile(channel);
   }

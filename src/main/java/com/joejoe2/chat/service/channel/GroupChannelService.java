@@ -56,14 +56,16 @@ public interface GroupChannelService {
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation;
 
   /**
-   * @param ofUserId invitee id
+   * let user (invitee) join the channel if there is an invitation
+   *
+   * @param userId invitee id
    * @param channelId channel id
    * @return GroupMessageDto join message
    * @throws UserDoesNotExist
    * @throws ChannelDoesNotExist
    * @throws InvalidOperation
    */
-  GroupMessageDto acceptInvitationOfChannel(String ofUserId, String channelId)
+  GroupMessageDto acceptInvitationOfChannel(String userId, String channelId)
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation;
 
   /**
@@ -79,6 +81,16 @@ public interface GroupChannelService {
   GroupMessageDto removeFromChannel(String adminId, String targetUserId, String channelId)
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation;
 
+  /**
+   * let user leave the channel
+   *
+   * @param userId member id
+   * @param channelId id of target channel
+   * @return GroupMessageDto leave message
+   * @throws UserDoesNotExist
+   * @throws ChannelDoesNotExist
+   * @throws InvalidOperation
+   */
   GroupMessageDto leaveChannel(String userId, String channelId)
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation;
 
@@ -97,9 +109,29 @@ public interface GroupChannelService {
       String adminId, String targetUserId, String channelId, boolean isBanned)
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation;
 
+  /**
+   * let user get all banned users in the channel
+   *
+   * @param userId member id
+   * @param channelId id of target channel
+   * @return list of banned users
+   * @throws UserDoesNotExist
+   * @throws ChannelDoesNotExist
+   * @throws InvalidOperation
+   */
   List<UserPublicProfile> getBannedUsers(String userId, String channelId)
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation;
 
+  /**
+   * let user get all administrators in the channel
+   *
+   * @param userId member id
+   * @param channelId id of target channel
+   * @return list of administrators
+   * @throws UserDoesNotExist
+   * @throws ChannelDoesNotExist
+   * @throws InvalidOperation
+   */
   List<UserPublicProfile> getAdministrators(String userId, String channelId)
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation;
 
@@ -120,24 +152,25 @@ public interface GroupChannelService {
   /**
    * get all group channels of target user with page
    *
-   * @param ofUserId id of target user
+   * @param userId id of target user
    * @param since filter by updateAt >= since
    * @param pageRequest
+   * @return list of channels
    * @throws UserDoesNotExist
    */
   SliceList<GroupChannelProfile> getAllChannels(
-      String ofUserId, Instant since, PageRequest pageRequest) throws UserDoesNotExist;
+      String userId, Instant since, PageRequest pageRequest) throws UserDoesNotExist;
 
   /**
    * get profile of target channel of target user
    *
-   * @param ofUserId id of target user
+   * @param userId id of target user
    * @param channelId id of target channel
    * @return profile of target channel
    * @throws UserDoesNotExist
    * @throws ChannelDoesNotExist
    * @throws InvalidOperation target user is not in members of target channel
    */
-  GroupChannelProfile getChannelProfile(String ofUserId, String channelId)
+  GroupChannelProfile getChannelProfile(String userId, String channelId)
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation;
 }
