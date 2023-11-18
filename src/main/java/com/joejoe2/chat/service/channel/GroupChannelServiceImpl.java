@@ -352,6 +352,10 @@ public class GroupChannelServiceImpl implements GroupChannelService {
           "user with id=%s is not in members of the channel !".formatted(user.getId()));
   }
 
+  private List<UserPublicProfile> collectProfiles(Collection<User> users) {
+    return users.stream().map(UserPublicProfile::new).collect(Collectors.toList());
+  }
+
   @Override
   @Transactional(readOnly = true)
   public List<UserPublicProfile> getBannedUsers(String userId, String channelId)
@@ -359,8 +363,7 @@ public class GroupChannelServiceImpl implements GroupChannelService {
     User user = userService.getUserById(userId);
     GroupChannel channel = getChannelById(channelId);
     checkIsMember(channel, user);
-
-    return channel.getBanned().stream().map(UserPublicProfile::new).collect(Collectors.toList());
+    return collectProfiles(channel.getBanned());
   }
 
   @Override
@@ -370,10 +373,7 @@ public class GroupChannelServiceImpl implements GroupChannelService {
     User user = userService.getUserById(userId);
     GroupChannel channel = getChannelById(channelId);
     checkIsMember(channel, user);
-
-    return channel.getAdministrators().stream()
-        .map(UserPublicProfile::new)
-        .collect(Collectors.toList());
+    return collectProfiles(channel.getAdministrators());
   }
 
   @Override

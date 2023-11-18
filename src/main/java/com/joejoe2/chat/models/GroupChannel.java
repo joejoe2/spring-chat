@@ -214,8 +214,7 @@ public class GroupChannel extends TimeStampBase {
    */
   public void addToAdministrators(User admin, User target) throws InvalidOperation {
     checkActionOnSameUser(admin, target);
-    if (!administrators.contains(admin))
-      throw new InvalidOperation("admin is not an valid administrator in the channel !");
+    checkIsAdmin(admin, false);
     if (!members.contains(target))
       throw new InvalidOperation("target user is not in members of the channel !");
     checkIsNotBanned(target);
@@ -231,8 +230,7 @@ public class GroupChannel extends TimeStampBase {
    */
   public void removeFromAdministrators(User admin, User target) throws InvalidOperation {
     checkActionOnSameUser(admin, target);
-    if (!administrators.contains(admin))
-      throw new InvalidOperation("admin is not an valid administrator in the channel !");
+    checkIsAdmin(admin, false);
 
     administrators.remove(target);
   }
