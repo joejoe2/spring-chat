@@ -45,7 +45,7 @@ public class GroupChannel extends TimeStampBase {
       inverseJoinColumns = {@JoinColumn(name = "user_id", nullable = false)})
   private Set<User> banned = new HashSet<>();
 
-  @OneToMany(mappedBy = "channel", cascade = CascadeType.ALL)
+  @OneToMany(mappedBy = "channel", cascade = CascadeType.ALL, orphanRemoval = true)
   @BatchSize(size = 32)
   private Set<GroupInvitation> invitations = new HashSet<>();
 
