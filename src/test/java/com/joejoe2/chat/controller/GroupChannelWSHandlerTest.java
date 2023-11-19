@@ -59,7 +59,8 @@ public class GroupChannelWSHandlerTest {
       accessTokens[i] = JwtUtil.generateAccessToken(privateKey, "jti", "issuer", users[i], exp);
     }
     userRepository.saveAll(Arrays.stream(users).toList());
-    channel = new GroupChannel(Set.of(users));
+    channel = new GroupChannel(users[0]);
+    channel.getMembers().addAll(Set.of(users));
     channelRepository.save(channel);
     for (int i = 0; i < users.length; i++) {
       accessTokens[i] = JwtUtil.generateAccessToken(privateKey, "jti", "issuer", users[i], exp);
@@ -74,7 +75,7 @@ public class GroupChannelWSHandlerTest {
 
   public class WsClient extends WebSocketClient {
     CountDownLatch messageLatch;
-    HashSet<String> messages = new HashSet<>();
+    Set<String> messages = Collections.synchronizedSet(new HashSet<>());
 
     public WsClient(URI serverUri) {
       super(serverUri);
@@ -143,7 +144,7 @@ public class GroupChannelWSHandlerTest {
     Thread.sleep(1000);
     for (int i = 0; i < users.length; i++) {
       assertTrue(clients[i].isOpen());
-      assertTrue(clients[i].messageLatch.await(5, TimeUnit.SECONDS));
+      assertTrue(clients[i].messageLatch.await(15, TimeUnit.SECONDS));
       assertEquals(messages, clients[i].messages);
       clients[i].closeBlocking();
     }

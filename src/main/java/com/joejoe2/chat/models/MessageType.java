@@ -4,7 +4,9 @@ public enum MessageType {
   MESSAGE("MESSAGE"),
   INVITATION("INVITATION"),
   JOIN("JOIN"),
-  LEAVE("LEAVE");
+  LEAVE("LEAVE"),
+  BAN("BAN"),
+  UNBAN("UNBAN");
 
   private final String value;
 

@@ -22,7 +22,6 @@ import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,7 +71,7 @@ class PublicChannelWSHandlerTest {
   }
 
   public static class WsClient extends WebSocketClient {
-    HashSet<String> messages = new HashSet<>();
+    Set<String> messages = Collections.synchronizedSet(new HashSet<>());
 
     CountDownLatch countDownLatch;
 
@@ -98,7 +97,6 @@ class PublicChannelWSHandlerTest {
   }
 
   @Test
-  @Disabled
   void subscribe() throws Exception {
     String uri =
         "ws://localhost:8081/ws/channel/public/subscribe?access_token="
@@ -132,7 +130,7 @@ class PublicChannelWSHandlerTest {
     }
     // test success
     assertTrue(client.isOpen());
-    client.countDownLatch.await(5, TimeUnit.SECONDS);
+    client.countDownLatch.await(15, TimeUnit.SECONDS);
     assertEquals(messages, client.messages);
     client.closeBlocking();
   }

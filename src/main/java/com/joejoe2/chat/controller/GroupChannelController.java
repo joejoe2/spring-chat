@@ -4,6 +4,7 @@ import com.joejoe2.chat.controller.constraint.auth.AuthenticatedApi;
 import com.joejoe2.chat.data.ErrorMessageResponse;
 import com.joejoe2.chat.data.PageRequestWithSince;
 import com.joejoe2.chat.data.SliceList;
+import com.joejoe2.chat.data.UserPublicProfile;
 import com.joejoe2.chat.data.channel.SliceOfGroupChannel;
 import com.joejoe2.chat.data.channel.profile.GroupChannelProfile;
 import com.joejoe2.chat.data.channel.request.*;
@@ -24,6 +25,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import java.util.List;
 import javax.validation.Valid;
 import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.http.HttpStatus;
@@ -51,7 +53,7 @@ public class GroupChannelController {
       value = {
         @ApiResponse(
             responseCode = "403",
-            description = "current user is not a member" + " of target channel",
+            description = "current user is not a member" + " of target channel or got banned",
             content =
                 @Content(
                     mediaType = "application/json",
@@ -163,7 +165,7 @@ public class GroupChannelController {
             responseCode = "403",
             description =
                 "cannot invite target user into the group channel, you may not in the channel or"
-                    + " target user already in the channel",
+                    + " target user got banned or already in the channel",
             content =
                 @Content(
                     mediaType = "application/json",
@@ -265,14 +267,14 @@ public class GroupChannelController {
     return ResponseEntity.ok(new SliceOfMessage<>(sliceList));
   }
 
-  @Operation(summary = "kick off someone in group channel")
+  @Operation(summary = "kick off someone in group channel, only admin can perform this action")
   @AuthenticatedApi
   @SecurityRequirement(name = "jwt")
   @ApiResponses(
       value = {
         @ApiResponse(
             responseCode = "403",
-            description = "ypu or target user is not in the channel",
+            description = "you or target user is not in the channel",
             content =
                 @Content(
                     mediaType = "application/json",
@@ -411,6 +413,178 @@ public class GroupChannelController {
     } catch (InvalidOperation e) {
       return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()), HttpStatus.FORBIDDEN);
     } catch (ChannelDoesNotExist e) {
+      return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()), HttpStatus.NOT_FOUND);
+    }
+  }
+
+  @Operation(summary = "get banned users in group channel")
+  @AuthenticatedApi
+  @SecurityRequirement(name = "jwt")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "403",
+            description = "current user is not in members of the channel",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorMessageResponse.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "the channel does not exist",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorMessageResponse.class))),
+        @ApiResponse(
+            responseCode = "200",
+            description = "list of banned users",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    array =
+                        @ArraySchema(schema = @Schema(implementation = UserPublicProfile.class)))),
+      })
+  @RequestMapping(path = "/banned", method = RequestMethod.GET)
+  public ResponseEntity<Object> banned(@ParameterObject @Valid ChannelRequest request)
+      throws UserDoesNotExist {
+    try {
+      List<UserPublicProfile> bannedUsers =
+          channelService.getBannedUsers(
+              AuthUtil.currentUserDetail().getId(), request.getChannelId());
+      return ResponseEntity.ok(bannedUsers);
+    } catch (InvalidOperation e) {
+      return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()), HttpStatus.FORBIDDEN);
+    } catch (ChannelDoesNotExist e) {
+      return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()), HttpStatus.NOT_FOUND);
+    }
+  }
+
+  @Operation(
+      summary = "editBanned or unban an user in group channel, only admin can perform this action")
+  @AuthenticatedApi
+  @SecurityRequirement(name = "jwt")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "403",
+            description = "fail to editBanned or unban the user",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorMessageResponse.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "the channel does not exist",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorMessageResponse.class))),
+        @ApiResponse(
+            responseCode = "200",
+            description = "editBanned or unban the user",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = GroupMessageDto.class))),
+      })
+  @RequestMapping(path = "/editBanned", method = RequestMethod.POST)
+  public ResponseEntity<Object> editBanned(@Valid @RequestBody EditBannedRequest request)
+      throws UserDoesNotExist {
+    try {
+      GroupMessageDto message =
+          channelService.editBanned(
+              AuthUtil.currentUserDetail().getId(),
+              request.getTargetUserId(),
+              request.getChannelId(),
+              request.getIsBanned());
+      messageService.deliverMessage(message);
+      return ResponseEntity.ok(message);
+    } catch (ChannelDoesNotExist e) {
+      return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()), HttpStatus.FORBIDDEN);
+    } catch (InvalidOperation e) {
+      return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()), HttpStatus.NOT_FOUND);
+    }
+  }
+
+  @Operation(summary = "get admin in group channel")
+  @AuthenticatedApi
+  @SecurityRequirement(name = "jwt")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "403",
+            description = "current user is not in members of the channel",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorMessageResponse.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "the channel does not exist",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorMessageResponse.class))),
+        @ApiResponse(
+            responseCode = "200",
+            description = "list of admin",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    array =
+                        @ArraySchema(schema = @Schema(implementation = UserPublicProfile.class)))),
+      })
+  @RequestMapping(path = "/admin", method = RequestMethod.GET)
+  public ResponseEntity<Object> admin(@ParameterObject @Valid ChannelRequest request)
+      throws UserDoesNotExist {
+    try {
+      List<UserPublicProfile> admin =
+          channelService.getAdministrators(
+              AuthUtil.currentUserDetail().getId(), request.getChannelId());
+      return ResponseEntity.ok(admin);
+    } catch (InvalidOperation e) {
+      return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()), HttpStatus.FORBIDDEN);
+    } catch (ChannelDoesNotExist e) {
+      return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()), HttpStatus.NOT_FOUND);
+    }
+  }
+
+  @Operation(
+      summary = "set an user to admin or not in group channel, only admin can perform this action")
+  @AuthenticatedApi
+  @SecurityRequirement(name = "jwt")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "403",
+            description = "fail to set the user to admin",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorMessageResponse.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "the channel does not exist",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorMessageResponse.class))),
+        @ApiResponse(responseCode = "200", description = "set the user to admin or not"),
+      })
+  @RequestMapping(path = "/editAdmin", method = RequestMethod.POST)
+  public ResponseEntity<Object> editAdmin(@Valid @RequestBody EditAdminRequest request)
+      throws UserDoesNotExist {
+    try {
+      channelService.editAdministrator(
+          AuthUtil.currentUserDetail().getId(),
+          request.getTargetUserId(),
+          request.getChannelId(),
+          request.getIsAdmin());
+      return ResponseEntity.ok().build();
+    } catch (ChannelDoesNotExist e) {
+      return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()), HttpStatus.FORBIDDEN);
+    } catch (InvalidOperation e) {
       return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()), HttpStatus.NOT_FOUND);
     }
   }

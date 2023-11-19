@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joejoe2.chat.data.PageRequest;
 import com.joejoe2.chat.data.SliceList;
+import com.joejoe2.chat.data.UserPublicProfile;
 import com.joejoe2.chat.data.channel.profile.GroupChannelProfile;
 import com.joejoe2.chat.data.message.GroupMessageDto;
 import com.joejoe2.chat.exception.ChannelDoesNotExist;
@@ -250,7 +251,7 @@ public class GroupChannelServiceImpl implements GroupChannelService {
     ;
     name = ChannelNameValidator.getInstance().validate(name);
 
-    GroupChannel channel = new GroupChannel(Set.of(user));
+    GroupChannel channel = new GroupChannel(user);
     channel.setName(name);
     channelRepository.saveAndFlush(channel);
     return new GroupChannelProfile(channel);
@@ -262,7 +263,6 @@ public class GroupChannelServiceImpl implements GroupChannelService {
   public GroupMessageDto inviteToChannel(String fromUserId, String toUserId, String channelId)
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation {
     User inviter = userService.getUserById(fromUserId);
-    ;
     User invitee = userService.getUserById(toUserId);
     GroupChannel channel = getChannelById(channelId);
 
@@ -296,9 +296,9 @@ public class GroupChannelServiceImpl implements GroupChannelService {
   @CacheEvict(
       value = "GroupChannelMembers",
       key = "'GroupChannelMembers:{'+ #channelId.toString() +'}'")
-  public GroupMessageDto removeFromChannel(String fromUserId, String targetUserId, String channelId)
+  public GroupMessageDto removeFromChannel(String adminId, String targetUserId, String channelId)
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation {
-    User actor = userService.getUserById(fromUserId);
+    User actor = userService.getUserById(adminId);
     User target = userService.getUserById(targetUserId);
     GroupChannel channel = getChannelById(channelId);
 
@@ -328,6 +328,69 @@ public class GroupChannelServiceImpl implements GroupChannelService {
   }
 
   @Override
+  @Retryable(value = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 100))
+  @Transactional(rollbackFor = Exception.class)
+  public GroupMessageDto editBanned(
+      String adminId, String targetUserId, String channelId, boolean isBanned)
+      throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation {
+    User actor = userService.getUserById(adminId);
+    User target = userService.getUserById(targetUserId);
+    GroupChannel channel = getChannelById(channelId);
+
+    if (isBanned) channel.ban(actor, target);
+    else channel.unban(actor, target);
+    channelRepository.saveAndFlush(channel);
+    GroupMessage banMessage = channel.getLastMessage();
+
+    return new GroupMessageDto(banMessage);
+  }
+
+  private void checkIsMember(GroupChannel channel, User user) throws InvalidOperation {
+    if (!channel.getMembers().contains(user))
+      throw new InvalidOperation(
+          "user with id=%s is not in members of the channel !".formatted(user.getId()));
+  }
+
+  private List<UserPublicProfile> collectProfiles(Collection<User> users) {
+    return users.stream().map(UserPublicProfile::new).collect(Collectors.toList());
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<UserPublicProfile> getBannedUsers(String userId, String channelId)
+      throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation {
+    User user = userService.getUserById(userId);
+    GroupChannel channel = getChannelById(channelId);
+    checkIsMember(channel, user);
+    return collectProfiles(channel.getBanned());
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<UserPublicProfile> getAdministrators(String userId, String channelId)
+      throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation {
+    User user = userService.getUserById(userId);
+    GroupChannel channel = getChannelById(channelId);
+    checkIsMember(channel, user);
+    return collectProfiles(channel.getAdministrators());
+  }
+
+  @Override
+  @Retryable(value = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 100))
+  @Transactional(rollbackFor = Exception.class)
+  public void editAdministrator(
+      String adminId, String targetUserId, String channelId, boolean isAdmin)
+      throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation {
+    User actor = userService.getUserById(adminId);
+    User target = userService.getUserById(targetUserId);
+    GroupChannel channel = getChannelById(channelId);
+
+    if (isAdmin) channel.addToAdministrators(actor, target);
+    else channel.removeFromAdministrators(actor, target);
+    channelRepository.saveAndFlush(channel);
+  }
+
+  @Override
   @Transactional(readOnly = true)
   public SliceList<GroupChannelProfile> getAllChannels(
       String userId, Instant since, PageRequest pageRequest) throws UserDoesNotExist {
@@ -349,8 +412,7 @@ public class GroupChannelServiceImpl implements GroupChannelService {
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation {
     User user = userService.getUserById(userId);
     GroupChannel channel = getChannelById(channelId);
-    if (!channel.getMembers().contains(user))
-      throw new InvalidOperation("user is not in members of the channel !");
+    checkIsMember(channel, user);
 
     return new GroupChannelProfile(channel);
   }

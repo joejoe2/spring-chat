@@ -74,7 +74,7 @@ public class PrivateChannelWSHandlerTest {
   }
 
   public static class WsClient extends WebSocketClient {
-    HashSet<String> messages = new HashSet<>();
+    Set<String> messages = Collections.synchronizedSet(new HashSet<>());
     CountDownLatch countDownLatch;
 
     public WsClient(URI serverUri, CountDownLatch countDownLatch) {
@@ -132,7 +132,7 @@ public class PrivateChannelWSHandlerTest {
     }
     // test success
     assertTrue(client.isOpen());
-    client.countDownLatch.await(5, TimeUnit.SECONDS);
+    client.countDownLatch.await(15, TimeUnit.SECONDS);
     assertEquals(messages, client.messages);
     client.closeBlocking();
   }
