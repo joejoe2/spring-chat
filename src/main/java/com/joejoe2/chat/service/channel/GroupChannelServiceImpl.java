@@ -263,7 +263,6 @@ public class GroupChannelServiceImpl implements GroupChannelService {
   public GroupMessageDto inviteToChannel(String fromUserId, String toUserId, String channelId)
       throws UserDoesNotExist, ChannelDoesNotExist, InvalidOperation {
     User inviter = userService.getUserById(fromUserId);
-    ;
     User invitee = userService.getUserById(toUserId);
     GroupChannel channel = getChannelById(channelId);
 
