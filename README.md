@@ -40,7 +40,7 @@ You can see technical details at [here](./doc/chat-detail/README.md).
 
 ## Example Frontend
 
-We provide an example frontend application written in Vue.js [at here](https://github.com/joejoe2/frontend/tree/chat) to
+We provide an example frontend application written in Vue.js [at here](https://github.com/joejoe2/chat-frontend) to
 work with this project.
 
 - chat in public channel
