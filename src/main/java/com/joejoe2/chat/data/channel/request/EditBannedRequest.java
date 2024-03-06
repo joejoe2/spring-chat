@@ -2,7 +2,7 @@ package com.joejoe2.chat.data.channel.request;
 
 import com.joejoe2.chat.validation.constraint.UUID;
 import io.swagger.v3.oas.annotations.media.Schema;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

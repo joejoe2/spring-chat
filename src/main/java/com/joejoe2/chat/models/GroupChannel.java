@@ -1,9 +1,9 @@
 package com.joejoe2.chat.models;
 
 import com.joejoe2.chat.exception.InvalidOperation;
+import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.*;
-import javax.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.BatchSize;

@@ -1,8 +1,8 @@
 package com.joejoe2.chat.models;
 
+import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.Objects;
-import javax.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.OnDelete;

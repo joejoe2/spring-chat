@@ -1,8 +1,6 @@
 package com.joejoe2.chat.repository.message;
 
-import com.joejoe2.chat.models.PrivateChannel;
 import com.joejoe2.chat.models.PrivateMessage;
-import com.joejoe2.chat.models.User;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
@@ -21,14 +19,13 @@ public interface PrivateMessageRepository extends JpaRepository<PrivateMessage, 
           "SELECT * FROM private_message WHERE channel_id = :channel "
               + "AND update_at >= :since ORDER BY update_at DESC")
   Slice<PrivateMessage> findAllByChannelSince(
-      @Param("channel") PrivateChannel channel, @Param("since") Instant since, Pageable pageable);
+      @Param("channel") UUID channelId, @Param("since") Instant since, Pageable pageable);
 
   @Query(
       nativeQuery = true,
       value =
           "SELECT * FROM private_message WHERE channel_id = :channel " + "ORDER BY update_at DESC")
-  Slice<PrivateMessage> findAllByChannel(
-      @Param("channel") PrivateChannel channel, Pageable pageable);
+  Slice<PrivateMessage> findAllByChannel(@Param("channel") UUID channelId, Pageable pageable);
 
   @Query(
       nativeQuery = true,
@@ -36,14 +33,14 @@ public interface PrivateMessageRepository extends JpaRepository<PrivateMessage, 
           "SELECT * FROM private_message WHERE to_id = :user OR from_id = :user "
               + "AND update_at >= :since ORDER BY update_at DESC")
   Slice<PrivateMessage> findAllByUserSince(
-      @Param("user") User user, @Param("since") Instant since, Pageable pageable);
+      @Param("user") UUID userId, @Param("since") Instant since, Pageable pageable);
 
   @Query(
       nativeQuery = true,
       value =
           "SELECT * FROM private_message WHERE to_id = :user OR from_id = :user "
               + "ORDER BY update_at DESC")
-  Slice<PrivateMessage> findAllByUser(@Param("user") User user, Pageable pageable);
+  Slice<PrivateMessage> findAllByUser(@Param("user") UUID userId, Pageable pageable);
 
   void deleteByCreateAtLessThan(Instant dateTime);
 }

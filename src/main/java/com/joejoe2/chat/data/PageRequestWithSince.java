@@ -1,9 +1,9 @@
 package com.joejoe2.chat.data;
 
 import io.swagger.v3.oas.annotations.Parameter;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

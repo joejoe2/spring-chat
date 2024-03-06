@@ -3,13 +3,13 @@ package com.joejoe2.chat.validation.constraint;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import com.joejoe2.chat.validation.validator.MessageValidator;
+import jakarta.validation.Constraint;
+import jakarta.validation.Payload;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-import javax.validation.Constraint;
-import javax.validation.Payload;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
 
 @Target(ElementType.FIELD)
 @Constraint(validatedBy = {})

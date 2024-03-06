@@ -89,7 +89,7 @@ public class PublicMessageServiceImpl implements PublicMessageService {
     PageRequest paging = pageValidator.validate(pageRequest);
     PublicChannel channel = getChannelById(channelId);
 
-    Slice<PublicMessage> slice = messageRepository.findAllByChannel(channel, paging);
+    Slice<PublicMessage> slice = messageRepository.findAllByChannel(channel.getId(), paging);
     return new SliceList<>(
         slice.getNumber(),
         slice.getSize(),
@@ -109,7 +109,8 @@ public class PublicMessageServiceImpl implements PublicMessageService {
     PageRequest paging = pageValidator.validate(pageRequest);
     PublicChannel channel = getChannelById(channelId);
 
-    Slice<PublicMessage> slice = messageRepository.findAllByChannelSince(channel, since, paging);
+    Slice<PublicMessage> slice =
+        messageRepository.findAllByChannelSince(channel.getId(), since, paging);
     return new SliceList<>(
         slice.getNumber(),
         slice.getSize(),

@@ -90,7 +90,7 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
     org.springframework.data.domain.PageRequest paging = pageValidator.validate(pageRequest);
     User user = userService.getUserById(userId);
 
-    Slice<PrivateMessage> slice = messageRepository.findAllByUser(user, paging);
+    Slice<PrivateMessage> slice = messageRepository.findAllByUser(user.getId(), paging);
     return new SliceList<>(
         slice.getNumber(),
         slice.getSize(),
@@ -112,7 +112,7 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
     if (!channel.getMembers().contains(user))
       throw new InvalidOperation("user is not in members of the channel !");
 
-    Slice<PrivateMessage> slice = messageRepository.findAllByChannel(channel, paging);
+    Slice<PrivateMessage> slice = messageRepository.findAllByChannel(channel.getId(), paging);
     return new SliceList<>(
         slice.getNumber(),
         slice.getSize(),
@@ -131,7 +131,7 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
     org.springframework.data.domain.PageRequest paging = pageValidator.validate(pageRequest);
     User user = userService.getUserById(userId);
 
-    Slice<PrivateMessage> slice = messageRepository.findAllByUserSince(user, since, paging);
+    Slice<PrivateMessage> slice = messageRepository.findAllByUserSince(user.getId(), since, paging);
     return new SliceList<>(
         slice.getNumber(),
         slice.getSize(),
@@ -154,7 +154,8 @@ public class PrivateMessageServiceImpl implements PrivateMessageService {
     if (!channel.getMembers().contains(user))
       throw new InvalidOperation("user is not in members of the channel !");
 
-    Slice<PrivateMessage> slice = messageRepository.findAllByChannelSince(channel, since, paging);
+    Slice<PrivateMessage> slice =
+        messageRepository.findAllByChannelSince(channel.getId(), since, paging);
     return new SliceList<>(
         slice.getNumber(),
         slice.getSize(),

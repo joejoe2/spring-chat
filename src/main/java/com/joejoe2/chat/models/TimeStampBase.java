@@ -1,7 +1,7 @@
 package com.joejoe2.chat.models;
 
+import jakarta.persistence.MappedSuperclass;
 import java.time.Instant;
-import javax.persistence.MappedSuperclass;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.CreationTimestamp;
