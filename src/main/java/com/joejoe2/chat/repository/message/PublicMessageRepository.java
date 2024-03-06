@@ -1,6 +1,5 @@
 package com.joejoe2.chat.repository.message;
 
-import com.joejoe2.chat.models.PublicChannel;
 import com.joejoe2.chat.models.PublicMessage;
 import java.time.Instant;
 import java.util.Optional;
@@ -20,13 +19,13 @@ public interface PublicMessageRepository extends JpaRepository<PublicMessage, UU
           "SELECT * FROM public_message WHERE channel_id = :channel "
               + "AND update_at >= :since ORDER BY update_at DESC")
   Slice<PublicMessage> findAllByChannelSince(
-      @Param("channel") PublicChannel channel, @Param("since") Instant since, Pageable pageable);
+      @Param("channel") UUID channel, @Param("since") Instant since, Pageable pageable);
 
   @Query(
       nativeQuery = true,
       value =
           "SELECT * FROM public_message WHERE channel_id = :channel " + "ORDER BY update_at DESC")
-  Slice<PublicMessage> findAllByChannel(@Param("channel") PublicChannel channel, Pageable pageable);
+  Slice<PublicMessage> findAllByChannel(@Param("channel") UUID channelId, Pageable pageable);
 
   void deleteByCreateAtLessThan(Instant dateTime);
 }

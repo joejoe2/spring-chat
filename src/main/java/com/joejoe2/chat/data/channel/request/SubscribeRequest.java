@@ -1,7 +1,7 @@
 package com.joejoe2.chat.data.channel.request;
 
 import io.swagger.v3.oas.annotations.Parameter;
-import javax.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

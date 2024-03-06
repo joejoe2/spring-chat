@@ -2,9 +2,9 @@ package com.joejoe2.chat.utils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
-import javax.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.http.HttpHeaders;

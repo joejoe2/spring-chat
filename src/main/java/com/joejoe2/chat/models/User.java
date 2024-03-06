@@ -1,9 +1,9 @@
 package com.joejoe2.chat.models;
 
+import jakarta.persistence.*;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import javax.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

@@ -1,10 +1,10 @@
 package com.joejoe2.chat.utils;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
-import javax.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpHeaders;
 
 public class HttpUtil {
