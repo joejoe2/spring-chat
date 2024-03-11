@@ -58,12 +58,10 @@ run `mvn test` or `./mvnw test`
 
 run
 ```
-mvn spotless:check
 mvn spotless:apply
 ``` 
 or
 ```
-./mvnw spotless:check
 ./mvnw spotless:apply
 ``` 
 
